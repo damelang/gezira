@@ -88,6 +88,6 @@ PixelPipeline (target     : Image,
 Renderer (target     : Image,
           texturer   : Texturer,
           compositor : Compositor) : Bezier >> _
-    self >> ClipBezier (0, 0, target[0].size, target.size) >>
+    self >> ClipBezier ([0, 0], [|| target[0] ||, || target ||]) >>
             DecomposeBezier >> GroupBy ('at.y) >> SortBy ('at.x) >>
             PixelPipeline (target, texturer, compositor)
