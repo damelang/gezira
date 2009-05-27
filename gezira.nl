@@ -4,7 +4,6 @@ Pixel :: [a, r, g, b : ColorComponent]
 Image :: [[Pixel]]
 CoverageAlpha :: ColorComponent
 PixelComposition :: [A, B : Pixel]
-≫ Bezier
 Texturer :: CoverageAlpha >> Pixel
 Compositor :: PixelComposition >> Pixel
 EdgeContribution :: [at, width, height : Point, Real, Real]
