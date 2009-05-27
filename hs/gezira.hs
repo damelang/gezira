@@ -1,3 +1,6 @@
+type Real = Float
+type ColorComponent = Float
+
 -- Point :: [x, y : Real]
 type Point = (Real, Real)
 
@@ -42,7 +45,7 @@ TransformBezier (M : Matrix) : Bezier >> Bezier
         [M ∙ A, M ∙ B, M ∙ C]
 -}
 transformBezier :: Matrix -> [Bezier] -> [Bezier]
-transformBezier M input
+transformBezier M input =
   do ((A, B, C)) <- input
      [(M * A, M * B, M * C)]
 
@@ -65,12 +68,13 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             nearmax ← | ABBC - max | < 0.1
             M       ← nearmin ? min : nearmax ? max : ABBC
             [A, AB, M] >> [M, BC, C] >> self
--}
+
 clipBezier :: Point -> Point -> [Bezier] -> [Bezier]
 clipBezier max min input =
   do ((A, B, C)) <- input
      let bmin = (A
      if
+-}
        
 {-
 DecomposeBezier : Bezier >> EdgeContribution
