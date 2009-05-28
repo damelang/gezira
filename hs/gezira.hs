@@ -1,4 +1,5 @@
 type Real = Float
+default (Real)
 type ColorComponent = Float
 
 -- Point :: [x, y : Real]
@@ -36,8 +37,8 @@ type Matrix = (Real, Real, Real, Real, Real, Real)
     [M.a ∙ P.x + M.c ∙ P.y + M.e,
      M.b ∙ P.x + M.d ∙ P.y + M.f]
  -}
-(*) :: Matrix -> Point -> Point
-(a, b, c, d, e, f) * (x, y) = (a * x + c * y + e, b * x + d * y + f)
+(∙) :: Matrix -> Point -> Point
+(a, b, c, d, e, f) ∙ (x, y) = (a * x + c * y + e, b * x + d * y + f)
 
 {-
 TransformBezier (M : Matrix) : Bezier >> Bezier
@@ -45,9 +46,11 @@ TransformBezier (M : Matrix) : Bezier >> Bezier
         [M ∙ A, M ∙ B, M ∙ C]
 -}
 transformBezier :: Matrix -> [Bezier] -> [Bezier]
-transformBezier M input =
-  do ((A, B, C)) <- input
-     [(M * A, M * B, M * C)]
+transformBezier m input =
+  do (_0) <- input
+     let (a, b, c) = _0
+     in
+       [(m ∙ a, m ∙ b, m ∙ c)]
 
 {-
 ClipBezier (min, max : Point) : Bezier >> Bezier
@@ -68,11 +71,13 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             nearmax ← | ABBC - max | < 0.1
             M       ← nearmin ? min : nearmax ? max : ABBC
             [A, AB, M] >> [M, BC, C] >> self
+-}
 
+{-
 clipBezier :: Point -> Point -> [Bezier] -> [Bezier]
 clipBezier max min input =
-  do ((A, B, C)) <- input
-     let bmin = (A
+  do ((a, b, c)) <- input
+     let bmin = (a
      if
 -}
        
@@ -143,3 +148,5 @@ Renderer (target     : Image,
             DecomposeBezier >> GroupBy ('at.y) >> SortBy ('at.x) >>
             PixelPipeline (target, texturer, compositor)
 -}
+
+main = putStrLn "done"
