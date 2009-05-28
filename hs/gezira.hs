@@ -1,12 +1,14 @@
+import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..),
+               (&&), (||), sqrt, putStrLn)
+
 type Real = Float
-default (Real)
 type ColorComponent = Float
 
 -- Point :: [x, y : Real]
 type Point = (Real, Real)
 
 -- Bezier :: [A, B, C : Point]
-type Bezier = (Point, Point)
+type Bezier = (Point, Point, Point)
 
 -- Pixel :: [a, r, g, b : ColorComponent]
 type Pixel = (ColorComponent, ColorComponent, ColorComponent, ColorComponent)
@@ -45,11 +47,10 @@ TransformBezier (M : Matrix) : Bezier >> Bezier
     ∀ [A, B, C]
         [M ∙ A, M ∙ B, M ∙ C]
 -}
+
 transformBezier :: Matrix -> [Bezier] -> [Bezier]
 transformBezier m input =
-  do (_0) <- input
-     let (a, b, c) = _0
-     in
+    do (a,b,c) <- input
        [(m ∙ a, m ∙ b, m ∙ c)]
 
 {-
@@ -73,13 +74,43 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             [A, AB, M] >> [M, BC, C] >> self
 -}
 
-{-
+a ⋖ b = min a b
+a ⋗ b = max a b
+
+a ≤ b = a <= b
+a ∧ b = a && b
+a ∨ b = a || b
+
+infixl 4 ≤, ⋖, ⋗
+infixl 3 ∧, ∨
+
+(~~) :: Point -> Point -> Point
+(ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
+(-~) :: Point -> Point -> Point -- minus for Point
+(ax, ay) -~ (bx, by) = (ax - bx, ay - by)
+
+absp :: Point -> Real -- abs for Point
+absp (x, y) = sqrt (x * x + y * y)
+
 clipBezier :: Point -> Point -> [Bezier] -> [Bezier]
 clipBezier max min input =
-  do ((a, b, c)) <- input
-     let bmin = (a
-     if
--}
+     do (a, b, c) <- input
+        let bmin = a ⋖ b ⋖ c
+            bmax = a ⋗ b ⋗ c
+        if min ≤ bmin ∧ bmax ≤ max
+          then [(a, b, c)]
+          else if bmax ≤ min ∨ max ≤ bmin
+               then let a' = min ⋗ a ⋖ max
+                        c' = min ⋗ c ⋖ max
+                    in [(a', a' ~~ c', c')]
+               else
+                   let ab   = a ~~ b
+                       bc   = b ~~ c
+                       abbc = ab ~~ bc
+                       nearmin = absp (abbc -~ min) < 0.1
+                       nearmax = absp (abbc -~ max) < 0.1
+                       m       = if nearmin then min else if nearmax then max else abbc
+                   in [(a, ab, m), (m, bc, c)]
        
 {-
 DecomposeBezier : Bezier >> EdgeContribution
