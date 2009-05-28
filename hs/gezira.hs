@@ -1,6 +1,24 @@
 import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..),
                (&&), (||), sqrt, putStrLn)
 
+a ⋖ b = min a b
+a ⋗ b = max a b
+a ≤ b = a <= b
+a ∧ b = a && b
+a ∨ b = a || b
+
+(~~) :: Point -> Point -> Point
+(ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
+
+(-~) :: Point -> Point -> Point -- minus for Point
+(ax, ay) -~ (bx, by) = (ax - bx, ay - by)
+
+abs_ :: Point -> Point -- abs for Point
+abs_ (x, y) = (abs x, abs y)
+
+infixl 4 ≤, ⋖, ⋗
+infixl 3 ∧, ∨
+
 type Real = Float
 type ColorComponent = Float
 
@@ -74,23 +92,7 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             [A, AB, M] >> [M, BC, C] >> self
 -}
 
-a ⋖ b = min a b
-a ⋗ b = max a b
 
-a ≤ b = a <= b
-a ∧ b = a && b
-a ∨ b = a || b
-
-infixl 4 ≤, ⋖, ⋗
-infixl 3 ∧, ∨
-
-(~~) :: Point -> Point -> Point
-(ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
-(-~) :: Point -> Point -> Point -- minus for Point
-(ax, ay) -~ (bx, by) = (ax - bx, ay - by)
-
-absp :: Point -> Real -- abs for Point
-absp (x, y) = sqrt (x * x + y * y)
 
 clipBezier :: Point -> Point -> [Bezier] -> [Bezier]
 clipBezier max min input =
@@ -107,8 +109,8 @@ clipBezier max min input =
                    let ab   = a ~~ b
                        bc   = b ~~ c
                        abbc = ab ~~ bc
-                       nearmin = absp (abbc -~ min) < 0.1
-                       nearmax = absp (abbc -~ max) < 0.1
+                       nearmin = abs_ (abbc -~ min) < 0.1
+                       nearmax = abs_ (abbc -~ max) < 0.1
                        m       = if nearmin then min else if nearmax then max else abbc
                    in clipBezier max min [(a, ab, m), (m, bc, c)]
 
