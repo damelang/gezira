@@ -110,8 +110,8 @@ clipBezier max min input =
                        nearmin = absp (abbc -~ min) < 0.1
                        nearmax = absp (abbc -~ max) < 0.1
                        m       = if nearmin then min else if nearmax then max else abbc
-                   in [(a, ab, m), (m, bc, c)]
-       
+                   in clipBezier max min [(a, ab, m), (m, bc, c)]
+
 {-
 DecomposeBezier : Bezier >> EdgeContribution
     ∀ [A, B, C]
