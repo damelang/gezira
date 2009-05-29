@@ -11,9 +11,13 @@ instance (Num a, Num b) => Num (a, b) where
 
 a ⋖ b = min a b
 a ⋗ b = max a b
-a ≤ b = a <= b
-a ∧ b = a && b
-a ∨ b = a || b
+
+-- logical functions for Point
+(ax, ay) ≤ (bx, by) = (ax <= bx, ay <= by)
+(ax, ay) ∧ (bx, by) = (ax && bx, ay && by)
+(ax, ay) ∨ (bx, by) = (ax || bx, ay || by)
+and_ (x, y) = x && y -- unary ∧
+or_ (x, y) = x && y -- unary ∨
 
 (~~) :: Point -> Point -> Point
 (ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
@@ -101,9 +105,9 @@ clipBezier max min input =
      do (a, b, c) <- input
         let bmin = a ⋖ b ⋖ c
             bmax = a ⋗ b ⋗ c
-        if min ≤ bmin ∧ bmax ≤ max
+        if and_ (min ≤ bmin ∧ bmax ≤ max)
           then [(a, b, c)]
-          else if bmax ≤ min ∨ max ≤ bmin
+          else if or_ (bmax ≤ min ∨ max ≤ bmin)
                then let a' = min ⋗ a ⋖ max
                         c' = min ⋗ c ⋖ max
                     in [(a', a' ~~ c', c')]
