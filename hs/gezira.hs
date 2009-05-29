@@ -17,7 +17,7 @@ a ⋗ b = max a b
 (ax, ay) ∧ (bx, by) = (ax && bx, ay && by)
 (ax, ay) ∨ (bx, by) = (ax || bx, ay || by)
 and_ (x, y) = x && y -- unary ∧
-or_ (x, y) = x && y -- unary ∨
+or_ (x, y) = x || y -- unary ∨
 
 (~~) :: Point -> Point -> Point
 (ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
