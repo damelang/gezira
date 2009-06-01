@@ -51,7 +51,7 @@ DecomposeBezier : Bezier >> EdgeContribution
             max     ← ⌈ ABBC ⌉
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
-            M       ← ABBC ?nearmin? min ?nearmax ? max
+            M       ← ABBC ?nearmin? min ?nearmax? max
             [A, AB, M] >> [M, BC, C] >> self
 
 FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
