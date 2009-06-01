@@ -1,4 +1,6 @@
-import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..),
+{-# LANGUAGE FlexibleInstances #-}
+
+import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..), Eq(..), Show(..),
                (&&), (||), sqrt, putStrLn, map, zipWith, repeat)
 
 instance (Num a, Num b) => Num (a, b) where
@@ -9,13 +11,16 @@ instance (Num a, Num b) => Num (a, b) where
     signum (x, y)       = (signum x, signum y)
     fromInteger x       = (fromInteger x, fromInteger x)
 
-instance Num a => Num [a] where
-    a + b         = zipWith (+) a b
-    a - b         = zipWith (-) a b
-    a * b         = zipWith (*) a b
-    abs a         = map abs a
-    signum a      = map signum a
-    fromInteger a = repeat (fromInteger a)
+data Vector a = Vector [a] deriving (Eq, Show)
+
+-- Vector [1,2,3] + Vector [4,5,6] == Vector [5,7,9]
+instance Num a => Num (Vector a) where
+    Vector a + Vector b = Vector (zipWith (+) a b)
+    Vector a - Vector b = Vector (zipWith (-) a b)
+    Vector a * Vector b = Vector (zipWith (*) a b)
+    abs (Vector a)      = Vector (map abs a)
+    signum (Vector a)   = Vector (map signum a)
+    fromInteger a       = Vector (repeat (fromInteger a))
 
 a ⋖ b = min a b
 a ⋗ b = max a b
