@@ -1,5 +1,5 @@
 import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..),
-               (&&), (||), sqrt, putStrLn)
+               (&&), (||), sqrt, putStrLn, map, zipWith, repeat)
 
 instance (Num a, Num b) => Num (a, b) where
     (ax, ay) + (bx, by) = (ax + bx, ay + by)
@@ -8,6 +8,14 @@ instance (Num a, Num b) => Num (a, b) where
     abs (x, y)          = (abs x, abs y)
     signum (x, y)       = (signum x, signum y)
     fromInteger x       = (fromInteger x, fromInteger x)
+
+instance Num a => Num [a] where
+    a + b         = zipWith (+) a b
+    a - b         = zipWith (-) a b
+    a * b         = zipWith (*) a b
+    abs a         = map abs a
+    signum a      = map signum a
+    fromInteger a = repeat (fromInteger a)
 
 a ⋖ b = min a b
 a ⋗ b = max a b
