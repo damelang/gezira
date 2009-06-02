@@ -81,7 +81,7 @@ CompositeOver : Compositor
 PixelPipeline (target     : Image,
                texturer   : Texturer,
                compositor : Compositor) : EdgeContribution >> _
-    first [x, y, _, _]
+    peek [x, y, _, _]
         self >> FillBetweenEdges (x) >>
                 Interleave (texturer (x, y), ReadArray (target[y], x)) >>
                 compositor >> WriteArray (target[y], x)
