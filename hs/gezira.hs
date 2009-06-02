@@ -180,7 +180,9 @@ FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
             x'    ← x
             local ← run + width ∙ height
             run   ← run + height
+    >> | local | ⋖ 1
 -}
+-- TODO how do I translate the last line of FillBetweenEdges?
 fillBetweenEdges :: Real -> [EdgeContribution] -> [CoverageAlpha]
 fillBetweenEdges = fillBetweenEdges' 0 0
               
