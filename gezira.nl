@@ -15,18 +15,18 @@ Matrix :: [a, b, c, d, e, f : Real]
 
 TransformBezier (M : Matrix) : Bezier >> Bezier
     ∀ [A, B, C]
-        [M ∙ A, M ∙ B, M ∙ C] >>
+        >> [M ∙ A, M ∙ B, M ∙ C]
 
 ClipBezier (min, max : Point) : Bezier >> Bezier
     ∀ [A, B, C]
         bmin ← A ⋖ B ⋖ C
         bmax ← A ⋗ B ⋗ C
         if ∧[ min ≤ bmin ∧ bmax ≤ max ]
-            [A, B, C] >>
+            >> [A, B, C]
         elseif ∨[ bmax ≤ min ∨ max ≤ bmin ]
             A' ← min ⋗ A ⋖ max
             C' ← min ⋗ C ⋖ max
-            [A', A' ~~ C', C'] >>
+            >> [A', A' ~~ C', C']
         else 
             AB      ← A ~~ B
             BC      ← B ~~ C
@@ -34,7 +34,7 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
             M       ← ABBC ?nearmin? min ?nearmax? max
-            [A, AB, M] >> [M, BC, C] >> self
+            >> [A, AB, M] >> [M, BC, C] >> self
 
 DecomposeBezier : Bezier >> EdgeContribution
     ∀ [A, B, C]
@@ -42,7 +42,7 @@ DecomposeBezier : Bezier >> EdgeContribution
             P      ← ⌊ A ⌋ ⋖ ⌊ C ⌋
             width  ← P.x + 1 - (C.x ~~ A.x)
             height ← C.y - A.y
-            [P.x, P.y, width, height] >>
+            >> [P.x, P.y, width, height]
         else
             AB      ← A ~~ B
             BC      ← B ~~ C
@@ -52,7 +52,7 @@ DecomposeBezier : Bezier >> EdgeContribution
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
             M       ← ABBC ?nearmin? min ?nearmax? max
-            [A, AB, M] >> [M, BC, C] >> self
+            >> [A, AB, M] >> [M, BC, C] >> self
 
 FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
     local ← 0
@@ -63,20 +63,20 @@ FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
             local ← local + width ∙ height
             run   ← run   + height
         else
-            | local | ⋖ 1 >>
-            | run   | ⋖ 1 >(n - 1)>
+            >> | local | ⋖ 1
+            >(n - 1)> | run | ⋖ 1
             x'    ← x
             local ← run + width ∙ height
             run   ← run + height
-    | local | ⋖ 1 >>
+    >> | local | ⋖ 1
 
 SolidColor (x, y : Real, color : Pixel) : Texturer
     ∀ coverage
-        color ∙ coverage >>
+        >> color ∙ coverage
 
 CompositeOver : Compositor
     ∀ [A, B]
-        A + B ∙ (1 - A.a) >>
+        >> A + B ∙ (1 - A.a)
 
 PixelPipeline (target     : Image,
                texturer   : Texturer,
