@@ -15,7 +15,7 @@ Matrix :: [a, b, c, d, e, f : Real]
 
 TransformBezier (M : Matrix) : Bezier >> Bezier
     ∀ [A, B, C]
-        [M ∙ A, M ∙ B, M ∙ C]
+        [M ∙ A, M ∙ B, M ∙ C] >>
 
 ClipBezier (min, max : Point) : Bezier >> Bezier
     ∀ [A, B, C]
