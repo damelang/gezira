@@ -63,8 +63,8 @@ FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
             local ← local + width ∙ height
             run   ← run   + height
         else
-            >> | local | ⋖ 1
-            >(n - 1)> | run | ⋖ 1
+            >>        | local | ⋖ 1
+            >(n - 1)> | run   | ⋖ 1
             x'    ← x
             local ← run + width ∙ height
             run   ← run + height
