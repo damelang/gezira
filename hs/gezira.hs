@@ -3,17 +3,27 @@
 import Prelude(Ord(..), Num(..), Fractional(..), Float, Monad(..), Eq(..), Show(..),
                (&&), (||), sqrt, putStrLn, map, zipWith, repeat)
 
-instance (Num a, Num b) => Num (a, b) where
-    (ax, ay) + (bx, by) = (ax + bx, ay + by)
-    (ax, ay) - (bx, by) = (ax - bx, ay - by)
-    (ax, ay) * (bx, by) = (ax * bx, ay * by)
-    abs (x, y)          = (abs x, abs y)
-    signum (x, y)       = (signum x, signum y)
-    fromInteger x       = (fromInteger x, fromInteger x)
+a ⋖ b = min a b
+a ⋗ b = max a b
+a ≤ b = a <= b
+a ∧ b = a && b
+a ∨ b = a || b
+a ~~ b = (a + b) / 2
+
+infixl 7 ~~
+infixl 4 ≤, ⋖, ⋗
+infixl 3 ∧, ∨
 
 data Vector a = Vector [a] deriving (Eq, Show)
 
--- Vector [1,2,3] + Vector [4,5,6] == Vector [5,7,9]
+vfoldl1 :: (a -> a -> a) -> Vector a -> a
+vfoldl1 f (Vector l) = foldl1 f l
+
+unless :: (Vector a) -> ((Vector Bool), (Vector a)) -> (Vector a)
+unless (Vector a) t = map choose (zip a t)
+  where choose a (q, b) = if q then b else a
+
+-- pairwise application over Vector
 instance Num a => Num (Vector a) where
     Vector a + Vector b = Vector (zipWith (+) a b)
     Vector a - Vector b = Vector (zipWith (-) a b)
@@ -22,33 +32,20 @@ instance Num a => Num (Vector a) where
     signum (Vector a)   = Vector (map signum a)
     fromInteger a       = Vector (repeat (fromInteger a))
 
-a ⋖ b = min a b
-a ⋗ b = max a b
-
--- logical functions for Point
-(ax, ay) ≤ (bx, by) = (ax <= bx, ay <= by)
-(ax, ay) ∧ (bx, by) = (ax && bx, ay && by)
-(ax, ay) ∨ (bx, by) = (ax || bx, ay || by)
-and_ (x, y) = x && y -- unary ∧
-or_ (x, y) = x || y -- unary ∨
-
-(~~) :: Point -> Point -> Point
-(ax, ay) ~~ (bx, by) = ((ax + bx) / 2, (ay + by) / 2)
-
-infixl 4 ≤, ⋖, ⋗
-infixl 3 ∧, ∨
+class (Num a) => NileNum a where
+    (∙) :: (Num b, Num c) => a -> b -> c
 
 type Real = Float
 type ColorComponent = Float
 
 -- Point :: [x, y : Real]
-type Point = (Real, Real)
+type Point = Vector Real
 
 -- Bezier :: [A, B, C : Point]
-type Bezier = (Point, Point, Point)
+type Bezier = Vector Point
 
 -- Pixel :: [a, r, g, b : ColorComponent]
-type Pixel = (ColorComponent, ColorComponent, ColorComponent, ColorComponent)
+type Pixel = Vector ColorComponent
 
 -- Image :: [[Pixel]]
 type Image = [[Pixel]]
@@ -57,7 +54,7 @@ type Image = [[Pixel]]
 type CoverageAlpha = ColorComponent
 
 -- PixelComposition :: [A, B : Pixel]
-type PixelComposition = (Pixel, Pixel)
+type PixelComposition = Vector Pixel
 
 -- Texturer :: CoverageAlpha >> Pixel
 type Texturer = [CoverageAlpha] -> [Pixel]
@@ -65,29 +62,30 @@ type Texturer = [CoverageAlpha] -> [Pixel]
 -- Compositor :: PixelComposition >> Pixel
 type Compositor = [PixelComposition] -> [Pixel]
 
--- EdgeContribution :: [at, width, height : Point, Real, Real]
-type EdgeContribution = (Point, Real, Real)
+-- EdgeContribution :: [x, y, width, height : Real]
+type EdgeContribution = Vector Real
 
 -- Matrix :: [a, b, c, d, e, f : Real]
-type Matrix = (Real, Real, Real, Real, Real, Real)
+type Matrix = Vector Real
 
 {-
 (M : Matrix ∙ P : Point) : Point
     [M.a ∙ P.x + M.c ∙ P.y + M.e,
      M.b ∙ P.x + M.d ∙ P.y + M.f]
+-}
+{-
+instance NileNum Matrix where
+  Matrix (a:b:c:d:e:f:_) ∙ Point (x:y:_) = Point [a * x + c * y + e, b * x + d * y + f]
  -}
-(∙) :: Matrix -> Point -> Point
-(a, b, c, d, e, f) ∙ (x, y) = (a * x + c * y + e, b * x + d * y + f)
 
 {-
 TransformBezier (M : Matrix) : Bezier >> Bezier
     ∀ [A, B, C]
         [M ∙ A, M ∙ B, M ∙ C]
 -}
-
 transformBezier :: Matrix -> [Bezier] -> [Bezier]
 transformBezier m input =
-    do (a,b,c) <- input
+    do (a, b, c) <- input
        [(m ∙ a, m ∙ b, m ∙ c)]
 
 {-
@@ -110,17 +108,14 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             M       ← nearmin ? min : nearmax ? max : ABBC
             [A, AB, M] >> [M, BC, C] >> self
 -}
-
-
-
 clipBezier :: Point -> Point -> [Bezier] -> [Bezier]
 clipBezier max min input =
      do (a, b, c) <- input
         let bmin = a ⋖ b ⋖ c
             bmax = a ⋗ b ⋗ c
-        if and_ (min ≤ bmin ∧ bmax ≤ max)
+        if vfoldl1 (∧) (min ≤ bmin ∧ bmax ≤ max)
           then [(a, b, c)]
-          else if or_ (bmax ≤ min ∨ max ≤ bmin)
+          else if vfoldl1 (∨) (bmax ≤ min ∨ max ≤ bmin)
                then let a' = min ⋗ a ⋖ max
                         c' = min ⋗ c ⋖ max
                     in [(a', a' ~~ c', c')]
@@ -128,19 +123,19 @@ clipBezier max min input =
                    let ab   = a ~~ b
                        bc   = b ~~ c
                        abbc = ab ~~ bc
-                       nearmin = abs (abbc - min) < (0.1, 0.1)
-                       nearmax = abs (abbc - max) < (0.1, 0.1)
-                       m       = if nearmin then min else if nearmax then max else abbc
+                       nearmin = abs (abbc - min) < Vector [0.1, 0.1]
+                       nearmax = abs (abbc - max) < Vector [0.1, 0.1]
+                       m = abbc `unless` (nearmin, min) `unless` (nearmax, max)
                    in clipBezier max min [(a, ab, m), (m, bc, c)]
 
 {-
 DecomposeBezier : Bezier >> EdgeContribution
     ∀ [A, B, C]
         if ∧[ ⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉ ]
-            at     ← ⌊ A ⌋ ⋖ ⌊ C ⌋
-            width  ← at.x + 1 - (C.x ~~ A.x)
+            P      ← ⌊ A ⌋ ⋖ ⌊ C ⌋
+            width  ← P.x + 1 - (C.x ~~ A.x)
             height ← C.y - A.y
-            [at, width, height] >>
+            [P.x, P.y, width, height] >>
         else
             AB      ← A ~~ B
             BC      ← B ~~ C
@@ -149,56 +144,56 @@ DecomposeBezier : Bezier >> EdgeContribution
             max     ← ⌈ ABBC ⌉
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
-            M       ← nearmin ? min : nearmax ? max : ABBC
+            M       ← ABBC ?nearmin? min ?nearmax? max
             [A, AB, M] >> [M, BC, C] >> self
 -}
+decomposeBezier :: [Bezier] -> [EdgeContribution]
+decomposeBezier input =
+    do (a, b, c) <- input
+      if vfoldl1 (∧) ((floor a == floor c) ∨ (ceiling a == ceiling c))
+      then let p      = (floor a) ⋖ (floor c)
+               width  = p!!0 + 1 - (c!!0 ~~ a!!0)
+               height = c!!1 - a!!1
+           in  [(p!!0, p!!1, width, height)]
+      else let AB   = A ~~ B
+               BC   = B ~~ C
+               ABBC = AB ~~ BC
+               min  = floor ABBC
+               max  = ceiling ABBC
+               nearmin = abs (abbc - min) < Vector [0.1, 0.1]
+               nearmax = abs (abbc - max) < Vector [0.1, 0.1]
+               m = abbc `unless` (nearmin, min) `unless` (nearmax, max)
+           in  decomposeBezier [(a, ab, m), (m, bc, c)]
 
 {-
-FillBetweenEdges (x : Real) : EdgeContribution >> CoverageAlpha
+FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
     local ← 0
     run   ← 0
-    ∀ [at, width, height]
-        n ← at.x - x
+    ∀ [x, y, width, height]
+        n ← x - x'
         if n = 0
             local ← local + width ∙ height
             run   ← run   + height
         else
             | local | ⋖ 1 >>
             | run   | ⋖ 1 >(n - 1)>
-            x     ← at.x
+            x'    ← x
             local ← run + width ∙ height
             run   ← run + height
 -}
-
-{-
-SolidColor (offset : Point, color : Pixel) : Texturer
-    ∀ coverage
-        color ∙ coverage >>
--}
-
-{-
-CompositeOver : Compositor
-    ∀ [A, B]
-        A + B ∙ (1 - A.a) >>
--}
-
-{-
-PixelPipeline (target     : Image,
-               texturer   : Texturer,
-               compositor : Compositor) : EdgeContribution >> _
-    first [at, _, _]
-        self >> FillBetweenEdges (at.x) >>
-                Interleave (texturer (at), ReadArray (target[at.y], at.x)) >>
-                compositor >> WriteArray (target[at.y], at.x)
--}
-
-{-
-Renderer (target     : Image,
-          texturer   : Texturer,
-          compositor : Compositor) : Bezier >> _
-    self >> ClipBezier ([0, 0], [‖ target[0] ‖, ‖ target ‖]) >>
-            DecomposeBezier >> GroupBy ('at.y) >> SortBy ('at.x) >>
-            PixelPipeline (target, texturer, compositor)
--}
+fillBetweenEdges :: Real -> [EdgeContribution] -> [CoverageAlpha]
+fillBetweenEdges = fillBetweenEdges' 0 0
+              
+fillBetweenEdges' :: Real -> Real -> Real -> [EdgeContribution] -> [CoverageAlpha]
+fillBetweenEdges' local run x' ((x:y:width:height:xs) =
+    if n == 0
+        fillBetweenEdges' (local + width ∙ height) (run + height) x' xs
+    else
+        let local' = (abs local) ⋖ 1
+            run'   = (abs run)   ⋖ 1
+        [local'] ++
+        (replicate (n - 1) run') ++
+        fillBetweenEdges' (run + width ∙ height) (run + height) x xs
+    where n = x - x'
 
 main = putStrLn "done"
