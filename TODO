@@ -1,0 +1,6 @@
+- linear gradient texturing
+- radial gradient texturing
+- image texturing
+- cubic >> quadratic bezier kernel
+- image filters (blur, etc.)
+- pen stroking
