@@ -57,7 +57,7 @@ type CoverageAlpha = ColorComponent
 type PixelComposition = Vector Pixel
 
 -- Texturer :: CoverageAlpha >> Pixel
-type Texturer = [CoverageAlpha] -> [Pixel]
+type Texturer = Real -> Real -> [CoverageAlpha] -> [Pixel]
 
 -- Compositor :: PixelComposition >> Pixel
 type Compositor = [PixelComposition] -> [Pixel]
@@ -175,19 +175,19 @@ FillBetweenEdges (x' : Real) : EdgeContribution >> CoverageAlpha
             local ← local + width ∙ height
             run   ← run   + height
         else
-            | local | ⋖ 1 >>
-            | run   | ⋖ 1 >(n - 1)>
+            >>        | local | ⋖ 1
+            >(n - 1)> | run   | ⋖ 1 
             x'    ← x
             local ← run + width ∙ height
             run   ← run + height
     >> | local | ⋖ 1
 -}
--- TODO how do I translate the last line of FillBetweenEdges?
 fillBetweenEdges :: Real -> [EdgeContribution] -> [CoverageAlpha]
 fillBetweenEdges = fillBetweenEdges' 0 0
               
 fillBetweenEdges' :: Real -> Real -> Real -> [EdgeContribution] -> [CoverageAlpha]
-fillBetweenEdges' local run x' ((x:y:width:height:xs) =
+fillBetweenEdges' local run x' [] = (abs local) ⋖ 1
+fillBetweenEdges' local run x' [EdgeContribution (x:y:width:height:xs)] =
     if n == 0
         fillBetweenEdges' (local + width ∙ height) (run + height) x' xs
     else
@@ -197,5 +197,37 @@ fillBetweenEdges' local run x' ((x:y:width:height:xs) =
         (replicate (n - 1) run') ++
         fillBetweenEdges' (run + width ∙ height) (run + height) x xs
     where n = x - x'
+
+{-
+SolidColor (x, y : Real, color : Pixel) : Texturer
+    ∀ coverage
+        >> color ∙ coverage
+-}
+solidColor :: Pixel -> Real -> Real -> [CoverageAlpha] -> [Pixel]
+solidColor color y x input =
+    do coverage <- input
+       [(color ∙ [coverage, coverage, coverage, coverage])]
+
+{-
+CompositeOver : Compositor
+    ∀ [A, B]
+        >> A + B ∙ (1 - A.a)
+-}
+compositeOver :: [PixelComposition] -> [Pixel]
+compositeOver input
+    do (a, b) <- input
+       [(a + b ∙ [1 - a.a, 1 - a.a, 1 - a.a, 1 - a.a])]
+
+{-
+PixelPipeline (target     : Image,
+               texturer   : Texturer,
+               compositor : Compositor) : EdgeContribution >> _
+    peek [x, y, _, _]
+        self >> FillBetweenEdges (x) >>
+                Interleave (texturer (x, y), ReadArray (target[y], x)) >>
+                compositor >> WriteArray (target[y], x)
+-}
+pixelPipeline :: Compositor -> Texturer -> Image -> [EdgeContribution] -> Bool
+pixelPipeline compositor texturer target =
 
 main = putStrLn "done"
