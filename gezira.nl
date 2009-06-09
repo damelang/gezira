@@ -83,12 +83,12 @@ PixelPipeline : (target     : Image,
                  compositor : Compositor) EdgeContribution >> ⏚
     peek [x, y, _, _]
         self >> FillBetweenEdges (x) >>
-                Interleave (texturer (x, y), ReadArray (target[y], x)) >>
-                compositor >> WriteArray (target[y], x)
+        Interleave (texturer (x + 0.5, y + 0.5), ReadArray (target[y], x)) >>
+        compositor >> WriteArray (target[y], x)
 
 Renderer : (target     : Image,
             texturer   : Texturer,
             compositor : Compositor) Bezier >> ⏚
     self >> ClipBezier ([0, 0], [‖ target[0] ‖, ‖ target ‖]) >>
-            DecomposeBezier >> GroupBy ('y) >> SortBy ('x) >>
-            PixelPipeline (target, texturer, compositor)
+    DecomposeBezier >> GroupBy ('y) >> SortBy ('x) >>
+    PixelPipeline (target, texturer, compositor)
