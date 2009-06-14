@@ -68,7 +68,8 @@ FillBetweenEdges : (x' : Real) EdgeContribution >> CoverageAlpha
             x'    ← x
             local ← run + width ∙ height
             run   ← run + height
-    >> | local | ⋖ 1
+    if local ≠ 0
+        >> | local | ⋖ 1
 
 UniformColor : Texturer (color : Pixel)
     ∀ coverage
