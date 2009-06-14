@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <title>Gezira Test</title>
+    <script src="gezira.js"></script>
+    <script>
+      function main() {
+        var input = [ 0,  0, 10, 30, 30, 10,
+                     30, 10, 20,  0,  0,  0];
+        var pipeline = new gezira.DecomposeBezier();
+        pipeline.downstream = {
+          process: function(input) {
+            while (input.length) {
+              _locationx = input.shift(); _locationy = input.shift();
+              valuex = input.shift(); valuey = input.shift();
+              var div = document.body.appendChild(document.createElement('div'));
+              div.innerHTML =
+                "location: (" + _locationx + ", " + _locationy + ") " +
+                "value: (" + valuex + ", " + valuey + ")";
+            }
+          }
+        };
+        pipeline.process(input);
+        alert('done');
+      }
+    </script>
+  </head>
+  <body onload="main();">
+  </body>
+</html>

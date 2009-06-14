@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>Gezira Test</title>
+    <script>
+      function main() {
+        var c = document.getElementsByTagName('canvas')[0].getContext('2d');
+        img = c.getImageData(0, 0, 500, 500);
+        pixels = img.data;
+
+        c.putImageData(img, 0, 0);
+        alert('done');
+      }
+    </script>
+  </head>
+  <body onload="main();">
+    <canvas width=500 height=500 />
+  </body>
+</html>
