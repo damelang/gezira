@@ -1,21 +1,21 @@
-Point :: [x, y : Real]
-Bezier :: [A, B, C : Point]
-Pixel :: [a, r, g, b : ColorComponent]
-CoverageAlpha :: ColorComponent
-Texturer :: (x, y : Real) CoverageAlpha >> Pixel
-Compositor :: [Pixel, Pixel] >> Pixel
-EdgeContribution :: [x, y, w, h : Real]
-Matrix :: [a, b, c, d, e, f : Real]
+Point <: [x, y : Real]
+Bezier <: [A, B, C : Point]
+Pixel <: [a, r, g, b : ColorComponent]
+CoverageAlpha <: ColorComponent
+Texturer <: (x, y : Real) : CoverageAlpha >> Pixel
+Compositor <: [Pixel, Pixel] >> Pixel
+EdgeContribution <: [x, y, w, h : Real]
+Matrix <: [a, b, c, d, e, f : Real]
 
 (M : Matrix ∙ P : Point) : Point
     [M.a ∙ P.x + M.c ∙ P.y + M.e,
      M.b ∙ P.x + M.d ∙ P.y + M.f]
 
-TransformBezier : (M : Matrix) Bezier >> Bezier
+TransformBezier (M : Matrix) : Bezier >> Bezier
     ∀ [A, B, C]
         >> [M ∙ A, M ∙ B, M ∙ C]
 
-ClipBezier : (min, max : Point) Bezier >> Bezier
+ClipBezier (min, max : Point) : Bezier >> Bezier
     ∀ [A, B, C]
         bmin ← A ⋖ B ⋖ C
         bmax ← A ⋗ B ⋗ C
@@ -52,24 +52,24 @@ DecomposeBezier : Bezier >> EdgeContribution
             M       ← ABBC ?nearmin? min ?nearmax? max
             << [A, AB, M] << [M, BC, C]
 
-FillBetweenEdges : (x' : Real) EdgeContribution >> CoverageAlpha
+FillBetweenEdges (x : Real) : EdgeContribution >> CoverageAlpha
     local ← 0
-    run   ← 0
-    ∀ [x, y, w, h]
-        n ← x - x'
+    run   ← 0 
+    ∀ [x', y, w, h]
+        n ← x' - x
         if n = 0
             local ← local + w ∙ h
             run   ← run   + h
         else
             >>        | local | ⋖ 1
             >(n - 1)> | run   | ⋖ 1
-            x'    ← x
+            x     ← x'
             local ← run + w ∙ h
             run   ← run + h
     if local ≠ 0
         >> | local | ⋖ 1
 
-UniformColor : (color : Pixel) Texturer
+UniformColor (color : Pixel) : Texturer
     ∀ coverage
         >> color ∙ coverage
 
@@ -77,17 +77,17 @@ CompositeOver : Compositor
     ∀ [A, B]
         >> A + B ∙ (1 - A.a)
 
-PixelPipeline : (target     : Image,
-                 texturer   : Texturer,
-                 compositor : Compositor) EdgeContribution >> ⏚
-    peek [x, y, _, _]
-        self >> FillBetweenEdges (x) >>
-        Interleave2 (texturer (x + 0.5, y + 0.5), ReadImage (target, x, y)) >>
-        compositor >> WriteImage (target, x, y)
+PixelPipeline (target     : Image,
+               texturer   : Texturer,
+               compositor : Compositor) : EdgeContribution >> ⏚
+    & [x, y, _, _]
+        -> FillBetweenEdges (x) >>
+           Interleave2 (texturer (x + 0.5, y + 0.5), ReadImage (target, x, y)) >>
+           compositor >> WriteImage (target, x, y)
 
-Renderer : (target     : Image, width      : Real,
-            height     : Real,  texturer   : Texturer,
-            compositor : Compositor) Bezier >> ⏚
-    self >> ClipBezier ([0, 0], [width, height]) >>
-    DecomposeBezier >> GroupBy ('y) >> SortBy ('x) >>
-    PixelPipeline (target, texturer, compositor)
+Renderer (target     : Image, width    : Real,
+          height     : Real,  texturer : Texturer,
+          compositor : Compositor) : Bezier >> ⏚
+    -> ClipBezier ([0, 0], [width, height]) >>
+       DecomposeBezier >> GroupBy (@y) >> SortBy (@x) >>
+       PixelPipeline (target, texturer, compositor)
