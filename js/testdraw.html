@@ -25,6 +25,9 @@
       function main() {
         var c = document.getElementsByTagName('canvas')[0].getContext('2d');
         image = c.getImageData(0, 0, 500, 500);
+        var length = image.width * image.height * 4;
+        for (var i = 0; i < length; i++)
+          image.data[i] = 255;
         render(image);
         c.putImageData(image, 0, 0);
         //alert('done');
