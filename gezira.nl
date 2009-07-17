@@ -1,11 +1,10 @@
 Point <: [x, y : Real]
 Bezier <: [A, B, C : Point]
-Pixel <: [a, r, g, b : ColorComponent]
-CoverageAlpha <: ColorComponent
-Texturer <: (x, y : Real) : CoverageAlpha >> Pixel
-Compositor <: [Pixel, Pixel] >> Pixel
+Color <: [a, r, g, b : ColorComponent]
 EdgeContribution <: [x, y, w, h : Real]
 Matrix <: [a, b, c, d, e, f : Real]
+Texturer <: (x, y : Real, i : Image) : ColorComponent >> Color
+Blender <: [Color, Color] >> Color
 
 (M : Matrix ∙ P : Point) : Point
     [M.a ∙ P.x + M.c ∙ P.y + M.e,
@@ -21,18 +20,16 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
         bmax ← A ⋗ B ⋗ C
         if ∧[ min ≤ bmin ∧ bmax ≤ max ]
             >> [A, B, C]
-        elseif ∨[ bmax ≤ min ∨ max ≤ bmin ]
+        else if ∨[ bmax ≤ min ∨ max ≤ bmin ]
             A' ← min ⋗ A ⋖ max
             C' ← min ⋗ C ⋖ max
             >> [A', A' ~~ C', C']
         else 
-            AB      ← A ~~ B
-            BC      ← B ~~ C
-            ABBC    ← AB ~~ BC
+            ABBC    ← (A ~~ B) ~~ (B ~~ C)
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
             M       ← ABBC ?nearmin? min ?nearmax? max
-            << [A, AB, M] << [M, BC, C]
+            << [A, A ~~ B, M] << [M, B ~~ C, C]
 
 DecomposeBezier : Bezier >> EdgeContribution
     ∀ [A, B, C]
@@ -42,19 +39,17 @@ DecomposeBezier : Bezier >> EdgeContribution
             h ← C.y - A.y
             >> [P.x, P.y, w, h]
         else
-            AB      ← A ~~ B
-            BC      ← B ~~ C
-            ABBC    ← AB ~~ BC
+            ABBC    ← (A ~~ B) ~~ (B ~~ C)
             min     ← ⌊ ABBC ⌋
             max     ← ⌈ ABBC ⌉
             nearmin ← | ABBC - min | < 0.1
             nearmax ← | ABBC - max | < 0.1
             M       ← ABBC ?nearmin? min ?nearmax? max
-            << [A, AB, M] << [M, BC, C]
+            << [A, A ~~ B, M] << [M, B ~~ C, C]
 
-FillBetweenEdges (x : Real) : EdgeContribution >> CoverageAlpha
-    local ← 0
-    run   ← 0 
+FillBetweenEdges (x : Real) : EdgeContribution >> ColorComponent
+    local ← 0 : Real
+    run   ← 0 : Real
     ∀ [x', y, w, h]
         n ← x' - x
         if n = 0
@@ -69,25 +64,23 @@ FillBetweenEdges (x : Real) : EdgeContribution >> CoverageAlpha
     if local ≠ 0
         >> | local | ⋖ 1
 
-UniformColor (color : Pixel) : Texturer
-    ∀ coverage
-        >> color ∙ coverage
+UniformColor (c : Color) : Texturer
+    ∀ _
+        >> c
 
-CompositeOver : Compositor
+BlendOver : Blender
     ∀ [A, B]
         >> A + B ∙ (1 - A.a)
 
-PixelPipeline (target     : Image,
-               texturer   : Texturer,
-               compositor : Compositor) : EdgeContribution >> ⏚
-    & [x, y, _, _]
-        -> FillBetweenEdges (x) >>
-           Interleave2 (texturer (x + 0.5, y + 0.5), ReadImage (target, x, y)) >>
-           compositor >> WriteImage (target, x, y)
+BlendTextures (t1 : Texturer, t2 : Texturer, b : Blender) : Texturer
+    -> Interleave (t1 (x, y, i), t2 (x, y, i)) -> b
 
-Renderer (target     : Image, width    : Real,
-          height     : Real,  texturer : Texturer,
-          compositor : Compositor) : Bezier >> ⏚
-    -> ClipBezier ([0, 0], [width, height]) >>
-       DecomposeBezier >> GroupBy (@y) >> SortBy (@x) >>
-       PixelPipeline (target, texturer, compositor)
+PixelPipeline (t : Texturer, i : Image) : EdgeContribution >> _
+    & [x, y, _, _]
+        sx <- x + 0.5
+        sy <- y + 0.5
+        -> FillBetweenEdges (x) -> Interleave (t (sx, sy, i), Echo) ->
+           WriteImage (sx, sy, i)
+
+Renderer (t : Texturer, i : Image) : Bezier >> _
+    -> DecomposeBezier -> GroupBy (@y) -> SortBy (@x) -> PixelPipeline (t, i)
