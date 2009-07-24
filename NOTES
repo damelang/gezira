@@ -1,0 +1,27 @@
+Unicode chars:
+    - ← 2190 <-
+    - ∀ 2200 \forall
+    - ∙ 2219 *
+    - √ 221A \sqrt()
+    - ∧ 2227 \and
+    - ∨ 2228 \or
+    - ≠ 2260 =/
+    - ≤ 2264 <=
+    - ≥ 2265 >=
+    - ⊕ 2295 \xor
+    - ⋖ 22D6 \min
+    - ⋗ 22D7 \max
+    - ⌈ 2308 \ceiling()
+    - ⌉ 2309
+    - ⌊ 230A \floor()
+    - ⌋ 230B
+
+Compositor references
+    - http://www.w3.org/TR/2003/WD-SVG12-20030715/#compositing
+    - http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html#compositing
+    - http://www.w3.org/TR/SVG/filters.html#feBlend
+    - http://livedocs.adobe.com/flash/9.0/UsingFlash/help.html?content=WSd60f23110762d6b883b18f10cb1fe1af6-7d5b.html
+    - http://www.kaourantin.net/2005/09/some-word-on-blend-modes-in-flash.html
+    - http://www.pegtop.net/delphi/articles/blendmodes/
+
+a⁻¹ for inverse?
