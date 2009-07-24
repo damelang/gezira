@@ -56,7 +56,7 @@ type CoverageAlpha = ColorComponent
 -- PixelComposition :: [A, B : Pixel]
 type PixelComposition = Vector Pixel
 
--- Texturer :: CoverageAlpha >> Pixel
+-- Texturer : (x, y : Real) CoverageAlpha >> Pixel
 type Texturer = Real -> Real -> [CoverageAlpha] -> [Pixel]
 
 -- Compositor :: PixelComposition >> Pixel
@@ -199,11 +199,11 @@ fillBetweenEdges' local run x' [EdgeContribution (x:y:width:height:xs)] =
     where n = x - x'
 
 {-
-SolidColor (x, y : Real, color : Pixel) : Texturer
+UniformColor : (x, y : Real, color : Pixel) : Texturer
     ∀ coverage
         >> color ∙ coverage
 -}
-solidColor :: Pixel -> Real -> Real -> [CoverageAlpha] -> [Pixel]
+UniformColor :: Pixel -> Texturer
 solidColor color y x input =
     do coverage <- input
        [(color ∙ [coverage, coverage, coverage, coverage])]
