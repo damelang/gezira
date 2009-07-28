@@ -5,33 +5,36 @@ UniformColor (c : Color) : Texturer
     ∀ _
         >> c
 
-LinearGradient (sl, dl/dx, dl/dy : Real) : (x, y : Real) : AlphaCoverage >> Real
-    l = sl + x ∙ dl/dx  + y ∙ dl/dy
+LinearGradient (s00, ds/dx, ds/dy : Real) : GradientShape
+    s = s00 + x ∙ ds/dx  + y ∙ ds/dy
     ∀ _
-        >> l
-        l' <- l + dl/dx
+        s' = s + ds/dx
+        >> s
 
-GradientPad : Real >> Real
-    ∀ l
-        >> 0 .> l <. 1
+GradientPad : GradientExtend
+    ∀ s
+        >> 0 ⋗ s ⋖ 1
 
-GradientRepeat : Real >> Real
-    ∀ l
-        >> l - ⌊ l ⌋
+GradientRepeat : GradientExtend
+    ∀ s
+        >> s - ⌊ s ⌋
 
-GradientMirror : Real >> Real
-    ∀ l
-        >> 1 - | (| l | % 2 - 1) |
+GradientMirror : GradientExtend
+    ∀ s
+        >> 1 - | (| s | % 2 - 1) |
 
-BeginGradientColor : Real >> [Real, Color]
-    ∀ l
-        >> [l, [0, 0, 0, 0]]
+GradientColorBegin : Real >> [Real, Color]
+    ∀ s
+        >> [s, [0, 0, 0, 0]]
 
-GradientColorSpan (stop, dc/dl : Color, ll : Real) : [Real, Color] >> [Real, Color]
-    ∀ [l, c]
-        d = stop + l ∙ dc/dl
-        >> [l - ll, d ?(l < 0)? c]
+GradientColorSpan (c0, dc/ds : Color, l : Real) : GradientColor
+    ∀ [s, c]
+        d = c0 + s ∙ dc/ds
+        >> [s - l, d ?(s < 0)? c]
 
-EndGradientColor : [Real, Color] >> Color
+GradientColorEnd : [Real, Color] >> Color
     ∀ [_, c]
         >> c
+
+Gradient (s : GradientShape, e : GradientExtend, c : GradientColor) : Texturer
+    -> s (x, y) -> e -> GradientColorBegin -> c -> GradientColorEnd

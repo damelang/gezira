@@ -13,3 +13,6 @@ Matrix <: [a, b, c, d, e, f : Real]
 -- TODO these should be type aliases
 Texturer <: (x, y : Real, i : Image) : ColorComponent >> Color
 Compositor <: [Color, Color] >> Color
+GradientShape <: (x, y : Real) : AlphaCoverage >> Real
+GradientExtend <: Real >> Real
+GradientColor <: [Real, Color] >> [Real, Color]
