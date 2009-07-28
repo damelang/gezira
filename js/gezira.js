@@ -5,12 +5,11 @@ gezira.ReadImage = function(image, x, y) {
     return function(input) {
       var i = (image.width * y + x) * 4;
       var data = image.data;
-      var output = input.map(function(_) {
-        var p = new gezira.Pixel(data[i + 3] / 255, data[i + 0] / 255,
-                                 data[i + 1] / 255, data[i + 2] / 255);
-        i += 4;
-        return p;
-      });
+      var end = i + input.length * 4;
+      var output = [];
+      for (; i != end; i += 4)
+        output.push(data[i + 3] / 255, data[i + 0] / 255,
+                    data[i + 1] / 255, data[i + 2] / 255);
       downstream(output);
     };
   };
@@ -23,13 +22,11 @@ gezira.WriteImage = function(image, x, y) {
     return function(input) {
       var i = (image.width * y + x) * 4;
       var data = image.data;
-      while(input.length) {
-        var pixel = input.shift();
-        data[i + 3] = pixel.a * 255;
-        data[i + 0] = pixel.r * 255;
-        data[i + 1] = pixel.g * 255;
-        data[i + 2] = pixel.b * 255;
-        i += 4;
+      for (; input.length; i += 4) {
+        data[i + 3] = input.shift() * 255;
+        data[i + 0] = input.shift() * 255;
+        data[i + 1] = input.shift() * 255;
+        data[i + 2] = input.shift() * 255;
       }
     };
   };

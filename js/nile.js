@@ -8,34 +8,38 @@ nile.pipeline = function() {
   return k;
 };
 
+nile.Echo = function(downstream) {
+  return function(input) {
+    downstream(input);
+  };
+};
+
 nile.Interleave2 = function(k1, k2) {
   return function(downstream) {
     return function(input) {
-      var k1_out;
-      var k2_out;
-      var k2_input = input.slice(0);
-      k1(function(input) { k1_out = input })(input);
-      k2(function(input) { k2_out = input })(k2_input);
-      var i = 0;
-      var output = k1_out.map(function(o1) {
-        return [o1, k2_out[i++]];
-      });
+      var out1;
+      var out2;
+      k1(function(input) { out1 = input })(input.slice(0));
+      k2(function(input) { out2 = input })(input);
+      var output = [];
+      for (var i = 0; i < out1.length; i++)
+        output.push(out1[i], out2[i]);
       downstream(output);
     };
   };
 };
 
-nile.GroupBy = function(f) {
+nile.GroupBy = function(index, size) {
   return function(downstream) {
     return function(input) {
       var buckets = {};
-      while (input.length) {
-        var element = input.shift();
-        var key = f(element);
+      for (var i = 0; i < input.length; i += size) {
+        var v = input.slice(i, size);
+        var key = v[index];
         var bucket = buckets[key];
         if (!bucket)
           bucket = buckets[key] = [];
-        bucket.push(element);
+        bucket.push(v);
       }
       for (bucket in buckets) {
         if (buckets.hasOwnProperty(bucket))
@@ -45,15 +49,16 @@ nile.GroupBy = function(f) {
   };
 };
 
-nile.SortBy = function(f) {
+nile.SortBy = function(index, size) {
   return function(downstream) {
     return function(input) {
-      input.sort(function(a, b) {
-        var fa = f(a);
-        var fb = f(b);
-        if (fa < fb)
+      var vectors = [];
+      for (var i = 0; i < input.length; i += size)
+        vectors.push(input.slice(i, size));
+      vectors.sort(function(a, b) {
+        if (a[index] < b[index])
           return -1;
-        else if (fa > fb)
+        else if (a[index] > b[index])
           return 1;
         else
           return 0;
