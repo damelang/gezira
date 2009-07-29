@@ -34,12 +34,12 @@ nile.GroupBy = function(index, size) {
     return function(input) {
       var buckets = {};
       for (var i = 0; i < input.length; i += size) {
-        var v = input.slice(i, size);
-        var key = v[index];
+        var key = input[i + index];
         var bucket = buckets[key];
         if (!bucket)
           bucket = buckets[key] = [];
-        bucket.push(v);
+        for (var j = 0; j < size; j++)
+          bucket.push(input[i + j]);
       }
       for (bucket in buckets) {
         if (buckets.hasOwnProperty(bucket))
@@ -63,7 +63,11 @@ nile.SortBy = function(index, size) {
         else
           return 0;
       });
-      downstream(input);
+      var output = [];
+      for (var i = 0; i < vectors.length; i++)
+        for (var j = 0; j < size; j++)
+          output.push(vectors[i][j]);
+      downstream(output);
     };
   };
 };
