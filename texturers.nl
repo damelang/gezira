@@ -6,7 +6,7 @@ UniformColor (c : Color) : Texturer
         >> c
 
 LinearGradient (s00, ds/dx, ds/dy : Real) : GradientShape
-    s = s00 + x ∙ ds/dx  + y ∙ ds/dy
+    s = s00 + x ∙ ds/dx + y ∙ ds/dy
     ∀ _
         s' = s + ds/dx
         >> s
