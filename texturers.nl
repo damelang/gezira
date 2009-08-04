@@ -30,7 +30,7 @@ GradientColorBegin : Real >> [Real, Color]
 GradientColorSpan (c0, dc/ds : Color, l : Real) : GradientColor
     ∀ [s, c]
         d = c0 + s ∙ dc/ds
-        >> [s - l, d ?(s < 0)? c]
+        >> [s - l, c ?(s < 0)? d]
 
 GradientColorEnd : [Real, Color] >> Color
     ∀ [_, c]
