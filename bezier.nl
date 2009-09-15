@@ -1,40 +1,47 @@
-(M : Matrix ∙ P : Point) : Point
-    [M.a ∙ P.x + M.c ∙ P.y + M.e,
-     M.b ∙ P.x + M.d ∙ P.y + M.f]
+Bezier <: [a, b, c : Point]
+Matrix <: [a, b, c, d, e, f : Real]
 
-TransformBezier (M : Matrix) : Bezier >> Bezier
-    ∀ [A, B, C]
-        >> [M ∙ A, M ∙ B, M ∙ C]
+(m : Matrix ∙ p : Point) : Point
+    [m.a ∙ p.x + m.c ∙ p.y + m.e,
+     m.b ∙ p.x + m.d ∙ p.y + m.f]
+
+TransformBezier (m : Matrix) : Bezier >> Bezier
+    ∀ [a, b, c]
+        >> [m ∙ a, m ∙ b, m ∙ c]
 
 ClipBezier (min, max : Point) : Bezier >> Bezier
-    ∀ [A, B, C]
-        bmin = A ⋖ B ⋖ C
-        bmax = A ⋗ B ⋗ C
+    ∀ [a, b, c]
+        bmin = a ⋖ b ⋖ c
+        bmax = a ⋗ b ⋗ c
         if ∧[ min ≤ bmin ∧ bmax ≤ max ]
-            >> [A, B, C]
+            >> [a, b, c]
         else if ∨[ bmax ≤ min ∨ max ≤ bmin ]
-            cA = min ⋗ A ⋖ max
-            cC = min ⋗ C ⋖ max
-            >> [cA, cA ~~ cC, cC]
+            ca = min ⋗ a ⋖ max
+            cc = min ⋗ c ⋖ max
+            >> [ca, ca ~~ cc, cc]
         else 
-            ABBC    = (A ~~ B) ~~ (B ~~ C)
-            nearmin = | ABBC - min | < 0.1
-            nearmax = | ABBC - max | < 0.1
-            M       = ABBC ?nearmin? min ?nearmax? max
-            << [A, A ~~ B, M] << [M, B ~~ C, C]
+            abbc    = (a ~~ b) ~~ (b ~~ c)
+            nearmin = | abbc - min | < 0.1
+            nearmax = | abbc - max | < 0.1
+            m       = min ? nearmin
+                      max ? nearmax
+                      abbc
+            << [a, a ~~ b, m] << [m, b ~~ c, c]
 
 DecomposeBezier : Bezier >> EdgeContribution
-    ∀ [A, B, C]
-        if ∧[ ⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉ ]
-            P = ⌊ A ⌋ ⋖ ⌊ C ⌋
-            w = P.x + 1 - (C.x ~~ A.x)
-            h = C.y - A.y
-            >> [P.x, P.y, w, h]
+    ∀ [a, b, c]
+        if ∧[ ⌊ a ⌋ = ⌊ c ⌋ ∨ ⌈ a ⌉ = ⌈ c ⌉ ]
+            p = ⌊ a ⌋ ⋖ ⌊ c ⌋
+            w = p.x + 1 - (c.x ~~ a.x)
+            h = c.y - a.y
+            >> [p, w, h]
         else
-            ABBC    = (A ~~ B) ~~ (B ~~ C)
-            min     = ⌊ ABBC ⌋
-            max     = ⌈ ABBC ⌉
-            nearmin = | ABBC - min | < 0.1
-            nearmax = | ABBC - max | < 0.1
-            M       = ABBC ?nearmin? min ?nearmax? max
-            << [A, A ~~ B, M] << [M, B ~~ C, C]
+            abbc    = (a ~~ b) ~~ (b ~~ c)
+            min     = ⌊ abbc ⌋
+            max     = ⌈ abbc ⌉
+            nearmin = | abbc - min | < 0.1
+            nearmax = | abbc - max | < 0.1
+            m       = min ? nearmin
+                      max ? nearmax
+                      abbc
+            << [a, a ~~ b, m] << [m, b ~~ c, c]
