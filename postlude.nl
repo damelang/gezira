@@ -24,4 +24,4 @@ CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
 
 UniformColor (c : Color) : Sampler
     ∀ _
-        >> c
+        >> [c.a, c.a ∙ c.r, c.a ∙ c.g, c.a ∙ c.b]

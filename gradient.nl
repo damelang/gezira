@@ -29,7 +29,7 @@ GradientMirror : GradientExtend
 
 GradientColorBegin : Real >> [Real, Color]
     ∀ s
-        >> [s, [0, 0, 0, 0]]
+        >> [s, 0]
 
 GradientColorSpan (c0, dc/ds : Color, l : Real) : GradientColor
     ∀ [s, c]
@@ -38,7 +38,7 @@ GradientColorSpan (c0, dc/ds : Color, l : Real) : GradientColor
 
 GradientColorEnd : [Real, Color] >> Color
     ∀ [_, c]
-        >> c
+        >> [c.a, c.r ∙ c.a, c.g ∙ c.a, c.b ∙ c.a]
 
 Gradient (s : GradientShape, e : GradientExtend, c : GradientColor) : Sampler
     -> s (start) -> e -> GradientColorBegin -> c -> GradientColorEnd
