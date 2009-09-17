@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Radial Gradient</title>
+    <script src="../nile.js"></script>
+    <script src="../gezira.js"></script>
+    <script src="shapes.js"></script>
+    <script>
+      function main() {
+        var canvas = document.getElementsByTagName('canvas')[0];
+        var cxt = canvas.getContext('2d');
+        var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
+        var star = shapes.star(image.width / 2, image.height / 2, 50, 100, 5);
+        with (gezira) {
+          var r = RadialGradient(250, 250, 100);
+          var c = GradientColorSpan(1, 0, 1, 0, -1, 0, -1, 1, 1);
+          nile.pipeline(DecomposeBezier,
+                        Render(Gradient(r, GradientMirror, c),
+                               WriteImage(image)))(star.slice(0));
+        }
+        cxt.putImageData(image, 0, 0);
+      };
+    </script>
+  </head>
+  <body onload="main();">
+    <canvas width=500 height=500></canvas>
+  </body>
+</html>

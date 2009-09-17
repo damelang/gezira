@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Pen Stroke</title>
+    <script src="../nile.js"></script>
+    <script src="../gezira.js"></script>
+    <script src="shapes.js"></script>
+    <script>
+      function main() {
+        var canvas = document.getElementsByTagName('canvas')[0];
+        var cxt = canvas.getContext('2d');
+        var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
+        var line = [100, 100, 250, 200, 350, 150];
+        with (gezira) {
+          nile.pipeline(Stroke(5, StrokeCapButt, StrokeJoinBevel),
+                        DecomposeBezier,
+                        Render(UniformColor(1, 0.5, 0.5, 0.5),
+                               WriteImage(image)))(line.slice(0));
+        }
+        cxt.putImageData(image, 0, 0);
+      };
+    </script>
+  </head>
+  <body onload="main();">
+    <canvas width=500 height=500></canvas>
+  </body>
+</html>

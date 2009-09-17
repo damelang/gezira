@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Basic Rendering</title>
+    <script src="../nile.js"></script>
+    <script src="../gezira.js"></script>
+    <script src="shapes.js"></script>
+    <script>
+      function main() {
+        var canvas = document.getElementsByTagName('canvas')[0];
+        var cxt = canvas.getContext('2d');
+        var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
+        var star = shapes.star(image.width / 2, image.height / 2, 50, 100, 5);
+                                      
+        with (gezira) {
+          nile.pipeline(DecomposeBezier,
+                        Render(UniformColor(1, 1, 0, 0),
+                               WriteImage(image)))(star.slice(0));
+        }
+        cxt.putImageData(image, 0, 0);
+      };
+    </script>
+  </head>
+  <body onload="main();">
+    <canvas width=500 height=500></canvas>
+  </body>
+</html>
