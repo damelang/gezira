@@ -118,4 +118,4 @@ CompositeSubtract : Compositor
 
 CompositeInvert : Compositor
     ∀ [a, b]
-        >> 1 - b
+        >> [b.a, 1 - b.r, 1 - b.g, 1 - b.b]
