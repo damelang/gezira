@@ -39,9 +39,9 @@
         with (gezira) {
           var l = createLinearGradient(0, 0, 150, 150);
           var c = GradientColorSpan(1, 1, 0, 0, 0, -1, 0, 1, 1);
-          var s = Gradient(l, GradientMirror, c);
-          var r = Render(s, WriteImage(image));
-          nile.pipeline(DecomposeBezier, r)(star.slice(0));
+          nile.pipeline(DecomposeBezier,
+                        Render(Gradient(l, GradientMirror, c),
+                               WriteImage(image)))(star.slice(0));
         }
         cxt.putImageData(image, 0, 0);
       };
