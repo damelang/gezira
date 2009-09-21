@@ -794,8 +794,8 @@ gezira.StrokeOutline = function(o) {
         var ab_x = _1_x / _2;
         var ab_y = _1_y / _2;
 
-        var _3_x = b_x - a_x;
-        var _3_y = b_y - a_y;
+        var _3_x = c_x - b_x;
+        var _3_y = c_y - b_y;
         var _4 = Math.sqrt(_3_x * _3_x + _3_y * _3_y);
         var bc_x = _3_x / _4;
         var bc_y = _3_y / _4;
@@ -803,12 +803,14 @@ gezira.StrokeOutline = function(o) {
         // ⟂(ab)
         var _5_x = 0 - ab_y;
         var _5_y = ab_x;
+
         var d_x = a_x + _5_x * o;
         var d_y = a_y + _5_y * o;
 
         // ⟂(bc)
         var _6_x = 0 - bc_y;
         var _6_y = bc_x;
+
         var f_x = c_x + _6_x * o;
         var f_y = c_y + _6_y * o;
 
@@ -853,7 +855,7 @@ gezira.StrokeOutline = function(o) {
 
         var error = Math.sqrt(_14_x * _14_x + _14_y * _14_y) +
                     Math.sqrt(_15_x * _15_x + _15_y * _15_y);
-        if (error < 0.1)
+        if (error < 1000) /* TODO find the right magic number */
           output.push(d_x, d_y, e_x, e_y, f_x, f_y);
         else
           input.unshift(a_x, a_y, _7_x, _7_y, m_x, m_y,
