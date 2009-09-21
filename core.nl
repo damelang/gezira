@@ -15,6 +15,10 @@ UniformColor (c : Color) : Sampler
     ∀ _
         >> [c.a, c.a ∙ c.r, c.a ∙ c.g, c.a ∙ c.b]
 
+CompositeOver : Compositor
+    ∀ [a, b]
+        >> a + b ∙ (1 - a.a)
+
 FillBetweenEdges (start) : EdgeContribution >> Real
     x = start.x
     local = 0

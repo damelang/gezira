@@ -13,10 +13,6 @@ CompositeDst : Compositor
     ∀ [a, b]
         >> b
 
-CompositeOver : Compositor
-    ∀ [a, b]
-        >> a + b ∙ (1 - a.a)
-
 CompositeDstOver : Compositor
     ∀ [a, b]
         >> b + a ∙ (1 - b.a)
