@@ -1,5 +1,13 @@
-- fix font problem on windows
-- radial gradient texturing
+- change most dots into multiplication signs (×)
+- create dot product for points?
+- incorporate miter limit into miter join
+- verify miter join correctness
+- round cap
+- round join
+- find the right magic number for stroke offset curve
+- what to do about closed pen paths
 - image texturing
+- fix font problem on windows (add missing chars to DejaVu Sans Mono or Inconsolata)
+- png
 - cubic >> quadratic bezier kernel
 - image filters (blur, etc.)

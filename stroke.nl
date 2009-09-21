@@ -1,53 +1,73 @@
-StrokeJoin :: (o : Real) Bezier >> Bezier
-StrokeCap :: (o : Real) Bezier >> Bezier
+StrokeJoin :: (o) Bezier >> Bezier
+StrokeCap :: (o) Bezier >> Bezier
 
-(‖ p : Point ‖) : Real
+‖ p : Point ‖ : Real
     √(p.x ∙ p.x + p.y ∙ p.y) 
 
-(⟂ p : Point) : Point
-    [0 - p.y, p.x]
-
-(^ p : Point) : Point
-    p / ‖ p ‖
+(a : Point ⟂ b : Point) : Point
+    ab = b - a
+    [0 - ab.y, ab.x] / ‖ ab ‖
 
 StrokeCapButt : StrokeCap
-    %$ [a, b, c]
-        ab = ^(b - a)
-        >> [a - ⟂(ab) ∙ o, a, a + ⟂(ab) ∙ o]
+    & [a, b, c]
+        >> [a - (a ⟂ b) ∙ o, a, a + (a ⟂ b) ∙ o]
+
+StrokeCapSquare : StrokeCap
+    & [a, b, c]
+        d = a - (a ⟂ b) ∙ o
+        g = a + (a ⟂ b) ∙ o
+        e = d + (a ⟂ g) ∙ o
+        f = g + (a ⟂ g) ∙ o
+        >> [d, d ~ e, e] >> [e, e ~ f, f] >> [f, f ~ g, g]
+
+StrokeCapRound : StrokeCap
+    & [a, b, c]
+        -- TODO
 
 StrokeJoinBevel : StrokeJoin
     % [a, b, c]
-    ∀ [d, e, f]
-        bc = ^(c - b)
-        de = ^(e - d)
-        f  = c + ⟂(bc) ∙ o
-        g  = d + ⟂(de) ∙ o
-        h  = d - ⟂(de) ∙ o
-        i  = c - ⟂(bc) ∙ o
-        >> [f, f ~~ g, g] >> [h, h ~~ i, i]
-        a', b', c' = d, e, f
+        ∀ [d, e, f]
+            g = c + (b ⟂ c) ∙ o
+            h = d + (d ⟂ e) ∙ o
+            a', b', c' = d, e, f
+            >> [g, g ~ h, h]
 
-StrokeOutline (o : Real) : Bezier >> Bezier
+StrokeJoinMiter : StrokeJoin
+    % [a, b, c]
+        ∀ [d, e, f]
+            g = c + (b ⟂ c) ∙ o
+            i = d + (d ⟂ e) ∙ o
+            -- TODO vector dot product is needed below
+            h = c + ((b ⟂ c) ~ (d ⟂ e)) ∙ (o / ((b ⟂ c) ∙ (d ⟂ e)))
+            a', b', c' = d, e, f
+            >> [g, g ~ h, h] >> [h, h ~ i, i]
+
+StrokeJoinRound : StrokeJoin
+    % [a, b, c]
+        ∀ [d, e, f]
+            a', b', c' = d, e, f
+            -- TODO
+
+StrokeOffsetCurve (o) : Bezier >> Bezier
     ∀ [a, b, c]
-        ab = ^(b - a)
-        bc = ^(c - b)
-        d = a + ⟂(ab) ∙ o
-        f = c + ⟂(bc) ∙ o
-        m = (a ~~ b) ~~ (b ~~ c)
-        n = m + (⟂(ab) ~~ ⟂(bc)) ∙ o
-        e = -0.5 ∙ d + 2 ∙ n - 0.5 ∙ f
-        de = ^(e - d)
-        ef = ^(f - e)
-        error = ‖ ef - bc ‖ + ‖ de - ab ‖
+        d = a + (a ⟂ b) ∙ o
+        f = c + (b ⟂ c) ∙ o
+        m = (a ~ b) ~ (b ~ c)
+        n = m + ((a ⟂ b) ~ (b ⟂ c)) ∙ o
+        e = 2 ∙ n - 0.5 ∙ d - 0.5 ∙ f
+        error = ‖ (a ⟂ b) - (d ⟂ e) ‖ + ‖ (b ⟂ c) - (e ⟂ f) ‖
         if error < 0.1
             >> [d, e, f]
         else
-            << [a, a ~~ b, m] << [m, b ~~ c, c]
+            << [a, a ~ b, m] << [m, b ~ c, c]
 
-StrokeOutlineReverse (o : Real) : Bezier >> Bezier
+StrokeSide (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
+    -> Mix (StrokeOffsetCurve (o), c (o), j (o))
+
+StrokeReverseSide (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
     -> ∀ [a, b, c]
            >> [c, b, a]
-    -> StrokeOutline (o)
+    -> Reverse -> StrokeSide (c, j, o)
 
-Stroke (o : Real, j : StrokeJoin, c : StrokeCap) : Bezier >> Bezier
-    -> Mix (StrokeOutline (o), StrokeOutlineReverse (o), j (o), c (o))
+Stroke (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
+    -> Mix (StrokeSide (c, j, o), StrokeReverseSide (c, j, o))
