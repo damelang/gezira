@@ -1,13 +1,16 @@
-- change most dots into multiplication signs (×)
-- create dot product for points?
-- incorporate miter limit into miter join
-- verify miter join correctness
-- round cap
-- round join
-- find the right magic number for stroke offset curve
-- what to do about closed pen paths
+- change masked assignment to a ?( b )? c
+- c generation
+    - start with hand translations
 - image texturing
+- finish pen stroking
+    - fix bugs
+    - find the right magic number for stroke offset curve
+    - reuse joins for caps
+    - miter (see formula in cairo)
+    - what to do about closed pen paths?
+- parser
+- javascript generation
 - fix font problem on windows (add missing chars to DejaVu Sans Mono or Inconsolata)
-- png
+- make zlib.nl and png.nl real
 - cubic >> quadratic bezier kernel
 - image filters (blur, etc.)
