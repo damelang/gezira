@@ -19,7 +19,7 @@ CompositeOver : Compositor
     ∀ [a, b]
         >> a + b × (1 - a.a)
 
-FillBetweenEdges (start) : EdgeContribution >> Real
+FillBetweenEdges (start : Point) : EdgeContribution >> Real
     x = start.x
     local = 0
     run   = 0
