@@ -1,6 +1,7 @@
 Unicode chars, code points and ASCII equivalents
     - × 00D7 *
     - ‖ 2016 \norm
+    - → 2192 ->
     - ∀ 2200 \forall
     - ∙ 2219 \dot
     - √ 221A \sqrt()
@@ -16,7 +17,6 @@ Unicode chars, code points and ASCII equivalents
     - ⌉ 2309
     - ⌊ 230A \floor()
     - ⌋ 230B
-    - ➔ 2794 ->
     - ⟂ 27C2 \perp *
     *  must add to DejaVu Sans Mono
 

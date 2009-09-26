@@ -41,4 +41,4 @@ GradientColorEnd : [Real, Color] >> Color
         >> [c.a, c.r × c.a, c.g × c.a, c.b × c.a]
 
 Gradient (s : GradientShape, e : GradientExtend, c : GradientColor) : Sampler
-    ➔ s (start) ➔ e ➔ GradientColorBegin ➔ c ➔ GradientColorEnd
+    → s (start) → e → GradientColorBegin → c → GradientColorEnd
