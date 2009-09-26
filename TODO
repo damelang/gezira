@@ -1,4 +1,3 @@
-- change masked assignment to a ?( b )? c
 - c generation
     - start with hand translations
 - image texturing
@@ -12,5 +11,7 @@
 - javascript generation
 - fix font problem on windows (add missing chars to DejaVu Sans Mono or Inconsolata)
 - make zlib.nl and png.nl real
+- what about things like 2b + 0.5c
+    - math mode? (single letter variables, etc.?)
 - cubic >> quadratic bezier kernel
 - image filters (blur, etc.)

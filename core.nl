@@ -9,7 +9,7 @@ Canvas :: (start : Point) : [Color, Real] >>|
 Compositor :: [Color, Color] >> Color
 
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-    -> Interleave (s1 (start), s2 (start)) -> c
+    ➔ Interleave (s1 (start), s2 (start)) ➔ c
 
 UniformColor (c : Color) : Sampler
     ∀ _
@@ -37,6 +37,6 @@ FillBetweenEdges (start : Point) : EdgeContribution >> Real
         >> | local | ⋖ 1
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    -> GroupBy (@p.y) -> SortBy (@p.x) ->
+    ➔ GroupBy (@p.y) ➔ SortBy (@p.x) ➔
         & [p, _, _]
-            -> FillBetweenEdges (p) -> Interleave (s (p + 0.5), Id) -> c (p + 0.5)
+            ➔ FillBetweenEdges (p) ➔ Interleave (s (p + 0.5), Id) ➔ c (p + 0.5)

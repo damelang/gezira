@@ -61,7 +61,7 @@ CompositeOverlay : Compositor
     ∀ [a, b]
         c = 2 × a × b + a ⊕ B
         d = a.a × b.a - 2 × (b.a - b) × (a.a - a) + a ⊕ b
-        >> c ? 2 × b < b.a ; d
+        >> c ?(2 × b < b.a)? d
 
 CompositeDarken : Compositor
     ∀ [a, b]
@@ -75,18 +75,18 @@ CompositeColorDodge : Compositor
     ∀ [a, b]
         c = a.a × b.a + a ⊕ b
         d = (b × a.a / (1 - a / a.a) + a ⊕ b) ⋖ 1
-        >> c ? a × b.a + b × a.a ≥ a.a × b.a ; d
+        >> c ?(a × b.a + b × a.a ≥ a.a × b.a)? d
 
 CompositeColorBurn : Compositor
     ∀ [a, b]
         c = a.a × (a × b.a + b × a.a - a.a × b.a) / a + a ⊕ b
-        >> a ⊕ b ? a × b.a + b × a.a ≤ a.a × b.a ; c
+        >> a ⊕ b ?(a × b.a + b × a.a ≤ a.a × b.a)? c
 
 CompositeHardLight : Compositor
     ∀ [a, b]
         c = 2 × a × b + a ⊕ b
         d = a.a × b.a - 2 × (b.a - b) × (a.a - a) + a ⊕ b
-        >> c ? 2 × a < a.a ; d
+        >> c ?(2 × a < a.a)? d
 
 CompositeSoftLight : Compositor
     ∀ [a, b]
@@ -94,9 +94,7 @@ CompositeSoftLight : Compositor
         d = b × (a.a - c) + a ⊕ b
         e = b × (a.a - c × (3 - 8 × b / b.a)) + a ⊕ b
         f = b × a.a + (√(b / b.a) × b.a - b) × (2 × a - a.a) + a ⊕ b
-        >> d ? 2 × A < A.a
-           e ? B × 8 ≤ B.a
-           f
+        >> d ?(2 × A < A.a)? (e ?(B × 8 ≤ B.a)? f)
 
 CompositeDifference : Compositor
     ∀ [a, b]

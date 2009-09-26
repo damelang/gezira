@@ -20,9 +20,7 @@ ClipBezier (min, max : Point) : Bezier >> Bezier
             abbc    = (a ~ b) ~ (b ~ c)
             nearmin = | abbc - min | < 0.1
             nearmax = | abbc - max | < 0.1
-            m       = min ? nearmin
-                      max ? nearmax
-                      abbc
+            m       = min ?(nearmin)? (max ?(nearmax)? abbc)
             << [a, a ~ b, m] << [m, b ~ c, c]
 
 DecomposeBezier : Bezier >> EdgeContribution
@@ -38,7 +36,5 @@ DecomposeBezier : Bezier >> EdgeContribution
             max     = ⌈ abbc ⌉
             nearmin = | abbc - min | < 0.1
             nearmax = | abbc - max | < 0.1
-            m       = min ? nearmin
-                      max ? nearmax
-                      abbc
+            m       = min ?(nearmin)? (max ?(nearmax)? abbc)
             << [a, a ~ b, m] << [m, b ~ c, c]

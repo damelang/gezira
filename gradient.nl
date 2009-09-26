@@ -34,11 +34,11 @@ GradientColorBegin : Real >> [Real, Color]
 GradientColorSpan (c0, dc/ds : Color, l) : GradientColor
     ∀ [s, c]
         d = c0 + s × dc/ds
-        >> [s - l, c ? s < 0 ; d]
+        >> [s - l, c ?(s < 0)? d]
 
 GradientColorEnd : [Real, Color] >> Color
     ∀ [_, c]
         >> [c.a, c.r × c.a, c.g × c.a, c.b × c.a]
 
 Gradient (s : GradientShape, e : GradientExtend, c : GradientColor) : Sampler
-    -> s (start) -> e -> GradientColorBegin -> c -> GradientColorEnd
+    ➔ s (start) ➔ e ➔ GradientColorBegin ➔ c ➔ GradientColorEnd
