@@ -1,11 +1,11 @@
-Id : a >> a
+Id : α >> α
 
-Reverse : a >> a
+Reverse : α >> α
 
-GroupBy (i) : a >> a
+GroupBy (e) : α >> α
 
-SortBy (i) : a >> a
+SortBy (e) : α >> α
 
-Interleave (k1 : a >> b, k2 : a >> c) : a >> [b, c]
+Interleave (k1 : α >> β, k2 : α >> γ) : α >> [β, γ]
 
-Mix ((k : a >> b)*) : a >> b
+Mix ((k : α >> β)*) : α >> β
