@@ -51,7 +51,7 @@ CompositePlus : Compositor
         
 CompositeMultiply : Compositor
     ∀ [a, b]
-        >> a × b + a ⊕ B
+        >> a × b + a ⊕ b
 
 CompositeScreen : Compositor
     ∀ [a, b]
@@ -59,7 +59,7 @@ CompositeScreen : Compositor
 
 CompositeOverlay : Compositor
     ∀ [a, b]
-        c = 2 × a × b + a ⊕ B
+        c = 2 × a × b + a ⊕ b
         d = a.a × b.a - 2 × (b.a - b) × (a.a - a) + a ⊕ b
         >> c ?(2 × b < b.a)? d
 
@@ -94,7 +94,7 @@ CompositeSoftLight : Compositor
         d = b × (a.a - c) + a ⊕ b
         e = b × (a.a - c × (3 - 8 × b / b.a)) + a ⊕ b
         f = b × a.a + (√(b / b.a) × b.a - b) × (2 × a - a.a) + a ⊕ b
-        >> d ?(2 × A < A.a)? (e ?(B × 8 ≤ B.a)? f)
+        >> d ?(2 × a < a.a)? (e ?(b × 8 ≤ b.a)? f)
 
 CompositeDifference : Compositor
     ∀ [a, b]
@@ -103,7 +103,7 @@ CompositeDifference : Compositor
 
 CompositeExclusion : Compositor
     ∀ [a, b]
-        c = a × b.a + b × a.a - 2 × a × b + a ⊕ B
+        c = a × b.a + b × a.a - 2 × a × b + a ⊕ b
         >> [c.a + a.a × b.a, c.r, c.g, c.b]
 
 CompositeSubtract : Compositor
