@@ -19,3 +19,9 @@ nile_pipeline (nile_Kernel_t *k0, ...)
     va_end (args);
     return k0;
 }
+
+void
+nile_emit (nile_Buffer_t **out, nile_Kernel_t *k)
+{
+    /* TODO */
+}

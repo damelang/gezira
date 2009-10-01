@@ -34,18 +34,22 @@ typedef struct
 {
     int n;
     int quantum;
-    nile_Real_t data[64];
+    int capacity;
+    nile_Real_t *data;
 } nile_Buffer_t;
 
 typedef struct nile_Kernel_ nile_Kernel_t;
 
 struct nile_Kernel_
 {
-    void (*process) (nile_Kernel_t *k, nile_Buffer_t *in, nile_Buffer_t *out);
+    void (*process) (nile_Kernel_t *k, nile_Buffer_t *in, nile_Buffer_t **out);
     nile_Kernel_t *downstream;
 };
 
 nile_Kernel_t *
 nile_pipeline (nile_Kernel_t *k0, ...) __attribute__ ((sentinel));
+
+void
+nile_emit (nile_Buffer_t **out, nile_Kernel_t *k);
 
 #endif
