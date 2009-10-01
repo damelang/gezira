@@ -29,13 +29,11 @@ nile_pipeline (nile_Kernel_t *k0, ...)
 
     va_start (args, k0); 
     ki = k0;
-    ki->initialized = 0;
-    kj = va_arg (args, nile_Kernel_t *);
-    while (kj == NULL) {
-        ki->downstream = kj;
-        ki = kj;
+    while (ki) {
         ki->initialized = 0;
         kj = va_arg (args, nile_Kernel_t *);
+        ki->downstream = kj ? kj : ki->downstream;
+        ki = kj;
     }
 
     va_end (args);
@@ -43,13 +41,29 @@ nile_pipeline (nile_Kernel_t *k0, ...)
 }
 
 void
-nile_feed (nile_Kernel_t *k, nile_Real_t *data, int n, nile_Context_t *c)
+nile_feed (nile_Context_t *c, nile_Kernel_t *k,
+           nile_Real_t *data, int n, int eos)
 {
     /* TODO */
 }
 
 void
-nile_flush (nile_Kernel_t *k, nile_Buffer_t **out, nile_Context_t *c)
+nile_flush (nile_Context_t *c, nile_Kernel_t *k,
+            nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+void
+nile_forward (nile_Context_t *c, nile_Kernel_t *k,
+              nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+static void
+Interleave_process (nile_Context_t *c, nile_Kernel_t *k,
+                    nile_Buffer_t *in, nile_Buffer_t **out)
 {
     /* TODO */
 }
@@ -59,6 +73,7 @@ nile_Interleave (nile_Interleave_t *k,
                  nile_Kernel_t *k1, int quantum1,
                  nile_Kernel_t *k2, int quantum2)
 {
+    k->kernel.process = Interleave_process;
     k->v_k1 = k1;
     k->v_quantum1 = quantum1;
     k->v_k2 = k2;

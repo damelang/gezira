@@ -35,14 +35,15 @@ typedef struct nile_Context_ nile_Context_t;
 typedef struct {
     nile_Real_t *data;
     int n;
+    int eos;
     int capacity;
 } nile_Buffer_t;
 
 typedef struct nile_Kernel_ nile_Kernel_t;
 
 struct nile_Kernel_ {
-    void (*process) (nile_Kernel_t *k, nile_Buffer_t *in,
-                     nile_Buffer_t **out, nile_Context_t *c);
+    void (*process) (nile_Context_t *c, nile_Kernel_t *k,
+                     nile_Buffer_t *in, nile_Buffer_t **out);
     nile_Kernel_t *downstream;
     int initialized;
 };
@@ -58,11 +59,17 @@ nile_pipeline (nile_Kernel_t *k0, ...) __attribute__ ((sentinel));
 
 /* TODO need to rename. This is the "end user" entry point */
 void
-nile_feed (nile_Kernel_t *k, nile_Real_t *data, int n, nile_Context_t *c);
+nile_feed (nile_Context_t *c, nile_Kernel_t *k,
+           nile_Real_t *data, int n, int eos);
 
 /* TODO need to rename/refactor. This is "internal" and puts a new buffer in 'out' */
 void
-nile_flush (nile_Kernel_t *k, nile_Buffer_t **out, nile_Context_t *c);
+nile_flush (nile_Context_t *c, nile_Kernel_t *k,
+            nile_Buffer_t **out);
+
+void
+nile_forward (nile_Context_t *c, nile_Kernel_t *k,
+              nile_Buffer_t *in, nile_Buffer_t **out);
 
 typedef struct {
     nile_Kernel_t kernel;

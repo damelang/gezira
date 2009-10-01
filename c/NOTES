@@ -1,0 +1,34 @@
+- kernel code generation looks sort of like this:
+
+  static void
+  $KERNEL_NAME$_process (nile_Context_t *c, nile_Kernel_t *k_,
+                         nile_Buffer_t *in, nile_Buffer_t **out)
+  {
+      gezira_$KERNEL_NAME$_t *k = (gezira_$KERNEL_NAME$_t *) k_;
+      $KERNEL_FIELDS$
+      nile_Buffer_t *o = *out;
+      int i = 0;
+
+      if (!k_->initialized) {
+          k_->initialized = 1;
+          $KERNEL_PROLOGUE$
+      }
+
+      while (i < in->n) {
+          $KERNEL_INPUT_VARIABLES$
+          i += $IN_QUANTUM$
+          $KERNEL_BODY$
+          ($KERNEL_EMIT$ =
+              $KERNEL_OUTPUT_VARIABLES$
+              o->n += $OUT_QUANTUM$
+              if (o->capacity < o->n + $OUT_QUANTUM$) {
+                  nile_flush (c, k_->downstream, out);
+                  o = *out;
+              }
+          )
+      }
+
+      if (in->eos) {
+          $KERNEL_EPILOGUE$
+      }
+  }

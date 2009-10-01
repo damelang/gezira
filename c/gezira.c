@@ -18,11 +18,11 @@ gezira_Sampler (gezira_Sampler_t *k,
         >> [c.a, c.a × c.r, c.a × c.g, c.a × c.b]
 */
 static void
-UniformColor_process (nile_Kernel_t *k_, nile_Buffer_t *in,
-                      nile_Buffer_t **out, nile_Context_t *c)
+UniformColor_process (nile_Context_t *c, nile_Kernel_t *k_,
+                      nile_Buffer_t *in, nile_Buffer_t **out)
 {
+#define IN_QUANTUM 1
 #define OUT_QUANTUM 4
-    nile_Kernel_t *downstream = k_->downstream;
     gezira_UniformColor_t *k = (gezira_UniformColor_t *) k_;
     real v_start_x = k->sampler.v_start_x;
     real v_start_y = k->sampler.v_start_y;
@@ -34,15 +34,21 @@ UniformColor_process (nile_Kernel_t *k_, nile_Buffer_t *in,
     int i = 0;
 
     while (i < in->n) {
-        real v__ = in->data[i++];
-        if (o->n + OUT_QUANTUM > o->capacity) {
-            nile_flush (downstream, out, c);
+        real v__ = in->data[i + 0];
+        i += IN_QUANTUM;
+        real v__1_a = v_c_a;
+        real v__1_r = nile_Real_mul (v_c_a, v_c_r);
+        real v__1_g = nile_Real_mul (v_c_a, v_c_g);
+        real v__1_b = nile_Real_mul (v_c_a, v_c_b);
+        o->data[o->n + 0] = v__1_a;
+        o->data[o->n + 1] = v__1_r;
+        o->data[o->n + 2] = v__1_g;
+        o->data[o->n + 3] = v__1_b;
+        o->n += OUT_QUANTUM;
+        if (o->capacity < o->n + OUT_QUANTUM) {
+            nile_flush (c, k_->downstream, out);
             o = *out;
         }
-        o->data[o->n++] = v_c_a;
-        o->data[o->n++] = nile_Real_mul (v_c_a, v_c_r);
-        o->data[o->n++] = nile_Real_mul (v_c_a, v_c_g);
-        o->data[o->n++] = nile_Real_mul (v_c_a, v_c_b);
     }
 }
 
@@ -70,36 +76,38 @@ gezira_Compositor (gezira_Compositor_t *k)
             >> a + b × (1 - a.a) 
 */
 static void
-CompositeOver_process (nile_Kernel_t *k_, nile_Buffer_t *in,
-                       nile_Buffer_t **out, nile_Context_t *c)
+CompositeOver_process (nile_Context_t *c, nile_Kernel_t *k_,
+                       nile_Buffer_t *in, nile_Buffer_t **out)
 {
+#define IN_QUANTUM 8
 #define OUT_QUANTUM 4
-    nile_Kernel_t *downstream = k_->downstream;
     gezira_CompositeOver_t *k = (gezira_CompositeOver_t *) k_;
     nile_Buffer_t *o = *out;
     int i = 0;
 
     while (i < in->n) {
-        real v_a_a = in->data[i++];
-        real v_a_r = in->data[i++];
-        real v_a_g = in->data[i++];
-        real v_a_b = in->data[i++];
-        real v_b_a = in->data[i++];
-        real v_b_r = in->data[i++];
-        real v_b_g = in->data[i++];
-        real v_b_b = in->data[i++];
+        real v_a_a = in->data[i + 0];
+        real v_a_r = in->data[i + 1];
+        real v_a_g = in->data[i + 2];
+        real v_a_b = in->data[i + 3];
+        real v_b_a = in->data[i + 4];
+        real v_b_r = in->data[i + 5];
+        real v_b_g = in->data[i + 6];
+        real v_b_b = in->data[i + 7];
+        i += IN_QUANTUM;
         real v__1_a = nile_Real_add (v_a_a, nile_Real_mul (v_b_a, nile_Real_sub (1, v_a_a)));
         real v__1_r = nile_Real_add (v_a_r, nile_Real_mul (v_b_r, nile_Real_sub (1, v_a_a)));
         real v__1_g = nile_Real_add (v_a_g, nile_Real_mul (v_b_g, nile_Real_sub (1, v_a_a)));
         real v__1_b = nile_Real_add (v_a_b, nile_Real_mul (v_b_b, nile_Real_sub (1, v_a_a)));
-        if (o->n + OUT_QUANTUM > o->capacity) {
-            nile_flush (downstream, out, c);
+        o->data[o->n + 0] = v__1_a;
+        o->data[o->n + 1] = v__1_r;
+        o->data[o->n + 2] = v__1_g;
+        o->data[o->n + 3] = v__1_b;
+        o->n += OUT_QUANTUM;
+        if (o->capacity < o->n + OUT_QUANTUM) {
+            nile_flush (c, k_->downstream, out);
             o = *out;
         }
-        o->data[o->n++] = v__1_a;
-        o->data[o->n++] = v__1_r;
-        o->data[o->n++] = v__1_g;
-        o->data[o->n++] = v__1_b;
     }
 }
 
@@ -115,11 +123,11 @@ gezira_CompositeOver (gezira_CompositeOver_t *k)
         → Interleave (s1 (start), s2 (start)) → c
 */
 static void
-CompositeSamplers_process (nile_Kernel_t *k_, nile_Buffer_t *in,
-                           nile_Buffer_t **out, nile_Context_t *c)
+CompositeSamplers_process (nile_Context_t *c, nile_Kernel_t *k_,
+                           nile_Buffer_t *in, nile_Buffer_t **out)
 {
+#define IN_QUANTUM 1
 #define OUT_QUANTUM 4
-    nile_Kernel_t *downstream = k_->downstream;
     gezira_CompositeSamplers_t *k = (gezira_CompositeSamplers_t *) k_;
     real v_start_x = k->sampler.v_start_x;
     real v_start_y = k->sampler.v_start_y;
@@ -128,18 +136,15 @@ CompositeSamplers_process (nile_Kernel_t *k_, nile_Buffer_t *in,
     gezira_Compositor_t *v_c = k->v_c;
 
     if (!k_->initialized) {
+        k_->initialized = 1;
         k_->downstream =
             nile_pipeline (nile_Interleave (&k->p_1,
                                             gezira_Sampler (v_s1, v_start_x, v_start_y), 4,
                                             gezira_Sampler (v_s2, v_start_x, v_start_y), 4),
                            gezira_Compositor (v_c),
-                           downstream, NULL);
-        downstream = k_->downstream;
-        k_->initialized = 1;
+                           k_->downstream, NULL);
     }
-    downstream->process (downstream, in, out, c);
-    if ((*out)->n != 0) // TODO I'd prefer not to get a fresh 'out' here
-        nile_flush (downstream->downstream, out, c);
+    nile_forward (c, k_->downstream, in, out);
 }
 
 gezira_Sampler_t *
