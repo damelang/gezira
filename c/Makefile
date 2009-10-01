@@ -2,10 +2,10 @@ CFLAGS := -Wall -O2
 
 default: gezira.o
 
-nile.o: nile.h
+nile.o: nile.h nile.c
 	gcc -c $(CFLAGS) nile.c
 
-gezira.o: nile.o gezira.h
+gezira.o: nile.o gezira.h gezira.c
 	gcc -c $(CFLAGS) -mfpmath=sse -ffast-math gezira.c
 
 main: gezira.o
