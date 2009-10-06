@@ -13,7 +13,7 @@ Canvas :: (start : Point) : [Color, Real] >>|
      m.b × p.x + m.d × p.y + m.f]
 
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-    → Interleave (s1 (start), s2 (start)) → c
+    → Interleave (s1, s2) → c
 
 UniformColor (c : Color) : Sampler
     ∀ _
