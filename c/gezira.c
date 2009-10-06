@@ -4,12 +4,67 @@
 #define real nile_Real_t
 
 nile_Kernel_t *
-gezira_Sampler (gezira_Sampler_t *k,
-                real start_x, real start_y)
+gezira_Sampler (gezira_Sampler_t *k)
+{
+    return &k->kernel;
+}
+
+nile_Kernel_t *
+gezira_Compositor (gezira_Compositor_t *k)
+{
+    return &k->kernel;
+}
+
+nile_Kernel_t *
+gezira_Canvas (gezira_Canvas_t *k,
+               nile_Real_t start_x,
+               nile_Real_t start_y)
 {
     k->v_start_x = start_x;
     k->v_start_y = start_y;
     return &k->kernel;
+}
+
+/*
+    CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
+        → Interleave (s1, s2) → c
+*/
+static void
+CompositeSamplers_process (nile_Context_t *c, nile_Kernel_t *k_,
+                           nile_Buffer_t *in, nile_Buffer_t **out)
+{
+#define IN_QUANTUM 1
+#define OUT_QUANTUM 4
+    gezira_CompositeSamplers_t *k = (gezira_CompositeSamplers_t *) k_;
+    gezira_Sampler_t *v_s1 = k->v_s1;
+    gezira_Sampler_t *v_s2 = k->v_s2;
+    gezira_Compositor_t *v_c = k->v_c;
+
+    if (!k_->initialized) {
+        k_->initialized = 1;
+        k_->downstream =
+            nile_pipeline (nile_Interleave (&k->p_1,
+                                            gezira_Sampler (v_s1), 4,
+                                            gezira_Sampler (v_s2), 4),
+                           gezira_Compositor (v_c),
+                           k_->downstream, NULL);
+    }
+    nile_forward (c, k_->downstream, in, out);
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+}
+
+gezira_Sampler_t *
+gezira_CompositeSamplers (gezira_CompositeSamplers_t *k,
+                          gezira_Sampler_t *s1,
+                          gezira_Sampler_t *s2,
+                          gezira_Compositor_t *c)
+{
+    k->sampler.kernel.process = CompositeSamplers_process;
+    k->v_s1 = s1;
+    k->v_s2 = s2;
+    k->v_c = c;
+    return &k->sampler;
 }
 
 /*
@@ -21,11 +76,9 @@ static void
 UniformColor_process (nile_Context_t *c, nile_Kernel_t *k_,
                       nile_Buffer_t *in, nile_Buffer_t **out)
 {
-#define IN_QUANTUM 1
+#define IN_QUANTUM 2
 #define OUT_QUANTUM 4
     gezira_UniformColor_t *k = (gezira_UniformColor_t *) k_;
-    real v_start_x = k->sampler.v_start_x;
-    real v_start_y = k->sampler.v_start_y;
     real v_c_a = k->v_c_a;
     real v_c_r = k->v_c_r;
     real v_c_g = k->v_c_g;
@@ -34,7 +87,8 @@ UniformColor_process (nile_Context_t *c, nile_Kernel_t *k_,
     int i = 0;
 
     while (i < in->n) {
-        real v__ = in->data[i + 0];
+        real v___x = in->data[i + 0];
+        real v___y = in->data[i + 1];
         i += IN_QUANTUM;
         real v__1_a = v_c_a;
         real v__1_r = nile_Real_mul (v_c_a, v_c_r);
@@ -50,11 +104,14 @@ UniformColor_process (nile_Context_t *c, nile_Kernel_t *k_,
             o = *out;
         }
     }
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
 }
 
 gezira_Sampler_t *
 gezira_UniformColor (gezira_UniformColor_t *k,
-                     real c_a, real c_r, real c_g, real c_b)
+                     nile_Real_t c_a, nile_Real_t c_r,
+                     nile_Real_t c_g, nile_Real_t c_b)
 {
     k->sampler.kernel.process = UniformColor_process;
     k->v_c_a = c_a;
@@ -62,12 +119,6 @@ gezira_UniformColor (gezira_UniformColor_t *k,
     k->v_c_g = c_g;
     k->v_c_b = c_b;
     return &k->sampler;
-}
-
-nile_Kernel_t *
-gezira_Compositor (gezira_Compositor_t *k)
-{
-    return &k->kernel;
 }
 
 /*
@@ -109,6 +160,8 @@ CompositeOver_process (nile_Context_t *c, nile_Kernel_t *k_,
             o = *out;
         }
     }
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
 }
 
 gezira_Compositor_t *
@@ -119,42 +172,153 @@ gezira_CompositeOver (gezira_CompositeOver_t *k)
 }
 
 /*
-    CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-        → Interleave (s1 (start), s2 (start)) → c
+    FillBetweenEdges (start : Point) : EdgeContribution >> Real
+        x = start.x
+        local = 0
+        run   = 0
+        ∀ [[x', y], w, h]
+            n = x' - x
+            if n = 0
+                local' = local + w × h
+                run'   = run   + h
+            else
+                local' = run + w × h
+                run'   = run + h
+                >>        | local | ⋖ 1
+                >(n - 1)> | run   | ⋖ 1
+        if local ≠ 0
+            >> | local | ⋖ 1
 */
 static void
-CompositeSamplers_process (nile_Context_t *c, nile_Kernel_t *k_,
-                           nile_Buffer_t *in, nile_Buffer_t **out)
+FillBetweenEdges_process (nile_Context_t *c, nile_Kernel_t *k_,
+                          nile_Buffer_t *in, nile_Buffer_t **out)
 {
-#define IN_QUANTUM 1
-#define OUT_QUANTUM 4
-    gezira_CompositeSamplers_t *k = (gezira_CompositeSamplers_t *) k_;
-    real v_start_x = k->sampler.v_start_x;
-    real v_start_y = k->sampler.v_start_y;
-    gezira_Sampler_t *v_s1 = k->v_s1;
-    gezira_Sampler_t *v_s2 = k->v_s2;
-    gezira_Compositor_t *v_c = k->v_c;
-
-    if (!k_->initialized) {
-        k_->initialized = 1;
-        k_->downstream =
-            nile_pipeline (nile_Interleave (&k->p_1,
-                                            gezira_Sampler (v_s1, v_start_x, v_start_y), 4,
-                                            gezira_Sampler (v_s2, v_start_x, v_start_y), 4),
-                           gezira_Compositor (v_c),
-                           k_->downstream, NULL);
-    }
-    nile_forward (c, k_->downstream, in, out);
+    /* TODO */
 }
 
-gezira_Sampler_t *
-gezira_CompositeSamplers (gezira_CompositeSamplers_t *k,
-                          gezira_Sampler_t *s1, gezira_Sampler_t *s2,
-                          gezira_Compositor_t *c)
+nile_Kernel_t *
+gezira_FillBetweenEdges (gezira_FillBetweenEdges_t *k,
+                         nile_Real_t start_x,
+                         nile_Real_t start_y)
 {
-    k->sampler.kernel.process = CompositeSamplers_process;
-    k->v_s1 = s1;
-    k->v_s2 = s2;
+    k->kernel.process = FillBetweenEdges_process;
+    k->v_start_x = start_x;
+    k->v_start_y = start_y;
+    return &k->kernel;
+}
+
+static void
+CreateSamplePoints_process (nile_Context_t *c, nile_Kernel_t *k_,
+                             nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_CreateSamplePoints (gezira_CreateSamplePoints_t *k,
+                           nile_Real_t start_x,
+                           nile_Real_t start_y)
+{
+    k->kernel.process = CreateSamplePoints_process;
+    k->v_start_x = start_x;
+    k->v_start_y = start_y;
+    return &k->kernel;
+}
+
+static void
+Render_1_process (nile_Context_t *c, nile_Kernel_t *k_,
+                  nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_Render_1 (gezira_Render_1_t *k,
+                 gezira_Sampler_t *s,
+                 gezira_Canvas_t *c)
+{
+    k->kernel.process = Render_1_process;
+    k->v_s = s;
     k->v_c = c;
-    return &k->sampler;
+    return &k->kernel;
+}
+
+static void
+Render_process (nile_Context_t *c, nile_Kernel_t *k_,
+                nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_Render (gezira_Render_t *k,
+               gezira_Sampler_t *s,
+               gezira_Canvas_t *c)
+{
+    k->kernel.process = Render_process;
+    k->v_s = s;
+    k->v_c = c;
+    return &k->kernel;
+}
+
+static void
+TransformBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
+                         nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_TransformBezier (gezira_TransformBezier_t *k,
+                        nile_Real_t m_a,
+                        nile_Real_t m_b,
+                        nile_Real_t m_c,
+                        nile_Real_t m_d,
+                        nile_Real_t m_e,
+                        nile_Real_t m_f)
+{
+    k->kernel.process = TransformBezier_process;
+    k->v_m_a = m_a;
+    k->v_m_b = m_b;
+    k->v_m_c = m_c;
+    k->v_m_d = m_d;
+    k->v_m_e = m_e;
+    k->v_m_f = m_f;
+    return &k->kernel;
+}
+
+static void
+ClipBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
+                    nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_ClipBezier (gezira_ClipBezier_t *k,
+                   nile_Real_t min_x,
+                   nile_Real_t min_y,
+                   nile_Real_t max_x,
+                   nile_Real_t max_y)
+{
+    k->kernel.process = ClipBezier_process;
+    k->v_min_x = min_x;
+    k->v_min_y = min_y;
+    k->v_max_x = max_x;
+    k->v_max_y = max_y;
+    return &k->kernel;
+}
+
+static void
+DecomposeBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
+                         nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+gezira_DecomposeBezier (gezira_DecomposeBezier_t *k)
+{
+    k->kernel.process = DecomposeBezier_process;
+    return &k->kernel;
 }

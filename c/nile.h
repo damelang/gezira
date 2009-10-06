@@ -73,16 +73,47 @@ nile_forward (nile_Context_t *c, nile_Kernel_t *k,
 
 typedef struct {
     nile_Kernel_t kernel;
+} nile_Id_t;
+
+typedef struct {
+    nile_Kernel_t kernel;
     nile_Kernel_t *v_k1;
-    int v_quantum1;
+    int quantum1;
     nile_Kernel_t *v_k2;
-    int v_quantum2;
+    int quantum2;
     /* TODO */
 } nile_Interleave_t;
+
+nile_Kernel_t *
+nile_Id (nile_Id_t *k);
 
 nile_Kernel_t *
 nile_Interleave (nile_Interleave_t *k,
                  nile_Kernel_t *k1, int quantum1,
                  nile_Kernel_t *k2, int quantum2);
+
+typedef struct {
+    nile_Kernel_t kernel;
+    int index;
+    int quantum;
+    /* TODO */
+} nile_GroupBy_t;
+
+nile_Kernel_t *
+nile_GroupBy (nile_GroupBy_t *k,
+              int index,
+              int quantum);
+
+typedef struct {
+    nile_Kernel_t kernel;
+    int index;
+    int quantum;
+    /* TODO */
+} nile_SortBy_t;
+
+nile_Kernel_t *
+nile_SortBy (nile_SortBy_t *k,
+             int index,
+             int quantum);
 
 #endif

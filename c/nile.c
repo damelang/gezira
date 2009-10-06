@@ -62,7 +62,21 @@ nile_forward (nile_Context_t *c, nile_Kernel_t *k,
 }
 
 static void
-Interleave_process (nile_Context_t *c, nile_Kernel_t *k,
+Id_process (nile_Context_t *c, nile_Kernel_t *k_,
+            nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    nile_forward (c, k_->downstream, in, out);
+}
+
+nile_Kernel_t *
+nile_Id (nile_Id_t *k)
+{
+    k->kernel.process = Id_process;
+    return &k->kernel;
+}
+
+static void
+Interleave_process (nile_Context_t *c, nile_Kernel_t *k_,
                     nile_Buffer_t *in, nile_Buffer_t **out)
 {
     /* TODO */
@@ -75,9 +89,47 @@ nile_Interleave (nile_Interleave_t *k,
 {
     k->kernel.process = Interleave_process;
     k->v_k1 = k1;
-    k->v_quantum1 = quantum1;
+    k->quantum1 = quantum1;
     k->v_k2 = k2;
-    k->v_quantum2 = quantum2;
+    k->quantum2 = quantum2;
+    /* TODO */
+    return &k->kernel;
+}
+
+static void
+GroupBy_process (nile_Context_t *c, nile_Kernel_t *k_,
+                 nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+nile_GroupBy (nile_GroupBy_t *k,
+              int index,
+              int quantum)
+{
+    k->kernel.process = GroupBy_process;
+    k->index = index;
+    k->quantum = quantum;
+    /* TODO */
+    return &k->kernel;
+}
+
+static void
+SortBy_process (nile_Context_t *c, nile_Kernel_t *k_,
+                nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+nile_Kernel_t *
+nile_SortBy (nile_SortBy_t *k,
+             int index,
+             int quantum)
+{
+    k->kernel.process = SortBy_process;
+    k->index = index;
+    k->quantum = quantum;
     /* TODO */
     return &k->kernel;
 }
