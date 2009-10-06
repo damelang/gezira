@@ -1,6 +1,5 @@
 - c generation
-    - start with hand translations
-- image texturing
+- update PDF
 - finish pen stroking
     - fix bugs
     - find the right magic number for stroke offset curve
@@ -13,5 +12,6 @@
 - make zlib.nl and png.nl real
 - what about things like 2b + 0.5c
     - math mode? (single letter variables, etc.?)
+      perhaps only in the body of ∀ blocks?
 - cubic >> quadratic bezier kernel
 - image filters (blur, etc.)

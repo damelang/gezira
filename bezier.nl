@@ -1,7 +1,3 @@
-(m : Matrix × p : Point) : Point
-    [m.a × p.x + m.c × p.y + m.e,
-     m.b × p.x + m.d × p.y + m.f]
-
 TransformBezier (m : Matrix) : Bezier >> Bezier
     ∀ [a, b, c]
         >> [m × a, m × b, m × c]
