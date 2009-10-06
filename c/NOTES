@@ -15,6 +15,7 @@
       }
 
       while (i < in->n) {
+          $DECLARE_TICK_VARIABLES$
           $KERNEL_INPUT_VARIABLES$
           i += $IN_QUANTUM$
           $KERNEL_BODY$
@@ -26,9 +27,13 @@
                   o = *out;
               }
           )
+        $UPDATE_VARS_WITH_TICK_VARS$
       }
 
       if (in->eos) {
           $KERNEL_EPILOGUE$
+      }
+      else {
+        $KERNEL_FIELD_UPDATES$
       }
   }

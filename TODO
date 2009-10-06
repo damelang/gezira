@@ -1,4 +1,6 @@
+- fix ImageExtendModes!
 - c generation
+    - address nile_combine need in Render_1
 - update PDF
 - finish pen stroking
     - fix bugs
