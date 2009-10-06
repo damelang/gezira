@@ -41,9 +41,9 @@ StrokeCapRound : StrokeCap
 StrokeJoinBevel : StrokeJoin
     % [a, b, c]
         ∀ [d, e, f]
+            a', b', c' = d, e, f
             g = c + (b ⟂ c) × o
             h = d + (d ⟂ e) × o
-            a', b', c' = d, e, f
             >> [g, g ~ h, h]
 
 StrokeJoinMiter : StrokeJoin
