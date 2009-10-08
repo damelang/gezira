@@ -348,18 +348,19 @@ gezira_CreateSamplePoints (gezira_CreateSamplePoints_t *k,
 }
 
 /*
-    & [p, _, _]
-        → FillBetweenEdges (p) →
-          Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
-          c (p + 0.5)
+    Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
+        & [p, _, _]
+            → FillBetweenEdges (p) →
+              Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
+              c (p + 0.5)
 */
 static void
-Render_1_process (nile_Context_t *c, nile_Kernel_t *k_,
+Render__process (nile_Context_t *c, nile_Kernel_t *k_,
                   nile_Buffer_t *in, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 4
 #define OUT_QUANTUM 0
-    gezira_Render_1_t *k = (gezira_Render_1_t *) k_;
+    gezira_Render__t *k = (gezira_Render__t *) k_;
     gezira_Sampler_t *v_s = k->v_s;
     gezira_Canvas_t *v_c = k->v_c;
 
@@ -386,11 +387,11 @@ Render_1_process (nile_Context_t *c, nile_Kernel_t *k_,
 }
 
 nile_Kernel_t *
-gezira_Render_1 (gezira_Render_1_t *k,
+gezira_Render_ (gezira_Render__t *k,
                  gezira_Sampler_t *s,
                  gezira_Canvas_t *c)
 {
-    k->kernel.process = Render_1_process;
+    k->kernel.process = Render__process;
     k->v_s = s;
     k->v_c = c;
     return &k->kernel;
@@ -398,7 +399,7 @@ gezira_Render_1 (gezira_Render_1_t *k,
 
 /*
     Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-        → GroupBy (@p.y) → SortBy (@p.x) → Render_1 (s, c)
+        → GroupBy (@p.y) → SortBy (@p.x) → Render' (s, c)
 */
 static void
 Render_process (nile_Context_t *c, nile_Kernel_t *k_,
@@ -415,7 +416,7 @@ Render_process (nile_Context_t *c, nile_Kernel_t *k_,
         k_->downstream =
             nile_pipeline (nile_GroupBy (&k->p_1, 1, 4),
                            nile_SortBy (&k->p_2, 0, 4),
-                           gezira_Render_1 (&k->p_3, v_s, v_c),
+                           gezira_Render_ (&k->p_3, v_s, v_c),
                            k_->downstream, NULL);
     }
     nile_forward (c, k_->downstream, in, out);

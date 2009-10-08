@@ -47,9 +47,11 @@ CreateSamplePoints (start : Point) : Real >> Point
         x' = x + 1
         >> [x, y]
 
+Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
+    & [p, _, _]
+        → FillBetweenEdges (p) →
+          Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
+          c (p + 0.5)
+
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    → GroupBy (@p.y) → SortBy (@p.x) →
-        & [p, _, _]
-            → FillBetweenEdges (p) →
-              Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
-              c (p + 0.5)
+    → GroupBy (@p.y) → SortBy (@p.x) → Render' (s, c)

@@ -97,12 +97,12 @@ typedef struct {
     nile_Interleave_t p_2;
     gezira_CreateSamplePoints_t p_3;
     nile_Id_t p_4;
-} gezira_Render_1_t;
+} gezira_Render__t;
 
 nile_Kernel_t *
-gezira_Render_1 (gezira_Render_1_t *k,
-                 gezira_Sampler_t *s,
-                 gezira_Canvas_t *c);
+gezira_Render_ (gezira_Render__t *k,
+                gezira_Sampler_t *s,
+                gezira_Canvas_t *c);
 
 typedef struct {
     nile_Kernel_t kernel;
@@ -110,7 +110,7 @@ typedef struct {
     gezira_Canvas_t *v_c;
     nile_GroupBy_t p_1;
     nile_SortBy_t p_2;
-    gezira_Render_1_t p_3;
+    gezira_Render__t p_3;
 } gezira_Render_t;
 
 nile_Kernel_t *

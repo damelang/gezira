@@ -1,7 +1,6 @@
 - c generation
-    - split Render into two kernels
     - clone kernels before put in pipeline
-    - address nile_combine need in Render_1
+    - address nile_combine need in Render'
 - fix ImageExtendModes!
 - update PDF
 - finish pen stroking
