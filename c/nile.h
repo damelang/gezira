@@ -32,11 +32,11 @@ static inline real nile_Real_ave (real a, real b) { return (a + b) / 2; }
 
 typedef struct nile_Context_ nile_Context_t;
 
+#define NILE_BUFFER_SIZE 128
 typedef struct {
     nile_Real_t *data;
     int n;
     int eos;
-    int capacity;
 } nile_Buffer_t;
 
 typedef struct nile_Kernel_ nile_Kernel_t;

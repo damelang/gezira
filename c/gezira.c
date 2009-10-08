@@ -99,7 +99,7 @@ UniformColor_process (nile_Context_t *c, nile_Kernel_t *k_,
         o->data[o->n + 2] = t_1_g;
         o->data[o->n + 3] = t_1_b;
         o->n += OUT_QUANTUM;
-        if (o->capacity < o->n + OUT_QUANTUM) {
+        if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
             nile_flush (c, k_->downstream, out);
             o = *out;
         }
@@ -155,7 +155,7 @@ CompositeOver_process (nile_Context_t *c, nile_Kernel_t *k_,
         o->data[o->n + 2] = t_1_g;
         o->data[o->n + 3] = t_1_b;
         o->n += OUT_QUANTUM;
-        if (o->capacity < o->n + OUT_QUANTUM) {
+        if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
             nile_flush (c, k_->downstream, out);
             o = *out;
         }
@@ -230,13 +230,13 @@ FillBetweenEdges_process (nile_Context_t *c, nile_Kernel_t *k_,
             real t_1 = nile_Real_min (nile_Real_abs (v_local), 1);
             o->data[o->n + 0] = t_1;
             o->n += OUT_QUANTUM;
-            if (o->capacity < o->n + OUT_QUANTUM) {
+            if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
                 nile_flush (c, k_->downstream, out);
                 o = *out;
             }
             int n1 = nile_Real_sub (v_n, 1);
             for (;;) {
-                int room = (o->capacity - o->n) / OUT_QUANTUM;
+                int room = (NILE_BUFFER_SIZE - o->n) / OUT_QUANTUM;
                 int n2 = n1 < room ? n1 : room;
                 int j;
                 for (j = 0; j < n2; j++) {
@@ -319,7 +319,7 @@ CreateSamplePoints_process (nile_Context_t *c, nile_Kernel_t *k_,
         o->data[o->n + 0] = v_x;
         o->data[o->n + 1] = v_y;
         o->n += OUT_QUANTUM;
-        if (o->capacity < o->n + OUT_QUANTUM) {
+        if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
             nile_flush (c, k_->downstream, out);
             o = *out;
         }
@@ -482,7 +482,7 @@ TransformBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
         o->data[o->n + 4] = t_3_x;
         o->data[o->n + 5] = t_3_y;
         o->n += OUT_QUANTUM;
-        if (o->capacity < o->n + OUT_QUANTUM) {
+        if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
             nile_flush (c, k_->downstream, out);
             o = *out;
         }
@@ -532,11 +532,125 @@ gezira_ClipBezier (gezira_ClipBezier_t *k,
     return &k->kernel;
 }
 
+/*
+    DecomposeBezier : Bezier >> EdgeContribution
+        ∀ [a, b, c]
+            if ∧[ ⌊ a ⌋ = ⌊ c ⌋ ∨ ⌈ a ⌉ = ⌈ c ⌉ ]
+                p = ⌊ a ⌋ ⋖ ⌊ c ⌋
+                w = p.x + 1 - (c.x ~ a.x)
+                h = c.y - a.y
+                >> [p, w, h]
+            else
+                abbc    = (a ~ b) ~ (b ~ c)
+                min     = ⌊ abbc ⌋
+                max     = ⌈ abbc ⌉
+                nearmin = | abbc - min | < 0.1
+                nearmax = | abbc - max | < 0.1
+                m       = min ?(nearmin)? (max ?(nearmax)? abbc)
+                << [a, a ~ b, m] << [m, b ~ c, c]
+*/
 static void
 DecomposeBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
                          nile_Buffer_t *in, nile_Buffer_t **out)
 {
-    /* TODO */
+#define IN_QUANTUM 6
+#define OUT_QUANTUM 4
+    gezira_DecomposeBezier_t *k = (gezira_DecomposeBezier_t *) k_;
+    nile_Buffer_t *o = *out;
+    real recurse_data[NILE_BUFFER_SIZE];
+    nile_Buffer_t recurse = {recurse_data, 0, 0};
+    nile_Buffer_t *r = &recurse;
+    int i = 0;
+
+    while (i < in->n) {
+        real v_a_x = in->data[i + 0];
+        real v_a_y = in->data[i + 1];
+        real v_b_x = in->data[i + 2];
+        real v_b_y = in->data[i + 3];
+        real v_c_x = in->data[i + 4];
+        real v_c_y = in->data[i + 5];
+        i += IN_QUANTUM;
+        real t_1_x = nile_Real_flr (v_a_x);
+        real t_1_y = nile_Real_flr (v_a_y);
+        real t_2_x = nile_Real_flr (v_c_x);
+        real t_2_y = nile_Real_flr (v_c_y);
+        real t_3_x = nile_Real_clg (v_a_x);
+        real t_3_y = nile_Real_clg (v_a_y);
+        real t_4_x = nile_Real_clg (v_c_x);
+        real t_4_y = nile_Real_clg (v_c_y);
+        real t_5_0 = nile_Real_eq (t_1_x, t_2_x);
+        real t_5_1 = nile_Real_eq (t_1_y, t_2_y);
+        real t_6_0 = nile_Real_eq (t_3_x, t_4_x);
+        real t_6_1 = nile_Real_eq (t_3_y, t_4_y);
+        real t_7_0 = nile_Real_or (t_5_0, t_6_0);
+        real t_7_1 = nile_Real_or (t_5_1, t_6_1);
+        real t_8 = nile_Real_and (t_7_0, t_7_1);
+        if (t_8) {
+            real v_p_x = nile_Real_min (t_1_x, t_2_x);
+            real v_p_y = nile_Real_min (t_1_y, t_2_y);
+            real t_9 = nile_Real_ave (v_c_x, v_a_x);
+            real v_w = nile_Real_sub (nile_Real_add (v_p_x, 1), t_9);
+            real v_h = nile_Real_sub (v_c_y, v_a_y);
+            o->data[o->n + 0] = v_p_x;
+            o->data[o->n + 1] = v_p_y;
+            o->data[o->n + 2] = v_w;
+            o->data[o->n + 3] = v_h;
+            o->n += OUT_QUANTUM;
+            if (o->n > NILE_BUFFER_SIZE - OUT_QUANTUM) {
+                nile_flush (c, k_->downstream, out);
+                o = *out;
+            }
+        }
+        else {
+            real v_abbc_x = nile_Real_ave (nile_Real_ave (v_a_x, v_b_x),
+                                           nile_Real_ave (v_b_x, v_c_x));
+            real v_abbc_y = nile_Real_ave (nile_Real_ave (v_a_y, v_b_y),
+                                           nile_Real_ave (v_b_y, v_c_y));
+            real v_min_x = nile_Real_flr (v_abbc_x);
+            real v_min_y = nile_Real_flr (v_abbc_y);
+            real v_max_x = nile_Real_clg (v_abbc_x);
+            real v_max_y = nile_Real_clg (v_abbc_y);
+            real v_nearmin_x =
+                nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_x, v_min_x)), 0.1);
+            real v_nearmin_y =
+                nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_y, v_min_y)), 0.1);
+            real v_nearmax_x =
+                nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_x, v_max_x)), 0.1);
+            real v_nearmax_y =
+                nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_y, v_max_y)), 0.1);
+            real t_9_x = v_nearmax_x ? v_max_x : v_abbc_x;
+            real t_9_y = v_nearmax_y ? v_max_y : v_abbc_y;
+            real v_m_x = v_nearmin_x ? v_min_x : t_9_x;
+            real v_m_y = v_nearmin_y ? v_min_y : t_9_y;
+            r->data[r->n + 0] = v_a_x;
+            r->data[r->n + 1] = v_a_y;
+            r->data[r->n + 2] = nile_Real_ave (v_a_x, v_b_x);
+            r->data[r->n + 3] = nile_Real_ave (v_a_y, v_b_y);
+            r->data[r->n + 4] = v_m_x;
+            r->data[r->n + 5] = v_m_y;
+            r->n += IN_QUANTUM;
+            if (r->n > NILE_BUFFER_SIZE - IN_QUANTUM) {
+                k_->process (c, k_, r, out);
+                r->n = 0;
+            }
+            r->data[r->n + 0] = v_m_x;
+            r->data[r->n + 1] = v_m_y;
+            r->data[r->n + 2] = nile_Real_ave (v_b_x, v_c_x);
+            r->data[r->n + 3] = nile_Real_ave (v_b_y, v_c_y);
+            r->data[r->n + 4] = v_c_x;
+            r->data[r->n + 5] = v_c_y;
+            r->n += IN_QUANTUM;
+            if (r->n > NILE_BUFFER_SIZE - IN_QUANTUM) {
+                k_->process (c, k_, r, out);
+                r->n = 0;
+            }
+        }
+    }
+
+    if (r->n != 0)
+        k_->process (c, k_, r, out);
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
 }
 
 nile_Kernel_t *

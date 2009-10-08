@@ -1,4 +1,4 @@
-CFLAGS := -Wall -O2
+CFLAGS := -Wall -Wno-unused -O2 
 
 default: gezira.o
 

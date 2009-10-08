@@ -1,6 +1,8 @@
-- fix ImageExtendModes!
 - c generation
+    - split Render into two kernels
+    - clone kernels before put in pipeline
     - address nile_combine need in Render_1
+- fix ImageExtendModes!
 - update PDF
 - finish pen stroking
     - fix bugs
