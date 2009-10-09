@@ -616,10 +616,10 @@ ClipBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
                     nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_x, v_max_x)), 0.1);
                 real v_nearmax_y =
                     nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_y, v_max_y)), 0.1);
-                real t_9_x = v_nearmax_x ? v_max_x : v_abbc_x;
-                real t_9_y = v_nearmax_y ? v_max_y : v_abbc_y;
-                real v_m_x = v_nearmin_x ? v_min_x : t_9_x;
-                real v_m_y = v_nearmin_y ? v_min_y : t_9_y;
+                real v_m_x = nile_Real_sel (v_min_x, v_nearmin_x,
+                             nile_Real_sel (v_max_x, v_nearmax_x, v_abbc_x));
+                real v_m_y = nile_Real_sel (v_min_y, v_nearmin_y,
+                             nile_Real_sel (v_max_y, v_nearmax_y, v_abbc_y));
                 r->data[r->n + 0] = v_a_x;
                 r->data[r->n + 1] = v_a_y;
                 r->data[r->n + 2] = nile_Real_ave (v_a_x, v_b_x);
@@ -753,10 +753,10 @@ DecomposeBezier_process (nile_Context_t *c, nile_Kernel_t *k_,
                 nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_x, v_max_x)), 0.1);
             real v_nearmax_y =
                 nile_Real_lt (nile_Real_abs (nile_Real_sub (v_abbc_y, v_max_y)), 0.1);
-            real t_9_x = v_nearmax_x ? v_max_x : v_abbc_x;
-            real t_9_y = v_nearmax_y ? v_max_y : v_abbc_y;
-            real v_m_x = v_nearmin_x ? v_min_x : t_9_x;
-            real v_m_y = v_nearmin_y ? v_min_y : t_9_y;
+            real v_m_x = nile_Real_sel (v_min_x, v_nearmin_x,
+                         nile_Real_sel (v_max_x, v_nearmax_x, v_abbc_x));
+            real v_m_y = nile_Real_sel (v_min_y, v_nearmin_y,
+                         nile_Real_sel (v_max_y, v_nearmax_y, v_abbc_y));
             r->data[r->n + 0] = v_a_x;
             r->data[r->n + 1] = v_a_y;
             r->data[r->n + 2] = nile_Real_ave (v_a_x, v_b_x);

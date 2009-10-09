@@ -1,8 +1,10 @@
 - c generation
-    - clone kernels before put in pipeline
+    - clone kernels before put in pipeline?
     - address nile_combine need in Render'
+    - write SDL versions of ReadImage and WriteImage
+    - demos
 - fix ImageExtendModes!
-- update PDF
+- update PDF doc
 - finish pen stroking
     - fix bugs
     - find the right magic number for stroke offset curve
