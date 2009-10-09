@@ -2,7 +2,7 @@ Id : α >> α
 
 Reverse : α >> α
 
-GroupBy (e) : α >> α
+GroupBy (e, k : α >> β) : α >>|
 
 SortBy (e) : α >> α
 
