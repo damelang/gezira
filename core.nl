@@ -28,13 +28,12 @@ FillBetweenEdges (start : Point) : EdgeContribution >> Real
     local = 0
     run   = 0
     ∀ [[x', y], w, h]
+        run' = run + h
         n = x' - x
         if n = 0
             local' = local + w × h
-            run'   = run   + h
         else
             local' = run + w × h
-            run'   = run + h
             >>        | local | ⋖ 1
             >(n - 1)> | run   | ⋖ 1
     if local ≠ 0
@@ -50,8 +49,8 @@ CreateSamplePoints (start : Point) : Real >> Point
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
     & [p, _, _]
         → FillBetweenEdges (p) →
-          Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
+          Interleave (CreateSamplePoints (p + 0.5) → s, Id) →
           c (p + 0.5)
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    → GroupBy (@p.y, → SortBy (@p.x) → Render' (s, c))
+    → GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))
