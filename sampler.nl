@@ -81,7 +81,7 @@ GradientColorSpan (c0, dc/ds : Color, l) : GradientColor
         >> [s - l, c ?(s < 0)? d]
 
 GradientColorEnd : [Real, Color] >> Color
-    ∀ [_, c]
+    ∀ [s, c]
         >> [c.a, c.r × c.a, c.g × c.a, c.b × c.a]
 
 Gradient (s : GradientShape, e : GradientExtendMode, c : GradientColor) : Sampler

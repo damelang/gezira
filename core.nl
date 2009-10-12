@@ -16,7 +16,7 @@ CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
     → Interleave (s1, s2) → c
 
 UniformColor (c : Color) : Sampler
-    ∀ _
+    ∀ p
         >> [c.a, c.a × c.r, c.a × c.g, c.a × c.b]
 
 CompositeOver : Compositor
@@ -42,12 +42,12 @@ FillBetweenEdges (start : Point) : EdgeContribution >> Real
 CreateSamplePoints (start : Point) : Real >> Point
     x = start.x
     y = start.y
-    ∀ _
+    ∀ c
         x' = x + 1
         >> [x, y]
 
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
-    & [p, _, _]
+    & [p, w, h]
         → FillBetweenEdges (p) →
           Interleave (CreateSamplePoints (p + 0.5) → s, Id) →
           c (p + 0.5)
