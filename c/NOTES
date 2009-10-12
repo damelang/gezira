@@ -1,39 +1,74 @@
 - kernel code generation looks sort of like this:
 
-  static void
-  $KERNEL_NAME$_process (nile_Context_t *c, nile_Kernel_t *k_,
-                         nile_Buffer_t *in, nile_Buffer_t **out)
-  {
-      gezira_$KERNEL_NAME$_t *k = (gezira_$KERNEL_NAME$_t *) k_;
+struct gezira_$KERNEL_NAME$_ {
+    gezira_$KERNEL_PARENT$_t $KERNEL_PARENT$;
+    $KERNEL_FIELDS$ (which include parameters and prologue vars)
+};
+
+static void
+gezira_$KERNEL_NAME$_process (nile_t *n, nile_Kernel_t *k_,
+                              nile_Buffer_t *in, nile_Buffer_t **out)
+{
+#define IN_QUANTUM $IN_QUANTUM$
+#define OUT_QUANTUM $OUT_QUANTUM$
+    real rdata[NILE_BUFFER_SIZE];
+    nile_Buffer_t rbuffer = {rdata, 0, 0};
+    nile_Buffer_t *r = &rbuffer;
+    nile_Buffer_t *o = *out;
+    int i = 0;
+
+    gezira_$KERNEL_NAME$_t *k = (gezira_$KERNEL_NAME$_t *) k_;
+    $KERNEL_FIELDS$
+
+    if (!k_->initialized) {
+        k_->initialized = 1;
+
+        $KERNEL_PROLOGUE$
+
+        $FOR PIPELINING KERNELS, THE FOLLOWING$
+            $PEEK_VARS$
+            nile_Kernel_t *p =
+                $PIPELINE_EXPRESSION$
+
+            p->downstream = k_->downstream;
+            k_->downstream = p;
+    }
+
+    $FOR PIPELINING KERNELS, THE FOLLOWING$
+        nile_forward (n, k_->downstream, in, out);
+
+
+    $FOR COMPUTATION KERNELS, THE FOLLOWING$
+        while (i <= in->n - IN_QUANTUM) {
+            $DECLARE KERNEL_PRIME_VARS$
+            NILE_CONSUME_n ($KERNEL_INPUT_VARS$, in, i);
+            $KERNEL_BODY$
+            nile_produce_n (o, $KERNEL_OUTPUT_VARS$);
+            nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+            $OR$
+            nile_produce_n_repeat (...)
+            $KERNEL_PRIME_VARS_UPDATE$
+        }
+
+    $KERNEL_FIELDS_WRITE_BACK$
+
+    if (r->n != 0)
+        k_->process (n, k_, r, out);
+
+    if (in->eos) {
       $KERNEL_FIELDS$
-      nile_Buffer_t *o = *out;
-      int i = 0;
+      $KERNEL_EPILOGUE$
+    }
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+}
 
-      if (!k_->initialized) {
-          k_->initialized = 1;
-          $KERNEL_PROLOGUE$
-      }
-
-      while (i < in->n) {
-          $DECLARE_TICK_VARIABLES$
-          $KERNEL_INPUT_VARIABLES$
-          i += $IN_QUANTUM$
-          $KERNEL_BODY$
-          ($KERNEL_EMIT$ =
-              $KERNEL_OUTPUT_VARIABLES$
-              o->n += $OUT_QUANTUM$
-              if (o->capacity < o->n + $OUT_QUANTUM$) {
-                  nile_flush (c, k_->downstream, out);
-                  o = *out;
-              }
-          )
-        $UPDATE_VARS_WITH_TICK_VARS$
-      }
-
-      if (in->eos) {
-          $KERNEL_EPILOGUE$
-      }
-      else {
-        $KERNEL_FIELD_UPDATES$
-      }
-  }
+gezira_$KERNEL_PARENT$_t *
+gezira_$KERNEL_NAME$ (nile_t *n,
+                     $KERNEL_PARAMETERS$)
+{
+    gezira_$KERNEL_NAME$_t *k;
+    NILE_KERNEL_INIT (n, k, gezira_$KERNEL_NAME$);
+    $KERNEL_PARAMETERS_ASSIGNMENT$
+    return &k->$KERNEL_PARENT_NAME$;
+}
