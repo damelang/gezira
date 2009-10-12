@@ -1,9 +1,9 @@
 - kernel code generation looks sort of like this:
 
-struct gezira_$KERNEL_NAME$_ {
+typedef struct {
     gezira_$KERNEL_PARENT$_t $KERNEL_PARENT$;
     $KERNEL_FIELDS$ (which include parameters and prologue vars)
-};
+} gezira_$KERNEL_NAME$_t;
 
 static void
 gezira_$KERNEL_NAME$_process (nile_t *n, nile_Kernel_t *k_,
