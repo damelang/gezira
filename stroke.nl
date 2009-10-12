@@ -80,12 +80,12 @@ StrokeOffsetCurve (o) : Bezier >> Bezier
             << [a, a ~ b, m] << [m, b ~ c, c]
 
 StrokeSide (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
-    → Mix (StrokeOffsetCurve (o), c (o), j (o))
+    ⇒ Mix (StrokeOffsetCurve (o), c (o), j (o))
 
 ReverseBezier : Bezier >> Bezier
     ∀ [a, b, c]
         >> [c, b, a]
 
 Stroke (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
-    → Mix (StrokeSide (c, j, o),
+    ⇒ Mix (StrokeSide (c, j, o),
            ReverseBezier → Reverse → StrokeSide (c, j, o))

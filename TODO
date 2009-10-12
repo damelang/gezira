@@ -1,6 +1,7 @@
 - c generation
-    - clone kernels before put in pipeline?
-    - address nile_combine need in Render'
+    - kernel constructor with null pointer for setting fields?
+      separate populate function?
+    - look into passing array of local variables trick
     - write SDL versions of ReadImage and WriteImage
     - demos
 - fix ImageExtendModes!

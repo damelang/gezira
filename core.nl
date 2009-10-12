@@ -13,7 +13,7 @@ Canvas :: (start : Point) : [Color, Real] >>|
      m.b × p.x + m.d × p.y + m.f]
 
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-    → Interleave (s1, s2) → c
+    ⇒ Interleave (s1, s2) → c
 
 UniformColor (c : Color) : Sampler
     ∀ p
@@ -48,9 +48,9 @@ CreateSamplePoints (start : Point) : Real >> Point
 
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
     & [p, w, h]
-        → FillBetweenEdges (p) →
+        ⇒ FillBetweenEdges (p) →
           Interleave (CreateSamplePoints (p + 0.5) → s, Id) →
           c (p + 0.5)
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    → GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))
+    ⇒ GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))

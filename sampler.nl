@@ -30,7 +30,7 @@ FilterEnd : Color >> Color
             n' = n + 1
             
 FilterSampler (s : Sampler) : Sampler
-    -> FilterBegin -> s -> FilterEnd
+    ⇒ FilterBegin → s → FilterEnd
 
 TransformSample (m : Matrix) : Point >> Point
     ∀ p
@@ -85,4 +85,4 @@ GradientColorEnd : [Real, Color] >> Color
         >> [c.a, c.r × c.a, c.g × c.a, c.b × c.a]
 
 Gradient (s : GradientShape, e : GradientExtendMode, c : GradientColor) : Sampler
-    → s → e → GradientColorBegin → c → GradientColorEnd
+    ⇒ s → e → GradientColorBegin → c → GradientColorEnd
