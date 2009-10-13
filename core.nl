@@ -49,7 +49,7 @@ CreateSamplePoints (start : Point) : Real >> Point
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
     & [p, w, h]
         ⇒ FillBetweenEdges (p) →
-          Interleave (CreateSamplePoints (p + 0.5) → s, Id) →
+          Interleave (CreateSamplePoints (p + 0.5) → s, (→)) →
           c (p + 0.5)
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|

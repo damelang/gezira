@@ -1,5 +1,3 @@
-Id : α >> α
-
 Reverse : α >> α
 
 GroupBy (e, k : α >> β) : α >>|

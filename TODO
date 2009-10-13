@@ -1,5 +1,4 @@
 - c generation
-    - change nile_Pipeline to count the kernels instead
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?

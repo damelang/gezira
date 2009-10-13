@@ -128,25 +128,6 @@ nile_flush (nile_t *n, nile_Kernel_t *k, nile_Buffer_t **out)
     /* TODO */
 }
 
-typedef struct {
-    nile_Kernel_t kernel;
-} nile_Id_t;
-
-static void
-nile_Id_process (nile_t *n, nile_Kernel_t *k_,
-                 nile_Buffer_t *in, nile_Buffer_t **out)
-{
-    nile_forward (n, k_->downstream, in, out);
-}
-
-nile_Kernel_t *
-nile_Id (nile_t *n)
-{
-    nile_Id_t *k;
-    NILE_KERNEL_INIT (n, k, nile_Id);
-    return &k->kernel;
-}
-
 nile_Kernel_t *
 nile_Interleave (nile_t *n, nile_Kernel_t *k1, int quantum1,
                  nile_Kernel_t *k2, int quantum2)

@@ -166,9 +166,6 @@ nile_produce_1_repeat (nile_t *n, nile_Kernel_t *downstream,
 }
 
 nile_Kernel_t *
-nile_Id (nile_t *n);
-
-nile_Kernel_t *
 nile_Interleave (nile_t *n, nile_Kernel_t *k1, int quantum1,
                  nile_Kernel_t *k2, int quantum2);
 
