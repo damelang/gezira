@@ -1,8 +1,8 @@
 - c generation
     - change nile_Pipeline to count the kernels instead
-    - kernel constructor with null pointer for setting fields?
-      separate populate function?
-    - look into passing array of local variables trick
+    - kernel constructor calls separate populate function?
+      reuse populate function for field write back?
+      what about fields that belong to "middle types"?
     - write SDL versions of ReadImage and WriteImage
     - demos
 - fix ImageExtendModes!
@@ -15,7 +15,7 @@
     - what to do about closed pen paths?
 - parser
 - javascript generation
-- fix font problem on windows (add missing chars to DejaVu Sans Mono or Inconsolata)
+- fix font problem on windows (add missing chars to DejaVu Sans Mono and/or Inconsolata)
 - make zlib.nl and png.nl real
 - what about things like 2b + 0.5c
     - math mode? (single letter variables, etc.?)

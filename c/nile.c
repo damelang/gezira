@@ -1,22 +1,32 @@
 #include <stdarg.h>
+#include <stdlib.h>
+#include <libkern/OSAtomic.h>
 #include "nile.h"
 
 struct nile_ {
-    /* TODO */
+    char *memory;
+    int msize;
+    int nthreads;
+    OSSpinLock lock;
 };
 
 nile_t *
-nile_begin (char *memory, int size, int nthreads)
+nile_begin (char *memory, int msize, int nthreads)
 {
-    nile_t *n = (nile_t *) memory;
-    /* TODO */
+    nile_t *n;
+    
+    n = (nile_t *) memory;
+    n->memory = memory + sizeof (nile_t); 
+    n->msize = msize;
+    n->nthreads = nthreads;
+    n->lock = OS_SPINLOCK_INIT;
+
     return n;
 }
 
 char *
 nile_end (nile_t *n)
 {
-    /* TODO */
     return (char *) n;
 }
 
@@ -26,26 +36,23 @@ nile_feed (nile_t *n, nile_Kernel_t *p, nile_Real_t *data, int ndata, int eos)
     /* TODO */
 }
 
-#if 0
-
 typedef struct {
     nile_Kernel_t kernel;
-    nile_Kernel_t *ks[10];
+    nile_Kernel_t **ks;
+    int n;
 } nile_Pipeline_t;
 
 void
 nile_Pipeline_process (nile_t *n, nile_Kernel_t *k_,
                        nile_Buffer_t *in, nile_Buffer_t **out)
 {
-    nile_Pipeline_t *p = (nile_Pipeline_t *) k_;
+    nile_Pipeline_t *k = (nile_Pipeline_t *) k_;
 
     if (!k_->initialized) {
+        k_->initialized = 1;
         int i;
-        nile_Kernel_t *ki;
-
-        /* TODO adjust for dynamically allocated array */
-        for (i = 0; p->ks[i]; i++) {
-            ki = nile_Kernel_clone (n, p->ks[i]);
+        for (i = k->n - 1; i >= 0; i--) {
+            nile_Kernel_t *ki = nile_Kernel_clone (n, k->ks[i]);
             ki->downstream = k_->downstream;
             k_->downstream = ki;
         }
@@ -54,27 +61,28 @@ nile_Pipeline_process (nile_t *n, nile_Kernel_t *k_,
     nile_forward (n, k_->downstream, in, out);
 }
 
-#endif
-
 nile_Kernel_t *
-nile_Pipeline (nile_t *n, int nk, nile_Kernel_t *k, ...)
+nile_Pipeline (nile_t *n, ...)
 {
-#if 0
     va_list args;
-    Pipeline_t *p;
+    nile_Pipeline_t *k;
+    nile_Kernel_t *ki;
     int i;
 
-    va_start (args, k); 
-    NILE_KERNEL_INIT (n, p, Pipeline);
-    /* TODO dynamically allocate the pointer array */
-    p->ks[0] = k;
-    for (i = 1; k; i++)
-        p->ks[i] = k = va_arg (args, nile_Kernel_t *);
-
+    va_start (args, n); 
+    NILE_KERNEL_INIT (n, k, nile_Pipeline);
+    ki = va_arg (args, nile_Kernel_t *);
+    for (k->n = 0; ki != NULL; k->n++)
+        ki = va_arg (args, nile_Kernel_t *);
     va_end (args);
-    return &p->kernel;
-#endif
-    return NULL;
+
+    va_start (args, n); 
+    k->ks = (nile_Kernel_t **) nile_alloc (n, k->n * sizeof (nile_Kernel_t *));
+    for (i = 0; i < k->n; i++)
+        k->ks[i] = va_arg (args, nile_Kernel_t *);
+    va_end (args);
+
+    return &k->kernel;
 }
 
 nile_Kernel_t *
@@ -95,8 +103,16 @@ nile_Kernel_clone (nile_t *n, nile_Kernel_t *k)
 char *
 nile_alloc (nile_t *n, int size)
 {
-    /* TODO */
-    return NULL;
+    char *m;
+
+    OSSpinLockLock (&n->lock);
+    m = n->memory;
+    n->memory += size;
+    if (n->memory > ((char *) n) + n->msize)
+        abort ();
+    OSSpinLockUnlock (&n->lock);
+
+    return m;
 }
 
 void
@@ -112,11 +128,23 @@ nile_flush (nile_t *n, nile_Kernel_t *k, nile_Buffer_t **out)
     /* TODO */
 }
 
+typedef struct {
+    nile_Kernel_t kernel;
+} nile_Id_t;
+
+static void
+nile_Id_process (nile_t *n, nile_Kernel_t *k_,
+                 nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    nile_forward (n, k_->downstream, in, out);
+}
+
 nile_Kernel_t *
 nile_Id (nile_t *n)
 {
-    /* TODO */
-    return NULL;
+    nile_Id_t *k;
+    NILE_KERNEL_INIT (n, k, nile_Id);
+    return &k->kernel;
 }
 
 nile_Kernel_t *
@@ -141,11 +169,8 @@ nile_SortBy (nile_t *n, int index, int quantum)
     return NULL;
 }
 
-#if 0
 
-struct nile_Id_ {
-    nile_Kernel_t kernel;
-};
+#if 0
 
 struct nile_Interleave_ {
     nile_Kernel_t kernel;
@@ -170,19 +195,6 @@ struct nile_SortBy_ {
     /* TODO */
 };
 
-static void
-Id_process (nile_Context_t *c, nile_Kernel_t *k_,
-            nile_Buffer_t *in, nile_Buffer_t **out)
-{
-    nile_forward (c, k_->downstream, in, out);
-}
-
-nile_Kernel_t *
-nile_Id (nile_Id_t *k)
-{
-    k->kernel.process = Id_process;
-    return &k->kernel;
-}
 
 static void
 Interleave_process (nile_Context_t *c, nile_Kernel_t *k_,

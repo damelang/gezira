@@ -8,7 +8,7 @@ typedef struct nile_Kernel_ nile_Kernel_t;
 typedef struct nile_ nile_t;
 
 nile_t *
-nile_begin (char *memory, int size, int nthreads);
+nile_begin (char *memory, int msize, int nthreads);
 
 char *
 nile_end (nile_t *n);
@@ -17,7 +17,7 @@ void
 nile_feed (nile_t *n, nile_Kernel_t *p, nile_Real_t *data, int ndata, int eos);
 
 nile_Kernel_t *
-nile_Pipeline (nile_t *n, int nk, nile_Kernel_t *k, ...) __attribute__ ((sentinel));
+nile_Pipeline (nile_t *n, ...) __attribute__ ((sentinel));
 
 /* INTERNAL API */
 
