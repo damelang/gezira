@@ -77,13 +77,6 @@ nile_Pipeline (nile_t *n, int nk, nile_Kernel_t *k, ...)
     return NULL;
 }
 
-char *
-nile_alloc (nile_t *n, int size)
-{
-    /* TODO */
-    return NULL;
-}
-
 nile_Kernel_t *
 nile_Kernel_clone (nile_t *n, nile_Kernel_t *k)
 {
@@ -97,6 +90,26 @@ nile_Kernel_clone (nile_t *n, nile_Kernel_t *k)
         d[i] = s[i];
 
     return (nile_Kernel_t *) d;
+}
+
+char *
+nile_alloc (nile_t *n, int size)
+{
+    /* TODO */
+    return NULL;
+}
+
+void
+nile_forward (nile_t *n, nile_Kernel_t *k,
+              nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    /* TODO */
+}
+
+void
+nile_flush (nile_t *n, nile_Kernel_t *k, nile_Buffer_t **out)
+{
+    /* TODO */
 }
 
 nile_Kernel_t *

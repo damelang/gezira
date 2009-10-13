@@ -1,4 +1,5 @@
 - c generation
+    - change nile_Pipeline to count the kernels instead
     - kernel constructor with null pointer for setting fields?
       separate populate function?
     - look into passing array of local variables trick

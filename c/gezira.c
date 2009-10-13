@@ -53,7 +53,7 @@ gezira_Canvas (nile_t *n, gezira_Canvas_t *k,
 
 /*
     CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-        → Interleave (s1, s2) → c
+        ⇒ Interleave (s1, s2) → c
 */
 
 typedef struct {
@@ -126,7 +126,7 @@ gezira_CompositeSamplers (nile_t *n,
 
 /*
    UniformColor (c : Color) : Sampler
-    ∀ _
+    ∀ p
         >> [c.a, c.a × c.r, c.a × c.g, c.a × c.b]
 */
 
@@ -162,7 +162,7 @@ gezira_UniformColor_process (nile_t *n, nile_Kernel_t *k_,
     }
 
     while (i <= in->n - IN_QUANTUM) {
-        NILE_CONSUME_2 (in, i, v__x, v__y);
+        NILE_CONSUME_2 (in, i, v_p_x, v_p_y);
         real t_1_a = v_c_a;
         real t_1_r = nile_Real_mul (v_c_a, v_c_r);
         real t_1_g = nile_Real_mul (v_c_a, v_c_g);
@@ -376,7 +376,7 @@ gezira_FillBetweenEdges (nile_t *n,
     CreateSamplePoints (start : Point) : Real >> Point
         x = start.x
         y = start.y
-        ∀ _
+        ∀ c
             x' = x + 1
             >> [x, y]
 */
@@ -415,7 +415,7 @@ gezira_CreateSamplePoints_process (nile_t *n, nile_Kernel_t *k_,
 
     while (i <= in->n - IN_QUANTUM) {
         real v_x_;
-        NILE_CONSUME_1 (in, i, v__);
+        NILE_CONSUME_1 (in, i, v_c);
         v_x_ = nile_Real_add (v_x, 1);
         nile_produce_2 (o, v_x, v_y);
         nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
@@ -448,8 +448,8 @@ gezira_CreateSamplePoints (nile_t *n,
 
 /*
     Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
-        & [p, _, _]
-            → FillBetweenEdges (p) →
+        & [p, w, h]
+            ⇒ FillBetweenEdges (p) →
               Interleave (→ CreateSamplePoints (p + 0.5) → s, Id) →
               c (p + 0.5)
 */
@@ -480,7 +480,7 @@ gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
     if (!k_->initialized) {
         k_->initialized = 1;
 
-        NILE_PEEK_4 (in, v_p_x, v_p_y, v__, v__);
+        NILE_PEEK_4 (in, v_p_x, v_p_y, v_w, v_h);
         real t_1_x = nile_Real_add (v_p_x, 0.5);
         real t_1_y = nile_Real_add (v_p_y, 0.5);
 
@@ -492,7 +492,7 @@ gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
                         gezira_CreateSamplePoints (n, t_1_x, t_1_y),
                         gezira_Sampler (n, v_s), NULL), 4,
                     nile_Id (n), 1),
-                gezira_Canvas (n, t_1_x, t_1_y), NULL);
+                gezira_Canvas (n, v_c, t_1_x, t_1_y), NULL);
 
         p->downstream = k_->downstream;
         k_->downstream = p;
@@ -517,6 +517,7 @@ gezira_Render_ (nile_t *n,
                 gezira_Sampler_t *v_s,
                 gezira_Canvas_t *v_c)
 {
+    gezira_Render__t *k;
     NILE_KERNEL_INIT (n, k, gezira_Render_);
     k->v_s = v_s;
     k->v_c = v_c;
@@ -525,7 +526,7 @@ gezira_Render_ (nile_t *n,
 
 /*
     Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-        → GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))
+        ⇒ GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))
 */
 
 typedef struct {
@@ -554,7 +555,7 @@ gezira_Render_process (nile_t *n, nile_Kernel_t *k_,
     if (!k_->initialized) {
         k_->initialized = 1;
 
-        nile_Kernel_t *p = nile_GroupBy (n, 1, 4, nile_Pipeline (n, 2
+        nile_Kernel_t *p = nile_GroupBy (n, 1, 4, nile_Pipeline (n, 2,
             nile_SortBy (n, 0, 4),
             gezira_Render_ (n, v_s, v_c), NULL));
 
@@ -659,8 +660,8 @@ gezira_TransformBezier (nile_t *n,
                         nile_Real_t v_m_e,
                         nile_Real_t v_m_f)
 {
+    gezira_TransformBezier_t *k;
     NILE_KERNEL_INIT (n, k, gezira_TransformBezier);
-    k->kernel.process = TransformBezier_process;
     k->v_m_a = v_m_a;
     k->v_m_b = v_m_b;
     k->v_m_c = v_m_c;

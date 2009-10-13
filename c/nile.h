@@ -114,6 +114,10 @@ nile_recurse_if_full (nile_t *n, nile_Kernel_t *k,
 #define NILE_CONSUME_4(b, i, v1, v2, v3, v4) \
     NILE_CONSUME_2 (b, i, v1, v2); NILE_CONSUME_2 (b, i, v3, v4)
 
+#define NILE_CONSUME_6(b, i, v1, v2, v3, v4, v5, v6) \
+    NILE_CONSUME_2 (b, i, v1, v2); NILE_CONSUME_2 (b, i, v3, v4); \
+    NILE_CONSUME_2 (b, i, v5, v6)
+
 #define NILE_CONSUME_8(b, i, v1, v2, v3, v4, v5, v6, v7, v8) \
     NILE_CONSUME_4 (b, i, v1, v2, v3, v4); \
     NILE_CONSUME_4 (b, i, v5, v6, v7, v8)
@@ -135,6 +139,10 @@ nile_produce_2 (nile_Buffer_t *b, real v1, real v2)
 static inline void
 nile_produce_4 (nile_Buffer_t *b, real v1, real v2, real v3, real v4)
     { nile_produce_2 (b, v1, v2); nile_produce_2 (b, v3, v4); }
+
+static inline void
+nile_produce_6 (nile_Buffer_t *b, real v1, real v2, real v3, real v4, real v5, real v6)
+    { nile_produce_2 (b, v1, v2); nile_produce_2 (b, v3, v4); nile_produce_2 (b, v5, v6); }
 
 static inline void
 nile_produce_1_repeat (nile_t *n, nile_Kernel_t *downstream,
