@@ -1,4 +1,7 @@
 - c generation
+    - fill out nile.c
+        - Interleave
+    - rename nile_consume and nile_produce to nile_input and nile_output ?
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?

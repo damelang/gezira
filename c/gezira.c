@@ -491,7 +491,7 @@ gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
                     nile_Pipeline (n, 2,
                         gezira_CreateSamplePoints (n, t_1_x, t_1_y),
                         gezira_Sampler (n, v_s), NULL), 4,
-                    nile_Pipeline (n), 1),
+                    nile_Pipeline (n, NULL), 1),
                 gezira_Canvas (n, v_c, t_1_x, t_1_y), NULL);
 
         p->downstream = k_->downstream;
