@@ -7,6 +7,7 @@
     - rename the nile_t *n variable to nile_t *nl
     - rename nile_consume and nile_produce to nile_input and nile_output ?
     - unify "feed" like functions?
+    - do all kernels pass along the 'eos' if an empty in buffer arrives?
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?

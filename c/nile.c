@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "nile.h"
 
+#define real nile_Real_t
+
 #include <libkern/OSAtomic.h>
 typedef OSSpinLock nile_Lock_t;
 static inline void nile_Lock_init (nile_Lock_t *l) { *l = OS_SPINLOCK_INIT; }
@@ -190,7 +192,7 @@ nile_Interleave__process (nile_t *n, nile_Kernel_t *k_,
                 o->data[j++] = in->data[i++];
             j += k->skip;
         }
-        int flush_needed = (!(i < i_n) && in->eos) || !(j < j_n);
+        int flush_needed = (in->eos && !(i < i_n)) || !(j < j_n);
 
         nile_Lock_lock (lock);
             o->n += i0 - i;
@@ -292,10 +294,18 @@ nile_GroupBy (nile_t *n, int index, int quantum, nile_Kernel_t *v_k)
     return &k->kernel;
 }
 
+typedef struct SortByCluster_ SortByCluster_t;
+
+struct SortByCluster_ {
+    nile_Buffer_t *o;
+    SortByCluster_t *next;
+};
+
 typedef struct {
     nile_Kernel_t kernel;
     int index;
     int quantum;
+    SortByCluster_t *head;
 } nile_SortBy_t;
 
 static void
@@ -303,15 +313,76 @@ nile_SortBy_process (nile_t *n, nile_Kernel_t *k_,
                      nile_Buffer_t *in, nile_Buffer_t **out)
 {
     nile_SortBy_t *k = (nile_SortBy_t *) k_;
-    /* TODO */
+    int i = 0;
+
+    while (i < in->n) {
+        SortByCluster_t *c = k->head;
+        real key = in->data[i + k->index];
+
+        /* find the right buffer */
+        while (c->next != NULL && key > c->next->o->data[k->index])
+            c = c->next;
+
+        /* split the buffer if it's full */
+        if (c->o->n > NILE_BUFFER_SIZE - k->quantum) {
+            SortByCluster_t *next = (SortByCluster_t *)
+                nile_alloc (n, sizeof (SortByCluster_t));
+            next->next = c->next;
+            c->next = next;
+            c->next->o = NULL; /* FIXME need a new buffer here! */
+
+            int j = c->o->n / k->quantum / 2 * k->quantum;
+            while (j < c->o->n)
+                c->next->o->data[c->next->o->n++] = c->o->data[j++];
+            c->o->n -= c->next->o->n;
+
+            if (key > c->next->o->data[k->index])
+                c = c->next;
+        }
+
+        /* insert new element */
+        nile_Buffer_t *o = c->o;
+        int j = o->n - k->quantum;
+        do {
+            real j_key = o->data[j + k->index];
+            if (j_key <= key)
+                break;
+            int jj = j + k->quantum;
+            int q = k->quantum;
+            while (q--)
+                o->data[jj++] = o->data[j++];
+            j = j - k->quantum - k->quantum;
+        } while (j >= 0);
+        j += k->quantum;
+        int q = k->quantum;
+        while (q--)
+            o->data[j++] = in->data[i++];
+
+        o->n += k->quantum;
+    }
+
+    if (in->eos) {
+        SortByCluster_t *c = k->head;
+        do {
+            if (c->next == NULL)
+                c->o->eos = 1;
+            nile_flush (n, k_->downstream, &c->o); /* FIXME don't want new buffer! */
+            c = c->next;
+        } while (c);
+    }
 }
 
 nile_Kernel_t *
 nile_SortBy (nile_t *n, int index, int quantum)
 {
     nile_SortBy_t *k;
+
     NILE_KERNEL_INIT (n, k, nile_SortBy);
     k->index = index;
     k->quantum = quantum;
+    k->head = (SortByCluster_t *) nile_alloc (n, sizeof (SortByCluster_t));
+    k->head->o = NULL; /* FIXME need a new buffer here! */
+    k->head->next = NULL;
+
     return &k->kernel;
 }
