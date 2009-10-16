@@ -51,9 +51,9 @@ static inline real nile_Real_sel (real a, real b, real c) { return b ? a : c; }
 
 #define NILE_BUFFER_SIZE 128
 typedef struct {
-    real data[NILE_BUFFER_SIZE];
     int n;
     int eos;
+    real data[NILE_BUFFER_SIZE];
 } nile_Buffer_t;
 
 struct nile_Kernel_ {
@@ -84,6 +84,9 @@ nile_forward (nile_t *n, nile_Kernel_t *k,
 
 void
 nile_flush (nile_t *n, nile_Kernel_t *k, nile_Buffer_t **out);
+
+void
+nile_reschedule (nile_t *n, nile_Kernel_t *k, nile_Buffer_t *in, int i);
 
 static inline void
 nile_flush_if_full (nile_t *n, nile_Kernel_t *downstream,
@@ -151,11 +154,10 @@ nile_produce_1_repeat (nile_t *n, nile_Kernel_t *downstream,
 {
     for (;;) {
         int room = (NILE_BUFFER_SIZE - o->n) / quantum;
-        int nj = times < room ? times : room;
-        int j;
-        for (j = 0; j < nj; j++)
+        int n_ = times < room ? times : room;
+        times -= n_;
+        while (n_--)
             nile_produce_1 (o, v);
-        times -= nj;
         if (times == 0) {
             nile_flush_if_full (n, downstream, o, out, quantum);
             break;

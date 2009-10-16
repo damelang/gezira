@@ -3,17 +3,17 @@
 #include "nile.h"
 
 #include <libkern/OSAtomic.h>
-#define NILE_LOCK_T OSSpinLock
-#define NILE_LOCK_INIT(lock) (lock) = OS_SPINLOCK_INIT
-#define NILE_LOCK_DESTROY(lock)
-#define NILE_LOCK(lock) OSSpinLockLock (&(lock))
-#define NILE_UNLOCK(lock) OSSpinLockUnlock (&(lock))
+typedef OSSpinLock nile_Lock_t;
+static inline void nile_Lock_init (nile_Lock_t *l) { *l = OS_SPINLOCK_INIT; }
+static inline void nile_Lock_fini (nile_Lock_t *l) { }
+static inline void nile_Lock_lock (nile_Lock_t *l) { OSSpinLockLock (l); }
+static inline void nile_Lock_unlock (nile_Lock_t *l) { OSSpinLockUnlock (l); }
 
 struct nile_ {
     char *memory;
     int msize;
     int nthreads;
-    NILE_LOCK_T lock;
+    nile_Lock_t lock;
 };
 
 nile_t *
@@ -25,7 +25,7 @@ nile_begin (char *memory, int msize, int nthreads)
     n->memory = memory + sizeof (nile_t); 
     n->msize = msize;
     n->nthreads = nthreads;
-    NILE_LOCK_INIT (n->lock);
+    nile_Lock_init (&n->lock);
 
     return n;
 }
@@ -33,12 +33,18 @@ nile_begin (char *memory, int msize, int nthreads)
 char *
 nile_end (nile_t *n)
 {
-    NILE_LOCK_DESTROY (n->lock);
+    nile_Lock_fini (&n->lock);
     return (char *) n;
 }
 
 void
 nile_feed (nile_t *n, nile_Kernel_t *p, nile_Real_t *data, int ndata, int eos)
+{
+    /* TODO */
+}
+
+void
+nile_reschedule (nile_t *n, nile_Kernel_t *k, nile_Buffer_t *in, int i)
 {
     /* TODO */
 }
@@ -61,12 +67,12 @@ nile_alloc (nile_t *n, int size)
 {
     char *m;
 
-    NILE_LOCK (n->lock);
-    m = n->memory;
-    n->memory += size;
-    if (n->memory > ((char *) n) + n->msize)
-        abort ();
-    NILE_UNLOCK (n->lock);
+    nile_Lock_lock (&n->lock);
+        m = n->memory;
+        n->memory += size;
+        if (n->memory > ((char *) n) + n->msize)
+            abort ();
+    nile_Lock_unlock (&n->lock);
 
     return m;
 }
@@ -141,14 +147,103 @@ typedef struct {
     int quantum1;
     nile_Kernel_t *v_k2;
     int quantum2;
+    nile_Lock_t lock;
+    nile_Buffer_t *o;
+    int j1;
+    int j2;
 } nile_Interleave_t ;
+
+typedef struct {
+    nile_Kernel_t kernel;
+    nile_Interleave_t *parent;
+    int quantum;
+    int skip;
+    int *j;
+    int j_n;
+} nile_Interleave__t;
+
+static void
+nile_Interleave__process (nile_t *n, nile_Kernel_t *k_,
+                          nile_Buffer_t *in, nile_Buffer_t **out)
+{
+    nile_Interleave__t *k = (nile_Interleave__t *) k_;
+    nile_Lock_t *lock = &k->parent->lock;
+    int i_n = in->n;
+    int j_n = k->j_n;
+    int i = 0;
+
+    while (i < i_n) {
+        nile_Lock_lock (lock);
+            nile_Buffer_t *o = k->parent->o;
+            int j = *k->j;
+        nile_Lock_unlock (lock);
+
+        if (j == -1) {
+            nile_reschedule (n, k_, in, i);
+            break;
+        }
+
+        int i0 = i;
+        while (i < i_n && j < j_n) {
+            int q = k->quantum;
+            while (q--)
+                o->data[j++] = in->data[i++];
+            j += k->skip;
+        }
+        int flush_needed = (!(i < i_n) && in->eos) || !(j < j_n);
+
+        nile_Lock_lock (lock);
+            o->n += i0 - i;
+            if (flush_needed) {
+                *k->j = -1;
+                if (k->parent->j1 == k->parent->j2) {
+                    nile_flush (n, k->parent->kernel.downstream, &k->parent->o);
+                    k->parent->j1 = 0;
+                    k->parent->j2 = k->parent->quantum1;
+                }
+            }
+            else
+                *k->j = j;
+        nile_Lock_unlock (lock);
+    }
+}
+
+nile_Kernel_t *
+nile_Interleave_ (nile_t *n, nile_Interleave_t *parent,
+                  int quantum, int skip, int *j)
+{
+    nile_Interleave__t *k;
+
+    NILE_KERNEL_INIT (n, k, nile_Interleave_);
+    k->parent = parent;
+    k->quantum = quantum;
+    k->skip = skip;
+    k->j = j;
+    k->j_n = NILE_BUFFER_SIZE - (quantum + skip) + *j + 1;
+    return &k->kernel;
+}
 
 static void
 nile_Interleave_process (nile_t *n, nile_Kernel_t *k_,
                          nile_Buffer_t *in, nile_Buffer_t **out)
 {
     nile_Interleave_t *k = (nile_Interleave_t *) k_;
-    /* TODO */
+    nile_Buffer_t *in_;
+
+    if (!k_->initialized) {
+        k_->initialized = 1;
+        k->v_k1 = nile_Kernel_clone (n, k->v_k1);
+        k->v_k2 = nile_Kernel_clone (n, k->v_k2);
+        k->v_k1->downstream =
+            nile_Interleave_ (n, k, k->quantum1, k->quantum2, &k->j1);
+        k->v_k2->downstream =
+            nile_Interleave_ (n, k, k->quantum2, k->quantum1, &k->j2);
+    }
+
+    in_ = in;
+    nile_flush (n, k->v_k1, &in_); /* TODO we don't want a new buffer here! */
+    in_ = in;
+    nile_flush (n, k->v_k2, &in_); /* TODO we don't want a new buffer here! */
 }
 
 nile_Kernel_t *
@@ -156,11 +251,18 @@ nile_Interleave (nile_t *n, nile_Kernel_t *v_k1, int quantum1,
                  nile_Kernel_t *v_k2, int quantum2)
 {
     nile_Interleave_t *k;
+
     NILE_KERNEL_INIT (n, k, nile_Interleave);
     k->v_k1 = v_k1;
     k->quantum1 = quantum1;
     k->v_k2 = v_k2;
     k->quantum2 = quantum2;
+    nile_Lock_init (&k->lock);
+    /* TODO nile_Lock_fini where/when? */
+    k->o = NULL; /* TODO this needs to get a newly allocated buffer! */
+    k->j1 = 0;
+    k->j2 = quantum1;
+
     return &k->kernel;
 }
 

@@ -1,14 +1,37 @@
 - c generation
     - fill out nile.c
         - Interleave
+    - fix flush_if_full and _repeat functions.
+      The o buffer is passed by value, you can't set it in the function!
+      must return the new o buffer!
+    - rename the nile_t *n variable to nile_t *nl
     - rename nile_consume and nile_produce to nile_input and nile_output ?
+    - unify "feed" like functions?
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?
+    - introduce _ vars back into the language
     - write SDL versions of ReadImage and WriteImage
     - demos
 - fix ImageExtendModes!
 - update PDF doc
+- think about restructuring Render this way:
+
+  Mask :: (start : Point) Real >>|
+
+  MaskCanvas (s : Sampler, c : Canvas) : Mask
+      ⇒ Interleave (CreateSamplePoints (start) → s, (→)) → c (start)
+
+  MaskSolidColor (color : Color, image : Image) : Mask
+      ... primitive code ...
+
+  RenderToMask' (m : Mask) : EdgeContribution >>|
+      & [p, w, h]
+          ⇒ FillBetweenEdges (p) → m (p + 0.5)
+
+  RenderToMask (m : Mask) : EdgeContribution >>|
+      ⇒ GroupBy (@p.y, SortBy (@p.x) → RenderToMask' (m))
+
 - finish pen stroking
     - fix bugs
     - find the right magic number for stroke offset curve
