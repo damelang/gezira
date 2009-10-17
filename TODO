@@ -8,12 +8,17 @@
     - rename nile_consume and nile_produce to nile_input and nile_output ?
     - unify "feed" like functions?
     - do all kernels pass along the 'eos' if an empty in buffer arrives?
+    - write SDL versions of ReadImage and WriteImage
+    - demos
+    - keep GroupBy from "fork bombing" by metering the number of
+      live kernels it has spawned
+    - optimize SortBy for when the input stream is wholly contained
+      in the first input buffer. Do an in-place sort and
+      just forward the input to the next kernel.
+    - introduce _ vars back into the language
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?
-    - introduce _ vars back into the language
-    - write SDL versions of ReadImage and WriteImage
-    - demos
 - fix ImageExtendModes!
 - update PDF doc
 - think about restructuring Render this way:

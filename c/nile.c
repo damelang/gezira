@@ -235,6 +235,11 @@ nile_Interleave_process (nile_t *n, nile_Kernel_t *k_,
 
     if (!k_->initialized) {
         k_->initialized = 1;
+        nile_Lock_init (&k->lock);
+        /* TODO nile_Lock_fini where/when? */
+        k->o = NULL; /* TODO this needs to get a newly allocated buffer! */
+        k->j1 = 0;
+        k->j2 = k->quantum1;
         k->v_k1 = nile_Kernel_clone (n, k->v_k1);
         k->v_k2 = nile_Kernel_clone (n, k->v_k2);
         k->v_k1->downstream =
@@ -260,11 +265,6 @@ nile_Interleave (nile_t *n, nile_Kernel_t *v_k1, int quantum1,
     k->quantum1 = quantum1;
     k->v_k2 = v_k2;
     k->quantum2 = quantum2;
-    nile_Lock_init (&k->lock);
-    /* TODO nile_Lock_fini where/when? */
-    k->o = NULL; /* TODO this needs to get a newly allocated buffer! */
-    k->j1 = 0;
-    k->j2 = quantum1;
 
     return &k->kernel;
 }
@@ -281,7 +281,26 @@ nile_GroupBy_process (nile_t *n, nile_Kernel_t *k_,
                       nile_Buffer_t *in, nile_Buffer_t **out)
 {
     nile_GroupBy_t *k = (nile_GroupBy_t *) k_;
-    /* TODO */
+    int i = 0;
+    real key = in->data[k->index];
+    nile_Kernel_t *downstream = nile_Kernel_clone (n, k->v_k);
+    nile_Buffer_t *o = *out;
+    
+    while (i < in->n) {
+        real key_ = in->data[i + k->index];
+        if (key_ == key)
+            nile_flush_if_full (n, downstream, o, out, k->quantum);
+        else {
+            nile_flush (n, downstream, out);
+            downstream = nile_Kernel_clone (n, k->v_k);
+            key = key_;
+        }
+        int q = k->quantum;
+        while (q--)
+            o->data[o->n++] = in->data[i++];
+    }
+
+    nile_flush (n, downstream, out); /* TODO no new buffer need! */
 }
 
 nile_Kernel_t *
@@ -294,14 +313,14 @@ nile_GroupBy (nile_t *n, int index, int quantum, nile_Kernel_t *v_k)
     k->quantum = quantum;
     k->v_k = v_k;
 
-    return &k->kernel;
+    return nile_Pipeline (n, nile_SortBy (n, index, quantum), &k->kernel, NULL);
 }
 
 typedef struct nile_BufferList_ nile_BufferList_t;
 
 struct nile_BufferList_ {
     nile_Buffer_t *o;
-    nile_BufferList_t *prev, *next;
+    nile_BufferList_t *tail;
 };
 
 typedef struct {
@@ -318,29 +337,36 @@ nile_SortBy_process (nile_t *n, nile_Kernel_t *k_,
     nile_SortBy_t *k = (nile_SortBy_t *) k_;
     int i = 0;
 
+    if (!k_->initialized) {
+        k_->initialized = 1;
+        k->os = (nile_BufferList_t *) nile_alloc (n, sizeof (nile_BufferList_t));
+        k->os->o = NULL; /* FIXME need a new buffer here! */
+        k->os->tail = NULL;
+    }
+
     while (i < in->n) {
         nile_BufferList_t *os = k->os;
         real key = in->data[i + k->index];
 
         /* find the right buffer */
-        while (os->next != NULL && key > os->next->o->data[k->index])
-            os = os->next;
+        while (os->tail != NULL && key > os->tail->o->data[k->index])
+            os = os->tail;
 
         /* split the buffer if it's full */
         if (os->o->n > NILE_BUFFER_SIZE - k->quantum) {
-            nile_BufferList_t *next = (nile_BufferList_t *)
+            nile_BufferList_t *tail = (nile_BufferList_t *)
                 nile_alloc (n, sizeof (nile_BufferList_t));
-            next->next = os->next;
-            os->next = next;
-            os->next->o = NULL; /* FIXME need a new buffer here! */
+            tail->tail = os->tail;
+            os->tail = tail;
+            os->tail->o = NULL; /* FIXME need a new buffer here! */
 
             int j = os->o->n / k->quantum / 2 * k->quantum;
             while (j < os->o->n)
-                os->next->o->data[os->next->o->n++] = os->o->data[j++];
-            os->o->n -= os->next->o->n;
+                os->tail->o->data[os->tail->o->n++] = os->o->data[j++];
+            os->o->n -= os->tail->o->n;
 
-            if (key > os->next->o->data[k->index])
-                os = os->next;
+            if (key > os->tail->o->data[k->index])
+                os = os->tail;
         }
 
         /* insert new element */
@@ -366,10 +392,10 @@ nile_SortBy_process (nile_t *n, nile_Kernel_t *k_,
     if (in->eos) {
         nile_BufferList_t *os = k->os;
         while (os) {
-            if (os->next == NULL)
+            if (os->tail == NULL)
                 os->o->eos = 1;
             nile_flush (n, k_->downstream, &os->o); /* FIXME don't want new buffer! */
-            os = os->next;
+            os = os->tail;
         }
     }
 }
@@ -382,9 +408,6 @@ nile_SortBy (nile_t *n, int index, int quantum)
     NILE_KERNEL_INIT (n, k, nile_SortBy);
     k->index = index;
     k->quantum = quantum;
-    k->os = (nile_BufferList_t *) nile_alloc (n, sizeof (nile_BufferList_t));
-    k->os->o = NULL; /* FIXME need a new buffer here! */
-    k->os->next = NULL;
 
     return &k->kernel;
 }
