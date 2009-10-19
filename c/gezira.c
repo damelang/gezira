@@ -11,9 +11,17 @@ struct gezira_Sampler_ {
 };
 
 nile_Kernel_t *
-gezira_Sampler (nile_t *n, gezira_Sampler_t *k)
+gezira_Sampler (nile_t *nl, gezira_Sampler_t *k)
 {
     return &k->kernel;
+}
+
+void *
+gezira_Sampler_clone (nile_t *nl, void *k_)
+{
+    gezira_Sampler_t *k = (gezira_Sampler_t *) k_;
+    gezira_Sampler_t *clone = nile_Kernel_clone (nl, k_);
+    return clone;
 }
 
 /*
@@ -25,9 +33,17 @@ struct gezira_Compositor_ {
 };
 
 nile_Kernel_t *
-gezira_Compositor (nile_t *n, gezira_Compositor_t *k)
+gezira_Compositor (nile_t *nl, gezira_Compositor_t *k)
 {
     return &k->kernel;
+}
+
+void *
+gezira_Compositor_clone (nile_t *nl, void *k_)
+{
+    gezira_Compositor_t *k = (gezira_Compositor_t *) k_;
+    gezira_Compositor_t *clone = nile_Kernel_clone (nl, k_);
+    return clone;
 }
 
 /*
@@ -41,14 +57,23 @@ struct gezira_Canvas_ {
 };
 
 nile_Kernel_t *
-gezira_Canvas (nile_t *n, gezira_Canvas_t *k,
+gezira_Canvas (nile_t *nl, gezira_Canvas_t *k,
                nile_Real_t v_start_x,
                nile_Real_t v_start_y)
 {
-    k = (gezira_Canvas_t *) nile_Kernel_clone (n, &k->kernel);
     k->v_start_x = v_start_x;
     k->v_start_y = v_start_y;
     return &k->kernel;
+}
+
+void *
+gezira_Canvas_clone (nile_t *nl, void *k_)
+{
+    gezira_Canvas_t *k = (gezira_Canvas_t *) k_;
+    gezira_Canvas_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_start_x = k->v_start_x;
+    clone->v_start_y = k->v_start_y;
+    return clone;
 }
 
 /*
@@ -63,9 +88,20 @@ typedef struct {
     gezira_Compositor_t *v_c;
 } gezira_CompositeSamplers_t;
 
-static void
-gezira_CompositeSamplers_process (nile_t *n, nile_Kernel_t *k_,
-                                  nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_CompositeSamplers_clone (nile_t *nl, void *k_)
+{
+    gezira_CompositeSamplers_t *k = (gezira_CompositeSamplers_t *) k_;
+    gezira_CompositeSamplers_t *clone = gezira_Sampler_clone (nl, k_);
+    clone->v_s1 = k->v_s1->clone (nl, k->v_s1);
+    clone->v_s2 = k->v_s2->clone (nl, k->v_s2);
+    clone->v_c = k->v_c->clone (nl, k->v_c);
+    return clone;
+}
+
+static int
+gezira_CompositeSamplers_process (nile_t *nl, nile_Kernel_t *k_,
+                                  nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 2
 #define OUT_QUANTUM 4
@@ -73,8 +109,6 @@ gezira_CompositeSamplers_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_CompositeSamplers_t *k = (gezira_CompositeSamplers_t *) k_;
     gezira_Sampler_t *v_s1 = k->v_s1;
@@ -85,39 +119,40 @@ gezira_CompositeSamplers_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
 
         nile_Kernel_t *p =
-            nile_Pipeline (n, 2,
-                nile_Interleave (n,
-                    gezira_Sampler (n, v_s1), 4,
-                    gezira_Sampler (n, v_s2), 4),
-                gezira_Compositor (n, v_c), NULL);
+            nile_Pipeline (nl, 2,
+                nile_Interleave (nl,
+                    gezira_Sampler (nl, v_s1), 4,
+                    gezira_Sampler (nl, v_s2), 4),
+                gezira_Compositor (nl, v_c), NULL);
 
         p->downstream = k_->downstream;
         k_->downstream = p;
     }
 
-    nile_forward (n, k_->downstream, in, out);
+    i = nile_forward (nl, k_, in, i, out);
 
     k->v_s1 = v_s1;
     k->v_s2 = v_s2;
     k->v_c = v_c;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 gezira_Sampler_t *
-gezira_CompositeSamplers (nile_t *n,
+gezira_CompositeSamplers (nile_t *nl,
                           gezira_Sampler_t *v_s1,
                           gezira_Sampler_t *v_s2,
                           gezira_Compositor_t *v_c)
 {
-    gezira_CompositeSamplers_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_CompositeSamplers);
+    gezira_CompositeSamplers_t *k = NILE_KERNEL_NEW (nl, gezira_CompositeSamplers);
     k->v_s1 = v_s1;
     k->v_s2 = v_s2;
     k->v_c = v_c;
@@ -138,9 +173,21 @@ typedef struct {
     nile_Real_t v_c_b;
 } gezira_UniformColor_t;
 
-static void
-gezira_UniformColor_process (nile_t *n, nile_Kernel_t *k_,
-                             nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_UniformColor_clone (nile_t *nl, void *k_)
+{
+    gezira_UniformColor_t *k = (gezira_UniformColor_t *) k_;
+    gezira_UniformColor_t *clone = gezira_Sampler_clone (nl, k_);
+    clone->v_c_a = k->v_c_a;
+    clone->v_c_r = k->v_c_r;
+    clone->v_c_g = k->v_c_g;
+    clone->v_c_b = k->v_c_b;
+    return clone;
+}
+
+static int
+gezira_UniformColor_process (nile_t *nl, nile_Kernel_t *k_,
+                             nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 2
 #define OUT_QUANTUM 4
@@ -148,8 +195,6 @@ gezira_UniformColor_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_UniformColor_t *k = (gezira_UniformColor_t *) k_;
     real v_c_a = k->v_c_a;
@@ -161,14 +206,14 @@ gezira_UniformColor_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         NILE_CONSUME_2 (in, i, v_p_x, v_p_y);
         real t_1_a = v_c_a;
         real t_1_r = nile_Real_mul (v_c_a, v_c_r);
         real t_1_g = nile_Real_mul (v_c_a, v_c_g);
         real t_1_b = nile_Real_mul (v_c_a, v_c_b);
-        nile_produce_4 (o, t_1_a, t_1_r, t_1_g, t_1_b);
-        nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+        nile_produce_4 (out, t_1_a, t_1_r, t_1_g, t_1_b);
+        nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
     }
 
     k->v_c_a = v_c_a;
@@ -177,23 +222,24 @@ gezira_UniformColor_process (nile_t *n, nile_Kernel_t *k_,
     k->v_c_b = v_c_b;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+    
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 gezira_Sampler_t *
-gezira_UniformColor (nile_t *n,
+gezira_UniformColor (nile_t *nl,
                      nile_Real_t c_a,
                      nile_Real_t c_r,
                      nile_Real_t c_g,
                      nile_Real_t c_b)
 {
-    gezira_UniformColor_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_UniformColor);
+    gezira_UniformColor_t *k = NILE_KERNEL_NEW (nl, gezira_UniformColor);
     k->v_c_a = c_a;
     k->v_c_r = c_r;
     k->v_c_g = c_g;
@@ -211,9 +257,17 @@ typedef struct {
     gezira_Compositor_t compositor;
 } gezira_CompositeOver_t;
 
-static void
-gezira_CompositeOver_process (nile_t *n, nile_Kernel_t *k_,
-                              nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_CompositeOver_clone (nile_t *nl, void *k_)
+{
+    gezira_CompositeOver_t *k = (gezira_CompositeOver_t *) k_;
+    gezira_CompositeOver_t *clone = gezira_Compositor_clone (nl, k_);
+    return clone;
+}
+
+static int
+gezira_CompositeOver_process (nile_t *nl, nile_Kernel_t *k_,
+                              nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 8
 #define OUT_QUANTUM 4
@@ -221,8 +275,6 @@ gezira_CompositeOver_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_CompositeOver_t *k = (gezira_CompositeOver_t *) k_;
 
@@ -230,30 +282,31 @@ gezira_CompositeOver_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         NILE_CONSUME_8 (in, i, v_a_a, v_a_r, v_a_g, v_a_b, v_b_a, v_b_r, v_b_g, v_b_b);
         real t_1_a = nile_Real_add (v_a_a, nile_Real_mul (v_b_a, nile_Real_sub (1, v_a_a)));
         real t_1_r = nile_Real_add (v_a_r, nile_Real_mul (v_b_r, nile_Real_sub (1, v_a_a)));
         real t_1_g = nile_Real_add (v_a_g, nile_Real_mul (v_b_g, nile_Real_sub (1, v_a_a)));
         real t_1_b = nile_Real_add (v_a_b, nile_Real_mul (v_b_b, nile_Real_sub (1, v_a_a)));
-        nile_produce_4 (o, t_1_a, t_1_r, t_1_g, t_1_b);
-        nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+        nile_produce_4 (out, t_1_a, t_1_r, t_1_g, t_1_b);
+        nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
     }
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 gezira_Compositor_t *
-gezira_CompositeOver (nile_t *n)
+gezira_CompositeOver (nile_t *nl)
 {
-    gezira_CompositeOver_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_CompositeOver);
+    gezira_CompositeOver_t *k = NILE_KERNEL_NEW (nl, gezira_CompositeOver);
     return &k->compositor;
 }
 
@@ -285,9 +338,19 @@ typedef struct {
     nile_Real_t v_run;
 } gezira_FillBetweenEdges_t;
 
-static void
-gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
-                                 nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_FillBetweenEdges_clone (nile_t *nl, void *k_)
+{
+    gezira_FillBetweenEdges_t *k = (gezira_FillBetweenEdges_t *) k_;
+    gezira_FillBetweenEdges_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_start_x = k->v_start_x;
+    clone->v_start_y = k->v_start_y;
+    return clone;
+}
+
+static int
+gezira_FillBetweenEdges_process (nile_t *nl, nile_Kernel_t *k_,
+                                 nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 4
 #define OUT_QUANTUM 1
@@ -295,8 +358,6 @@ gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_FillBetweenEdges_t *k = (gezira_FillBetweenEdges_t *) k_;
     real v_start_x = k->v_start_x;
@@ -312,7 +373,7 @@ gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
         v_run = 0;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         real v_local_;
         real v_run_;
         NILE_CONSUME_4 (in, i, v_x_, v_y, v_w, v_h);
@@ -325,9 +386,9 @@ gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
             v_local_ = nile_Real_add (v_run, nile_Real_mul (v_w, v_h));
             v_run_ = nile_Real_add (v_run, v_h);
             real t_1 = nile_Real_min (nile_Real_abs (v_local), 1);
-            nile_produce_1 (o, t_1);
-            nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
-            nile_produce_1_repeat (n, k_->downstream, o, out, OUT_QUANTUM,
+            nile_produce_1 (out, t_1);
+            nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
+            nile_produce_1_repeat (nl, k_, out, OUT_QUANTUM,
                                    nile_Real_sub (v_n, 1),
                                    nile_Real_min (nile_Real_abs (v_run), 1));
         }
@@ -336,12 +397,14 @@ gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
         v_run = v_run_;
     }
 
+    k->v_start_x = v_start_x;
+    k->v_start_y = v_start_y;
     k->v_x = v_x;
     k->v_local = v_local;
     k->v_run = v_run;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
         real v_start_x = k->v_start_x;
@@ -352,21 +415,22 @@ gezira_FillBetweenEdges_process (nile_t *n, nile_Kernel_t *k_,
 
         if (nile_Real_neq (v_local, 0)) {
             real t_1 = nile_Real_min (nile_Real_abs (v_local), 1);
-            nile_produce_1 (o, t_1);
-            nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+            nile_produce_1 (out, t_1);
+            nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
         }
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_FillBetweenEdges (nile_t *n,
+gezira_FillBetweenEdges (nile_t *nl,
                          nile_Real_t v_start_x,
                          nile_Real_t v_start_y)
 {
-    gezira_FillBetweenEdges_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_FillBetweenEdges);
+    gezira_FillBetweenEdges_t *k = NILE_KERNEL_NEW (nl, gezira_FillBetweenEdges);
     k->v_start_x = v_start_x;
     k->v_start_y = v_start_y;
     return &k->kernel;
@@ -389,9 +453,19 @@ typedef struct {
     nile_Real_t v_y;
 } gezira_CreateSamplePoints_t;
 
-static void
-gezira_CreateSamplePoints_process (nile_t *n, nile_Kernel_t *k_,
-                                   nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_CreateSamplePoints_clone (nile_t *nl, void *k_)
+{
+    gezira_CreateSamplePoints_t *k = (gezira_CreateSamplePoints_t *) k_;
+    gezira_CreateSamplePoints_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_start_x = k->v_start_x;
+    clone->v_start_y = k->v_start_y;
+    return clone;
+}
+
+static int
+gezira_CreateSamplePoints_process (nile_t *nl, nile_Kernel_t *k_,
+                                   nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 1
 #define OUT_QUANTUM 2
@@ -399,8 +473,7 @@ gezira_CreateSamplePoints_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
+
     gezira_CreateSamplePoints_t *k = (gezira_CreateSamplePoints_t *) k_;
     real v_start_x = k->v_start_x;
     real v_start_y = k->v_start_y;
@@ -413,34 +486,37 @@ gezira_CreateSamplePoints_process (nile_t *n, nile_Kernel_t *k_,
         v_y = v_start_y;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         real v_x_;
         NILE_CONSUME_1 (in, i, v_c);
         v_x_ = nile_Real_add (v_x, 1);
-        nile_produce_2 (o, v_x, v_y);
-        nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+        nile_produce_2 (out, v_x, v_y);
+        nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
         v_x = v_x_;
     }
 
+    k->v_start_x = v_start_x;
+    k->v_start_y = v_start_y;
     k->v_x = v_x;
     k->v_y = v_y;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_CreateSamplePoints (nile_t *n,
+gezira_CreateSamplePoints (nile_t *nl,
                            nile_Real_t v_start_x,
                            nile_Real_t v_start_y)
 {
-    gezira_CreateSamplePoints_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_CreateSamplePoints);
+    gezira_CreateSamplePoints_t *k = NILE_KERNEL_NEW (nl, gezira_CreateSamplePoints);
     k->v_start_x = v_start_x;
     k->v_start_y = v_start_y;
     return &k->kernel;
@@ -460,9 +536,19 @@ typedef struct {
     gezira_Canvas_t *v_c;
 } gezira_Render__t;
 
-static void
-gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
-                        nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_Render__clone (nile_t *nl, void *k_)
+{
+    gezira_Render__t *k = (gezira_Render__t *) k_;
+    gezira_Render__t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_s = k->v_s->clone (nl, k->v_s);
+    clone->v_c = k->v_c->clone (nl, k->v_c);
+    return clone;
+}
+
+static int
+gezira_Render__process (nile_t *nl, nile_Kernel_t *k_,
+                        nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 4
 #define OUT_QUANTUM 0
@@ -470,8 +556,6 @@ gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_Render__t *k = (gezira_Render__t *) k_;
     gezira_Sampler_t *v_s = k->v_s;
@@ -485,40 +569,41 @@ gezira_Render__process (nile_t *n, nile_Kernel_t *k_,
         real t_1_y = nile_Real_add (v_p_y, 0.5);
 
         nile_Kernel_t *p =
-            nile_Pipeline (n, 3,
-                gezira_FillBetweenEdges (n, v_p_x, v_p_y),
-                nile_Interleave (n, 
-                    nile_Pipeline (n, 2,
-                        gezira_CreateSamplePoints (n, t_1_x, t_1_y),
-                        gezira_Sampler (n, v_s), NULL), 4,
-                    nile_Pipeline (n, NULL), 1),
-                gezira_Canvas (n, v_c, t_1_x, t_1_y), NULL);
+            nile_Pipeline (nl, 3,
+                gezira_FillBetweenEdges (nl, v_p_x, v_p_y),
+                nile_Interleave (nl, 
+                    nile_Pipeline (nl, 2,
+                        gezira_CreateSamplePoints (nl, t_1_x, t_1_y),
+                        gezira_Sampler (nl, v_s), NULL), 4,
+                    nile_Pipeline (nl, NULL), 1),
+                gezira_Canvas (nl, v_c, t_1_x, t_1_y), NULL);
 
         p->downstream = k_->downstream;
         k_->downstream = p;
     }
 
-    nile_forward (n, k_->downstream, in, out);
+    i = nile_forward (nl, k_, in, i, out);
 
     k->v_s = v_s;
     k->v_c = v_c;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_Render_ (nile_t *n,
+gezira_Render_ (nile_t *nl,
                 gezira_Sampler_t *v_s,
                 gezira_Canvas_t *v_c)
 {
-    gezira_Render__t *k;
-    NILE_KERNEL_INIT (n, k, gezira_Render_);
+    gezira_Render__t *k = NILE_KERNEL_NEW (nl, gezira_Render_);
     k->v_s = v_s;
     k->v_c = v_c;
     return &k->kernel;
@@ -535,9 +620,19 @@ typedef struct {
     gezira_Canvas_t *v_c;
 } gezira_Render_t;
 
-static void
-gezira_Render_process (nile_t *n, nile_Kernel_t *k_,
-                       nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_Render_clone (nile_t *nl, void *k_)
+{
+    gezira_Render_t *k = (gezira_Render_t *) k_;
+    gezira_Render_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_s = k->v_s->clone (nl, k->v_s);
+    clone->v_c = k->v_c->clone (nl, k->v_c);
+    return clone;
+}
+
+static int
+gezira_Render_process (nile_t *nl, nile_Kernel_t *k_,
+                       nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 4
 #define OUT_QUANTUM 0
@@ -545,8 +640,6 @@ gezira_Render_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_Render_t *k = (gezira_Render_t *) k_;
     gezira_Sampler_t *v_s = k->v_s;
@@ -555,35 +648,36 @@ gezira_Render_process (nile_t *n, nile_Kernel_t *k_,
     if (!k_->initialized) {
         k_->initialized = 1;
 
-        nile_Kernel_t *p = nile_GroupBy (n, 1, 4, nile_Pipeline (n, 2,
-            nile_SortBy (n, 0, 4),
-            gezira_Render_ (n, v_s, v_c), NULL));
+        nile_Kernel_t *p = nile_GroupBy (nl, 1, 4, nile_Pipeline (nl, 2,
+            nile_SortBy (nl, 0, 4),
+            gezira_Render_ (nl, v_s, v_c), NULL));
 
         p->downstream = k_->downstream;
         k_->downstream = p;
     }
 
-    nile_forward (n, k_->downstream, in, out);
+    i = nile_forward (nl, k_, in, i, out);
 
     k->v_s = v_s;
     k->v_c = v_c;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_Render (nile_t *n,
+gezira_Render (nile_t *nl,
                gezira_Sampler_t *v_s,
                gezira_Canvas_t *v_c)
 {
-    gezira_Render_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_Render);
+    gezira_Render_t *k = NILE_KERNEL_NEW (nl, gezira_Render);
     k->v_s = v_s;
     k->v_c = v_c;
     return &k->kernel;
@@ -605,9 +699,23 @@ typedef struct {
     nile_Real_t v_m_f;
 } gezira_TransformBezier_t;
 
-static void
-gezira_TransformBezier_process (nile_t *n, nile_Kernel_t *k_,
-                                nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_TransformBezier_clone (nile_t *nl, void *k_)
+{
+    gezira_TransformBezier_t *k = (gezira_TransformBezier_t *) k_;
+    gezira_TransformBezier_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_m_a = k->v_m_a; 
+    clone->v_m_b = k->v_m_b; 
+    clone->v_m_c = k->v_m_c; 
+    clone->v_m_d = k->v_m_d; 
+    clone->v_m_e = k->v_m_e; 
+    clone->v_m_f = k->v_m_f; 
+    return clone;
+}
+
+static int
+gezira_TransformBezier_process (nile_t *nl, nile_Kernel_t *k_,
+                                nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 6
 #define OUT_QUANTUM 6
@@ -615,8 +723,6 @@ gezira_TransformBezier_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_TransformBezier_t *k = (gezira_TransformBezier_t *) k_;
     real v_m_a = k->v_m_a;
@@ -630,7 +736,7 @@ gezira_TransformBezier_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         NILE_CONSUME_6 (in, i, v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
         real t_1_x = nile_Real_add (nile_Real_add (nile_Real_mul (v_m_a, v_a_x),
                                                    nile_Real_mul (v_m_c, v_a_y)), v_m_e);
@@ -644,15 +750,30 @@ gezira_TransformBezier_process (nile_t *n, nile_Kernel_t *k_,
                                                    nile_Real_mul (v_m_c, v_c_y)), v_m_e);
         real t_3_y = nile_Real_add (nile_Real_add (nile_Real_mul (v_m_b, v_c_x),
                                                    nile_Real_mul (v_m_d, v_c_y)), v_m_f);
-        nile_produce_6 (o, t_1_x, t_1_y, t_2_x, t_2_y, t_3_x, t_3_y);
-        nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+        nile_produce_6 (out, t_1_x, t_1_y, t_2_x, t_2_y, t_3_x, t_3_y);
+        nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
     }
+
+    k->v_m_a = v_m_a;
+    k->v_m_b = v_m_b;
+    k->v_m_c = v_m_c;
+    k->v_m_d = v_m_d;
+    k->v_m_e = v_m_e;
+    k->v_m_f = v_m_f;
+
+    if (r->n != 0)
+        nile_recurse (nl, k_, r, out);
+
+    if (in->eos) {
+    }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_TransformBezier (nile_t *n,
+gezira_TransformBezier (nile_t *nl,
                         nile_Real_t v_m_a,
                         nile_Real_t v_m_b,
                         nile_Real_t v_m_c,
@@ -660,8 +781,7 @@ gezira_TransformBezier (nile_t *n,
                         nile_Real_t v_m_e,
                         nile_Real_t v_m_f)
 {
-    gezira_TransformBezier_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_TransformBezier);
+    gezira_TransformBezier_t *k = NILE_KERNEL_NEW (nl, gezira_TransformBezier);
     k->v_m_a = v_m_a;
     k->v_m_b = v_m_b;
     k->v_m_c = v_m_c;
@@ -698,9 +818,21 @@ typedef struct {
     nile_Real_t v_max_y;
 } gezira_ClipBezier_t;
 
-static void
-gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
-                           nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_ClipBezier_clone (nile_t *nl, void *k_)
+{
+    gezira_ClipBezier_t *k = (gezira_ClipBezier_t *) k_;
+    gezira_ClipBezier_t *clone = nile_Kernel_clone (nl, k_);
+    clone->v_min_x = k->v_min_x;
+    clone->v_min_y = k->v_min_y;
+    clone->v_max_x = k->v_max_x;
+    clone->v_max_y = k->v_max_y;
+    return clone;
+}
+
+static int
+gezira_ClipBezier_process (nile_t *nl, nile_Kernel_t *k_,
+                           nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 6
 #define OUT_QUANTUM 6
@@ -708,8 +840,6 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_ClipBezier_t *k = (gezira_ClipBezier_t *) k_;
     real v_min_x = k->v_min_x;
@@ -721,7 +851,7 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         NILE_CONSUME_6 (in, i, v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
         real v_bmin_x = nile_Real_min (v_a_x, nile_Real_min (v_b_x, v_c_x));
         real v_bmin_y = nile_Real_min (v_a_y, nile_Real_min (v_b_y, v_c_y));
@@ -735,8 +865,8 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
         real t_3_1 = nile_Real_and (t_1_1, t_2_1);
         real t_4 = nile_Real_and (t_3_0, t_3_1);
         if (t_4) {
-            nile_produce_6 (o, v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
-            nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+            nile_produce_6 (out, v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
+            nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
         }
         else {
             real t_5_0 = nile_Real_leq (v_bmax_x, v_min_x);
@@ -751,10 +881,10 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
                 real v_ca_y = nile_Real_min (nile_Real_max (v_min_y, v_a_y), v_max_y);
                 real v_cc_x = nile_Real_min (nile_Real_max (v_min_x, v_c_x), v_max_x);
                 real v_cc_y = nile_Real_min (nile_Real_max (v_min_y, v_c_y), v_max_y);
-                nile_produce_6 (o, v_ca_x, v_ca_y,
+                nile_produce_6 (out, v_ca_x, v_ca_y,
                                 nile_Real_ave (v_ca_x, v_cc_x), nile_Real_ave (v_ca_y, v_cc_y),
                                 v_cc_x, v_cc_y);
-                nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+                nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
             }
             else {
                 real v_abbc_x = nile_Real_ave (nile_Real_ave (v_a_x, v_b_x),
@@ -773,13 +903,13 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
                              nile_Real_sel (v_max_x, v_nearmax_x, v_abbc_x));
                 real v_m_y = nile_Real_sel (v_min_y, v_nearmin_y,
                              nile_Real_sel (v_max_y, v_nearmax_y, v_abbc_y));
-                nile_produce_6 (r, v_a_x, v_a_y,
+                nile_produce_6 (&r, v_a_x, v_a_y,
                                 nile_Real_ave (v_a_x, v_b_x), nile_Real_ave (v_a_y, v_b_y),
                                 v_m_x, v_m_y);
-                nile_recurse_if_full (n, k_, r, IN_QUANTUM, out);
-                nile_produce_6 (r, v_m_x, v_m_y, nile_Real_ave (v_b_x, v_c_x),
-                                  nile_Real_ave (v_b_y, v_c_y), v_c_x, v_c_y);
-                nile_recurse_if_full (n, k_, r, IN_QUANTUM, out);
+                nile_recurse_if_full (nl, k_, r, IN_QUANTUM, out);
+                nile_produce_6 (&r, v_m_x, v_m_y, nile_Real_ave (v_b_x, v_c_x),
+                                nile_Real_ave (v_b_y, v_c_y), v_c_x, v_c_y);
+                nile_recurse_if_full (nl, k_, r, IN_QUANTUM, out);
             }
         }
     }
@@ -790,23 +920,24 @@ gezira_ClipBezier_process (nile_t *n, nile_Kernel_t *k_,
     k->v_max_y = v_max_y;
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_ClipBezier (nile_t *n,
+gezira_ClipBezier (nile_t *nl,
                    nile_Real_t v_min_x,
                    nile_Real_t v_min_y,
                    nile_Real_t v_max_x,
                    nile_Real_t v_max_y)
 {
-    gezira_ClipBezier_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_ClipBezier);
+    gezira_ClipBezier_t *k = NILE_KERNEL_NEW (nl, gezira_ClipBezier);
     k->v_min_x = v_min_x;
     k->v_min_y = v_min_y;
     k->v_max_x = v_max_x;
@@ -836,9 +967,17 @@ typedef struct {
     nile_Kernel_t kernel;
 } gezira_DecomposeBezier_t;
 
-static void
-gezira_DecomposeBezier_process (nile_t *n, nile_Kernel_t *k_,
-                                nile_Buffer_t *in, nile_Buffer_t **out)
+void *
+gezira_DecomposeBezier_clone (nile_t *nl, void *k_)
+{
+    gezira_DecomposeBezier_t *k = (gezira_DecomposeBezier_t *) k_;
+    gezira_DecomposeBezier_t *clone = nile_Kernel_clone (nl, k_);
+    return clone;
+}
+
+static int
+gezira_DecomposeBezier_process (nile_t *nl, nile_Kernel_t *k_,
+                                nile_Buffer_t *in, int i, nile_Buffer_t **out)
 {
 #define IN_QUANTUM 6
 #define OUT_QUANTUM 6
@@ -846,8 +985,6 @@ gezira_DecomposeBezier_process (nile_t *n, nile_Kernel_t *k_,
     rbuffer.n = 0;
     rbuffer.eos = 0;
     nile_Buffer_t *r = &rbuffer;
-    nile_Buffer_t *o = *out;
-    int i = 0;
 
     gezira_DecomposeBezier_t *k = (gezira_DecomposeBezier_t *) k_;
 
@@ -855,7 +992,7 @@ gezira_DecomposeBezier_process (nile_t *n, nile_Kernel_t *k_,
         k_->initialized = 1;
     }
 
-    while (i <= in->n - IN_QUANTUM) {
+    while (i < in->n) {
         NILE_CONSUME_6 (in, i, v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
         real t_1_x = nile_Real_flr (v_a_x);
         real t_1_y = nile_Real_flr (v_a_y);
@@ -878,8 +1015,8 @@ gezira_DecomposeBezier_process (nile_t *n, nile_Kernel_t *k_,
             real t_9 = nile_Real_ave (v_c_x, v_a_x);
             real v_w = nile_Real_sub (nile_Real_add (v_p_x, 1), t_9);
             real v_h = nile_Real_sub (v_c_y, v_a_y);
-            nile_produce_4 (o, v_p_x, v_p_y, v_w, v_h);
-            nile_flush_if_full (n, k_->downstream, o, out, OUT_QUANTUM);
+            nile_produce_4 (out, v_p_x, v_p_y, v_w, v_h);
+            nile_flush_if_full (nl, k_, out, OUT_QUANTUM);
         }
         else {
             real v_abbc_x = nile_Real_ave (nile_Real_ave (v_a_x, v_b_x),
@@ -902,29 +1039,30 @@ gezira_DecomposeBezier_process (nile_t *n, nile_Kernel_t *k_,
                          nile_Real_sel (v_max_x, v_nearmax_x, v_abbc_x));
             real v_m_y = nile_Real_sel (v_min_y, v_nearmin_y,
                          nile_Real_sel (v_max_y, v_nearmax_y, v_abbc_y));
-            nile_produce_6 (r, v_a_x, v_a_y,
+            nile_produce_6 (&r, v_a_x, v_a_y,
                             nile_Real_ave (v_a_x, v_b_x), nile_Real_ave (v_a_y, v_b_y),
                             v_m_x, v_m_y);
-            nile_recurse_if_full (n, k_, r, IN_QUANTUM, out);
-            nile_produce_6 (r, v_m_x, v_m_y, nile_Real_ave (v_b_x, v_c_x),
+            nile_recurse_if_full (nl, k_, r, IN_QUANTUM, out);
+            nile_produce_6 (&r, v_m_x, v_m_y, nile_Real_ave (v_b_x, v_c_x),
                               nile_Real_ave (v_b_y, v_c_y), v_c_x, v_c_y);
-            nile_recurse_if_full (n, k_, r, IN_QUANTUM, out);
+            nile_recurse_if_full (nl, k_, r, IN_QUANTUM, out);
         }
     }
 
     if (r->n != 0)
-        k_->process (n, k_, r, out);
+        nile_recurse (nl, k_, r, out);
 
     if (in->eos) {
     }
+
+    return i;
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 }
 
 nile_Kernel_t *
-gezira_DecomposeBezier (nile_t *n)
+gezira_DecomposeBezier (nile_t *nl)
 {
-    gezira_DecomposeBezier_t *k;
-    NILE_KERNEL_INIT (n, k, gezira_DecomposeBezier);
+    gezira_DecomposeBezier_t *k = NILE_KERNEL_NEW (nl, gezira_DecomposeBezier);
     return &k->kernel;
 }
