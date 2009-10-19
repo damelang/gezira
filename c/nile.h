@@ -14,7 +14,7 @@ nile_Kernel_t *
 nile_Pipeline (nile_t *nl, ...) __attribute__ ((sentinel));
 
 void
-nile_feed (nile_t *nl, nile_Kernel_t *p, nile_Real_t *data, int n, int eos);
+nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos);
 
 char *
 nile_end (nile_t *nl);
