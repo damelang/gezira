@@ -48,7 +48,7 @@ CompositeXor : Compositor
 CompositePlus : Compositor
     ∀ [a, b]
         >> (a + b) ⋖ 1
-        
+
 CompositeMultiply : Compositor
     ∀ [a, b]
         >> a × b + a ⊕ b

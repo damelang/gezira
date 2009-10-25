@@ -28,7 +28,7 @@ FilterEnd : Color >> Color
             else
                 sum' = sum + c
             n' = n + 1
-            
+
 FilterSampler (s : Sampler) : Sampler
     ⇒ FilterBegin → s → FilterEnd
 
