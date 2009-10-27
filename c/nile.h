@@ -10,14 +10,17 @@ typedef struct nile_ nile_t;
 nile_t *
 nile_begin (int nthreads, char *mem, int memsize);
 
-nile_Kernel_t *
-nile_Pipeline (nile_t *nl, ...) __attribute__ ((sentinel));
-
 void
 nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos);
 
+void
+nile_sync (nile_t *nl);
+
 char *
 nile_end (nile_t *nl);
+
+nile_Kernel_t *
+nile_Pipeline (nile_t *nl, ...) __attribute__ ((sentinel));
 
 /* INTERNAL API */
 
@@ -52,98 +55,110 @@ static inline real nile_Real_sel (real a, real b, real c) { return b ? a : c; }
 #define NILE_BUFFER_SIZE 128
 
 typedef struct nile_Buffer_ nile_Buffer_t;
-
 struct nile_Buffer_ {
+    nile_Buffer_t *next;
+    int i;
     int n;
     int eos;
-    nile_Buffer_t *next;
     real data[NILE_BUFFER_SIZE];
 };
 
-/* FIXME arbitrary garbage below */
-#define NILE_KERNEL_MAX_SIZE (20 * sizeof (void *))
+nile_Buffer_t *
+nile_Buffer_new (nile_t *nl);
 
-typedef int (*nile_Kernel_process_t)
-    (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *in, int i, nile_Buffer_t **out);
+nile_Buffer_t *
+nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b);
 
-typedef nile_Kernel_t * (*nile_Kernel_clone_t) (nile_t *nl, nile_Kernel_t *k);
+void
+nile_Buffer_free (nile_t *nl, nile_Buffer_t *b);
+
+void
+nile_Buffer_deliver (nile_t *nl, nile_Buffer_t *b, nile_Kernel_t *k);
+
+typedef nile_Buffer_t * (*nile_Kernel_process_t)
+    (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *in, nile_Buffer_t *out, int *pause);
+
+typedef void * (*nile_Kernel_clone_t) (nile_t *nl, void *k);
 
 struct nile_Kernel_ {
+    nile_Kernel_t *next;
     nile_Kernel_process_t process;
     nile_Kernel_clone_t clone;
+    nile_Kernel_t *downstream;
+    nile_Buffer_t *inbox;
     int initialized;
-    nile_Kernel_t *next;
 };
 
 nile_Kernel_t *
 nile_Kernel_new (nile_t *nl, nile_Kernel_process_t process,
                              nile_Kernel_clone_t clone);
 
-#define NILE_KERNEL_NEW (n, name) \
-    (name##_t *) nile_Kernel_new (n, name##_process, name##_clone)
+#define NILE_KERNEL_NEW(nl, name) \
+    ((name##_t *) nile_Kernel_new ((nl), name##_process, name##_clone))
 
-void
-nile_forward (nile_t *nl, nile_Kernel_t *k,
-              nile_Buffer_t *in, int i, nile_Buffer_t **out);
-
-void
-nile_flush (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t **out);
-
-static inline void
-nile_flush_if_full (nile_t *nl, nile_Kernel_t *k,
-                    nile_Buffer_t **out, int quantum)
+static inline void *
+nile_Kernel_clone (nile_t *nl, void *k_)
 {
-    if ((*out)->n > NILE_BUFFER_SIZE - quantum)
-        nile_flush (nl, k, out);
+    nile_Kernel_t *k = (nile_Kernel_t *) k_;
+    return nile_Kernel_new (nl, k->process, k->clone);
 }
 
-static inline void
-nile_recurse_if_full (nile_t *nl, nile_Kernel_t *k,
-                      nile_Buffer_t *r, int quantum, nile_Buffer_t **out)
+void
+nile_Kernel_free (nile_t *nl, nile_Kernel_t *k);
+
+void
+nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
+
+void
+nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k);
+
+static inline nile_Buffer_t *
+nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantum)
 {
-    if (r->n > NILE_BUFFER_SIZE - quantum) {
-        k->process (nl, k, r, 0, out);
-        r->n = 0;
+    if (out->n > NILE_BUFFER_SIZE - quantum) {
+        nile_Buffer_deliver (nl, out, k->downstream);
+        out = nile_Buffer_new (nl);
     }
+    return out;
 }
 
-#define NILE_CONSUME_1(in, i, v) \
-    real (v) = (in)->data[(i)++]
+#define NILE_CONSUME_1(in, v) \
+    real (v) = (in)->data[(in)->i++]
 
-#define NILE_CONSUME_2(in, i, v1, v2) \
-    NILE_CONSUME_1 (in, i, v1); NILE_CONSUME_1 (in, i, v2)
+#define NILE_CONSUME_2(in, v1, v2) \
+    NILE_CONSUME_1 (in, v1); NILE_CONSUME_1 (in, v2)
 
-#define NILE_CONSUME_4(in, i, v1, v2, v3, v4) \
-    NILE_CONSUME_2 (in, i, v1, v2); NILE_CONSUME_2 (in, i, v3, v4)
+#define NILE_CONSUME_4(in, v1, v2, v3, v4) \
+    NILE_CONSUME_2 (in, v1, v2); NILE_CONSUME_2 (in, v3, v4)
 
-#define NILE_CONSUME_6(in, i, v1, v2, v3, v4, v5, v6) \
-    NILE_CONSUME_2 (in, i, v1, v2); NILE_CONSUME_2 (in, i, v3, v4); \
-    NILE_CONSUME_2 (in, i, v5, v6)
+#define NILE_CONSUME_6(in, v1, v2, v3, v4, v5, v6) \
+    NILE_CONSUME_2 (in, v1, v2); NILE_CONSUME_2 (in, v3, v4); \
+    NILE_CONSUME_2 (in, v5, v6)
 
-#define NILE_CONSUME_8(in, i, v1, v2, v3, v4, v5, v6, v7, v8) \
-    NILE_CONSUME_4 (in, i, v1, v2, v3, v4); \
-    NILE_CONSUME_4 (in, i, v5, v6, v7, v8)
+#define NILE_CONSUME_8(in, v1, v2, v3, v4, v5, v6, v7, v8) \
+    NILE_CONSUME_4 (in, v1, v2, v3, v4); \
+    NILE_CONSUME_4 (in, v5, v6, v7, v8)
 
 #define NILE_PEEK_4(in, v1, v2, v3, v4) \
-    real (v1) = (in)->data[0]; \
-    real (v2) = (in)->data[1]; \
-    real (v3) = (in)->data[2]; \
-    real (v4) = (in)->data[3]
+    real (v1) = (in)->data[(in)->i + 0]; \
+    real (v2) = (in)->data[(in)->i + 1]; \
+    real (v3) = (in)->data[(in)->i + 2]; \
+    real (v4) = (in)->data[(in)->i + 3]
 
 static inline void
-nile_produce_1 (nile_Buffer_t **out, real v)
-    { (*out)->data[(*out)->n++] = v; }
+nile_produce_1 (nile_Buffer_t *out, real v)
+    { out->data[out->n++] = v; }
 
 static inline void
-nile_produce_2 (nile_Buffer_t **out, real v1, real v2)
+nile_produce_2 (nile_Buffer_t *out, real v1, real v2)
     { nile_produce_1 (out, v1); nile_produce_1 (out, v2); }
 
 static inline void
-nile_produce_4 (nile_Buffer_t **out, real v1, real v2, real v3, real v4)
+nile_produce_4 (nile_Buffer_t *out, real v1, real v2, real v3, real v4)
     { nile_produce_2 (out, v1, v2); nile_produce_2 (out, v3, v4); }
 
 static inline void
-nile_produce_6 (nile_Buffer_t **out, real v1, real v2, real v3, real v4,
+nile_produce_6 (nile_Buffer_t *out, real v1, real v2, real v3, real v4,
                 real v5, real v6)
 {
     nile_produce_2 (out, v1, v2);
@@ -151,18 +166,37 @@ nile_produce_6 (nile_Buffer_t **out, real v1, real v2, real v3, real v4,
     nile_produce_2 (out, v5, v6);
 }
 
-static inline void
-nile_produce_1_repeat (nile_t *nl, nile_Kernel_t *k,
-                       nile_Buffer_t **out, int quantum, int times, real v)
+static inline nile_Buffer_t *
+nile_produce_1_repeat (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out,
+                       int quantum, int times, real v)
 {
     while (times) {
-        int room = (NILE_BUFFER_SIZE - (*out)->n) / quantum;
+        int room = (NILE_BUFFER_SIZE - out->n) / quantum;
         int n = times < room ? times : room;
         times -= n;
         while (n--)
             nile_produce_1 (out, v);
-        nile_flush_if_full (nl, k, out, quantum);
+        out = nile_flush_if_full (nl, k, out, quantum);
     }
+    return out;
+}
+
+static inline nile_Buffer_t *
+nile_recurse (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *r, nile_Buffer_t *out)
+{
+    return k->process (nl, k, r, out, NULL);
+}
+
+static inline nile_Buffer_t *
+nile_recurse_if_full (nile_t *nl, nile_Kernel_t *k,
+                      nile_Buffer_t *r, int quantum, nile_Buffer_t *out)
+{
+    if (r->n > NILE_BUFFER_SIZE - quantum) {
+        out = nile_recurse (nl, k, r, out);
+        r->i = 0;
+        r->n = 0;
+    }
+    return out;
 }
 
 nile_Kernel_t *

@@ -12,4 +12,4 @@ main: nile.o gezira.o main.c
 	gcc -o main $(CFLAGS) main.c nile.o gezira.o
 
 clean:
-	/bin/rm -rf main *.o
+	/bin/rm -rf main *.o *.gch

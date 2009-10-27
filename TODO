@@ -1,25 +1,60 @@
+- finish pen stroking
+    - fix bugs
+    - find the right magic number for stroke offset curve
+    - reuse joins for caps
+    - miter (see formula in cairo)
+    - what to do about closed pen paths?
+- fix ImageExtendModes!
 - c generation
-    - fill out nile.c
-        - Interleave
-    - fix flush_if_full and _repeat functions.
-      The o buffer is passed by value, you can't set it in the function!
-      must return the new o buffer!
-    - rename the nile_t *n variable to nile_t *nl
-    - rename nile_consume and nile_produce to nile_input and nile_output ?
-    - unify "feed" like functions?
-    - do all kernels pass along the 'eos' if an empty in buffer arrives?
+    - change groupby so that is doesn't use the downstream field,
+      just the v_k field. That will mean that it needs to flush its
+      own out buffer? Maybe not a good idea.
+    - change kernel_pause to take the pause pointer, so we don't
+      forget to set it ourselves
+    - kernels have to allocate their out buffer if NULL at function start
+    - kernels have to free the in buffer now
+    - kernels need to set out->eos when in->eos
+    - kernels have to free themselves now
+    - kernel next is now called downstream!!! Fix all occurances
+    - fill in thread/semaphore code
+
     - write SDL versions of ReadImage and WriteImage
     - demos
-    - keep GroupBy from "fork bombing" by metering the number of
-      live kernels it has spawned
+    - make recursion part of the normal scheduling scheme. this will allow ordered
+      output, etc. Might need to change order of recursion elements nile code.
+      Recursion will now look something like this:
+
+        in->i -= quantum;
+        nile_produce_6 (in, 1, 2, 3, 4, 5, 6);
+        in->i -= quantum;
+        if (in->i < quantum) {
+            nile_Buffer_t *in_ = nile_Buffer_split (nl, in);
+            nile_Lock_lock (nl->kernellock);
+            {
+                in->next = k->inbox;
+                k->inbox = in;
+            }
+            nile_Lock_unlock (nl->kernellock);
+            in = in_;
+        }
+
     - optimize SortBy for when the input stream is wholly contained
       in the first input buffer. Do an in-place sort and
       just forward the input to the next kernel.
-    - introduce _ vars back into the language
+    - rename "initialized" field to something related to first_time
+      or prologue or something
+    - rename nile_consume and nile_produce to nile_input and nile_output ?
+    - what if they give us an input buffer that isn't a multiple of in_quantum?
+    - handle limit on number of kernels that can be pipelined.
+      we just have to split them up into multiple pipelines, not too hard?
+    - document the kernel clone rules (when a kernel is referenced more that
+      once in a pipeline expression)
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?
-- fix ImageExtendModes!
+- document (and add compiler support) for the fact that kernel parameters are
+  immutable
+- introduce _ vars back into the language
 - update PDF doc
 - think about restructuring Render this way:
 
@@ -38,12 +73,6 @@
   RenderToMask (m : Mask) : EdgeContribution >>|
       ⇒ GroupBy (@p.y, SortBy (@p.x) → RenderToMask' (m))
 
-- finish pen stroking
-    - fix bugs
-    - find the right magic number for stroke offset curve
-    - reuse joins for caps
-    - miter (see formula in cairo)
-    - what to do about closed pen paths?
 - parser
 - javascript generation
 - fix font problem on windows (add missing chars to DejaVu Sans Mono and/or Inconsolata)
