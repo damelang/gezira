@@ -5,8 +5,8 @@ int
 main ()
 {
     char memory[100000];
-    nile_t *n = nile_begin (memory, sizeof (memory), 4);
-    nile_end (n);
+    nile_t *nl = nile_begin (4, memory, sizeof (memory));
+    nile_end (nl);
     printf ("done\n");
     return 0;
 }

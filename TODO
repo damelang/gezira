@@ -6,6 +6,15 @@
     - what to do about closed pen paths?
 - fix ImageExtendModes!
 - c generation
+    - nile_loop cannot depend on k->inbox or k->downstream after process
+      because the kernel may have deleted itself!
+      I think we need to let the loop delete the kernel, in which
+      case the look needs to know when in->eos (even though the
+      kernel will delete 'in' during process, and the 'in' could
+      change during process). Maybe store eos before process, then,
+      if inbox is empty, we know that we're done.
+      Maybe in this scenario, we don't have to set out->eos in the
+      kernel anymore. Just delete 'in'.
     - change groupby so that is doesn't use the downstream field,
       just the v_k field. That will mean that it needs to flush its
       own out buffer? Maybe not a good idea.
@@ -13,9 +22,8 @@
       forget to set it ourselves
     - kernels have to allocate their out buffer if NULL at function start
     - kernels have to free the in buffer now
-    - kernels need to set out->eos when in->eos
-    - kernels have to free themselves now
-    - kernel next is now called downstream!!! Fix all occurances
+    - kernels need to set out->eos when in->eos? NO MORE?
+    - kernels have to free themselves now? NO MORE?
     - fill in thread/semaphore code
 
     - write SDL versions of ReadImage and WriteImage
@@ -43,6 +51,8 @@
       just forward the input to the next kernel.
     - rename "initialized" field to something related to first_time
       or prologue or something
+    - what about the scheduling heuristic that has the thread execute
+      the downstream kernel when all the output fit in one buffer?
     - rename nile_consume and nile_produce to nile_input and nile_output ?
     - what if they give us an input buffer that isn't a multiple of in_quantum?
     - handle limit on number of kernels that can be pipelined.

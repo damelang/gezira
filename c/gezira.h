@@ -3,9 +3,9 @@
 
 #include "nile.h"
 
-typedef struct gezira_Sampler_ gezira_Sampler_t;
+typedef nile_Kernel_t gezira_Sampler_t;
 
-typedef struct gezira_Compositor_ gezira_Compositor_t;
+typedef nile_Kernel_t gezira_Compositor_t;
 
 typedef struct gezira_Canvas_ gezira_Canvas_t;
 

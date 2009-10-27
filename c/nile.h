@@ -112,16 +112,6 @@ nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
 void
 nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k);
 
-static inline nile_Buffer_t *
-nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantum)
-{
-    if (out->n > NILE_BUFFER_SIZE - quantum) {
-        nile_Buffer_deliver (nl, out, k->downstream);
-        out = nile_Buffer_new (nl);
-    }
-    return out;
-}
-
 #define NILE_CONSUME_1(in, v) \
     real (v) = (in)->data[(in)->i++]
 
@@ -144,6 +134,16 @@ nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantu
     real (v2) = (in)->data[(in)->i + 1]; \
     real (v3) = (in)->data[(in)->i + 2]; \
     real (v4) = (in)->data[(in)->i + 3]
+
+static inline nile_Buffer_t *
+nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantum)
+{
+    if (out->n > NILE_BUFFER_SIZE - quantum) {
+        nile_Buffer_deliver (nl, out, k->downstream);
+        out = nile_Buffer_new (nl);
+    }
+    return out;
+}
 
 static inline void
 nile_produce_1 (nile_Buffer_t *out, real v)
