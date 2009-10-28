@@ -72,9 +72,6 @@ nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b);
 void
 nile_Buffer_free (nile_t *nl, nile_Buffer_t *b);
 
-void
-nile_Buffer_deliver (nile_t *nl, nile_Buffer_t *b, nile_Kernel_t *k);
-
 typedef nile_Buffer_t * (*nile_Kernel_process_t)
     (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *in, nile_Buffer_t *out, int *pause);
 
@@ -107,10 +104,13 @@ void
 nile_Kernel_free (nile_t *nl, nile_Kernel_t *k);
 
 void
-nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
+nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b, int *pause);
 
 void
 nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k);
+
+void
+nile_deliver (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
 
 #define NILE_CONSUME_1(in, v) \
     real (v) = (in)->data[(in)->i++]
@@ -139,7 +139,7 @@ static inline nile_Buffer_t *
 nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantum)
 {
     if (out->n > NILE_BUFFER_SIZE - quantum) {
-        nile_Buffer_deliver (nl, out, k->downstream);
+        nile_deliver (nl, k->downstream, out);
         out = nile_Buffer_new (nl);
     }
     return out;

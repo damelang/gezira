@@ -53,7 +53,7 @@ nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos)
         n -= in->n;
         if (n == 0)
             in->eos = eos;
-        nile_Buffer_deliver (nl, in, k);
+        nile_deliver (nl, k, in);
     }
 }
 
@@ -145,8 +145,52 @@ nile_Buffer_free (nile_t *nl, nile_Buffer_t *b)
     nile_free (nl, b);
 }
 
+nile_Kernel_t *
+nile_Kernel_new (nile_t *nl, nile_Kernel_process_t process,
+                             nile_Kernel_clone_t clone)
+{
+    nile_Kernel_t *k = nile_alloc (nl);
+    k->next = NULL;
+    k->process = process;
+    k->clone = clone;
+    k->downstream = NULL;
+    k->inbox = NULL;
+    k->initialized = 0;
+    return k;
+}
+
 void
-nile_Buffer_deliver (nile_t *nl, nile_Buffer_t *b, nile_Kernel_t *k)
+nile_Kernel_free (nile_t *nl, nile_Kernel_t *k)
+{
+    nile_free (nl, k);
+}
+
+void
+nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b, int *pause)
+{
+    nile_Lock_lock (&nl->kernellock);
+    {
+        b->next = k->inbox;
+        k->inbox = b;
+    }
+    nile_Lock_unlock (&nl->kernellock);
+    *pause = 1;
+}
+
+void
+nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k)
+{
+    nile_Lock_lock (&nl->kernellock);
+    {
+        k->next = nl->ready;
+        nl->ready = k;
+        nile_signal_kernel_ready (nl);
+    }
+    nile_Lock_unlock (&nl->kernellock);
+}
+
+void
+nile_deliver (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b)
 {
     nile_Lock_lock (&nl->kernellock);
     {
@@ -172,56 +216,11 @@ nile_Buffer_deliver (nile_t *nl, nile_Buffer_t *b, nile_Kernel_t *k)
     nile_Lock_unlock (&nl->kernellock);
 }
 
-nile_Kernel_t *
-nile_Kernel_new (nile_t *nl, nile_Kernel_process_t process,
-                             nile_Kernel_clone_t clone)
-{
-    nile_Kernel_t *k = nile_alloc (nl);
-    k->next = NULL;
-    k->process = process;
-    k->clone = clone;
-    k->downstream = NULL;
-    k->inbox = NULL;
-    k->initialized = 0;
-    return k;
-}
-
-void
-nile_Kernel_free (nile_t *nl, nile_Kernel_t *k)
-{
-    nile_free (nl, k);
-}
-
-void
-nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b)
-{
-    nile_Lock_lock (&nl->kernellock);
-    {
-        b->next = k->inbox;
-        k->inbox = b;
-    }
-    nile_Lock_unlock (&nl->kernellock);
-}
-
-void
-nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k)
-{
-    nile_Lock_lock (&nl->kernellock);
-    {
-        k->next = nl->ready;
-        nl->ready = k;
-        nile_signal_kernel_ready (nl);
-    }
-    nile_Lock_unlock (&nl->kernellock);
-}
-
 static void 
 nile_loop (nile_t *nl)
 {
     for (;;) {
         nile_Kernel_t *k;
-        nile_Buffer_t *in, *out;
-
         nile_wait_for_kernel_ready (nl);
         nile_Lock_lock (&nl->kernellock);
         {
@@ -231,6 +230,7 @@ nile_loop (nile_t *nl)
         }
         nile_Lock_unlock (&nl->kernellock);
 
+        nile_Buffer_t *in;
         nile_Lock_lock (&nl->kernellock);
         {
             in = k->inbox;
@@ -238,9 +238,11 @@ nile_loop (nile_t *nl)
         }
         nile_Lock_unlock (&nl->kernellock);
 
-        out = NULL;
+        int eos;
+        int pause = 0;
+        nile_Buffer_t *out = NULL;
         while (in != NULL) {
-            int pause = 0;
+            eos = in->eos;
             out = k->process (nl, k, in, out, &pause);
             if (pause)
                 break;
@@ -252,17 +254,19 @@ nile_loop (nile_t *nl)
             nile_Lock_unlock (&nl->kernellock);
         }
 
-        if (out) {
-            if (k->downstream)
-                nile_Buffer_deliver (nl, out, k->downstream);
-            else
-                nile_Buffer_free (nl, out);
+        nile_Kernel_t *downstream = k->downstream;
+        if (eos && !pause) {
+            nile_Kernel_free (nl, k);
+            if (out)
+                out->eos = 1;
         }
+        if (out)
+            nile_deliver (nl, downstream, out);
     }
 }
 
 typedef struct {
-    nile_Kernel_t kernel;
+    nile_Kernel_t base;
     int n;
     nile_Kernel_t *ks[20];
 } nile_Pipeline_t;
@@ -295,7 +299,7 @@ nile_Pipeline_process (nile_t *nl, nile_Kernel_t *k_,
         }
     }
 
-    nile_Buffer_deliver (nl, in, k_->downstream);
+    nile_deliver (nl, k_->downstream, in);
 
     return out;
 }
@@ -315,19 +319,15 @@ nile_Pipeline (nile_t *nl, ...)
     }
     va_end (args);
 
-    return &k->kernel;
+    return &k->base;
 }
 
 typedef struct {
-    nile_Kernel_t kernel;
+    nile_Kernel_t base;
     nile_Kernel_t *v_k1;
     int quantum1;
     nile_Kernel_t *v_k2;
     int quantum2;
-    nile_Lock_t lock;
-    nile_Buffer_t *out;
-    nile_Kernel_t *child1;
-    nile_Kernel_t *child2;
 } nile_Interleave_t;
 
 static void *
@@ -343,13 +343,23 @@ nile_Interleave_clone (nile_t *nl, void *k_)
 }
 
 typedef struct {
-    nile_Kernel_t kernel;
-    nile_Interleave_t *shared;
+    nile_Kernel_t base;
+    nile_Lock_t lock;
+    nile_Buffer_t *out;
+} nile_Interleave__shared_t;
+
+typedef struct nile_Interleave__ nile_Interleave__t;
+
+struct nile_Interleave__ {
+    nile_Kernel_t base;
+    nile_Interleave__shared_t *shared;
+    nile_Interleave__t *sibling;
     int quantum;
     int skip;
     int j;
+    int j0;
     int n;
-} nile_Interleave__t;
+};
 
 static void *
 nile_Interleave__clone (nile_t *nl, void *k_)
@@ -366,8 +376,6 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
 {
     nile_Interleave__t *k = (nile_Interleave__t *) k_;
     nile_Lock_t *lock = &k->shared->lock;
-    nile_Interleave__t *sib = (nile_Interleave__t *)
-        (k_ == k->shared->child1 ? k->shared->child2 : k->shared->child1);
     nile_Buffer_t *out;
     int done = 0;
     int j;
@@ -381,8 +389,7 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
         nile_Lock_unlock (lock);
 
         if (j == -1) {
-            nile_Kernel_pause (nl, k_, in);
-            *pause = 1;
+            nile_Kernel_pause (nl, k_, in, pause);
             return unused;
         }
 
@@ -400,17 +407,16 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
             out->n += in->i - i0;
             if (flush_needed) {
                 k->j = -1;
-                if (sib->j == -1) {
+                if (k->sibling->j == -1) {
                     done = in->eos && !(in->i < in->n);
                     if (done)
                         out->eos = 1;
-                    nile_Buffer_deliver (nl, out,
-                                         k->shared->kernel.downstream);
+                    nile_deliver (nl, k_->downstream, out);
                     if (!done) {
                         k->shared->out = nile_Buffer_new (nl);
-                        ((nile_Interleave__t *) k->shared->child1)->j = 0;
-                        ((nile_Interleave__t *) k->shared->child2)->j = k->shared->quantum1;
-                        nile_Kernel_resume (nl, &sib->kernel);
+                        k->j = k->j0;
+                        k->sibling->j = k->sibling->j0;
+                        nile_Kernel_resume (nl, &k->sibling->base);
                     }
                 }
             }
@@ -422,26 +428,26 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
 
     if (done) {
         nile_Lock_fini (lock);
-        nile_Kernel_free (nl, &k->shared->kernel);
-        nile_Kernel_free (nl, &sib->kernel);
-        nile_Kernel_free (nl, k_);
+        nile_Kernel_free (nl, &k->shared->base);
     }
 
     nile_Buffer_free (nl, in);
     return unused;
 }
 
-static nile_Kernel_t *
-nile_Interleave_ (nile_t *nl, nile_Interleave_t *shared,
-                  int quantum, int skip, int j)
+static nile_Interleave__t *
+nile_Interleave_ (nile_t *nl, nile_Interleave__shared_t *shared, int quantum,
+                  int skip, int j0, nile_Kernel_t *downstream)
 {
     nile_Interleave__t *k = NILE_KERNEL_NEW (nl, nile_Interleave_);
     k->shared = shared;
     k->quantum = quantum;
     k->skip = skip;
-    k->j = j;
-    k->n = NILE_BUFFER_SIZE - (quantum + skip) + j + 1;
-    return &k->kernel;
+    k->j = j0;
+    k->j0 = j0;
+    k->n = NILE_BUFFER_SIZE - (quantum + skip) + j0 + 1;
+    k->base.downstream = downstream;
+    return k;
 }
 
 static nile_Buffer_t *
@@ -452,16 +458,22 @@ nile_Interleave_process (nile_t *nl, nile_Kernel_t *k_,
 
     if (!k_->initialized) {
         k_->initialized = 1;
-        nile_Lock_init (&k->lock);
-        k->out = nile_Buffer_new (nl);
-        k->child1 = nile_Interleave_ (nl, k, k->quantum1, k->quantum2, 0);
-        k->child2 = nile_Interleave_ (nl, k, k->quantum2, k->quantum1, k->quantum1);
-        k->v_k1->downstream = k->child1;
-        k->v_k2->downstream = k->child2;
+        nile_Interleave__shared_t *shared =
+            (nile_Interleave__shared_t *) nile_Kernel_new (nl, NULL, NULL);
+        nile_Lock_init (&shared->lock);
+        shared->out = nile_Buffer_new (nl);
+        nile_Interleave__t *child1 =
+            nile_Interleave_ (nl, shared, k->quantum1, k->quantum2, 0, k_->downstream);
+        nile_Interleave__t *child2 =
+            nile_Interleave_ (nl, shared, k->quantum2, k->quantum1, k->quantum1, k_->downstream);
+        child1->sibling = child2;
+        child2->sibling = child1;
+        k->v_k1->downstream = &child1->base;
+        k->v_k2->downstream = &child2->base;
     }
 
-    nile_Buffer_deliver (nl, nile_Buffer_clone (nl, in), k->v_k1);
-    nile_Buffer_deliver (nl, in, k->v_k2);
+    nile_deliver (nl, k->v_k1, nile_Buffer_clone (nl, in));
+    nile_deliver (nl, k->v_k2, in);
 
     return out;
 }
@@ -475,11 +487,11 @@ nile_Interleave (nile_t *nl, nile_Kernel_t *v_k1, int quantum1,
     k->quantum1 = quantum1;
     k->v_k2 = v_k2;
     k->quantum2 = quantum2;
-    return &k->kernel;
+    return &k->base;
 }
 
 typedef struct {
-    nile_Kernel_t kernel;
+    nile_Kernel_t base;
     int index;
     int quantum;
     nile_Kernel_t *v_k;
@@ -506,19 +518,18 @@ nile_GroupBy_process (nile_t *nl, nile_Kernel_t *k_,
 
     if (!k_->initialized) {
         k_->initialized = 1;
-        k_->downstream = k->v_k;
         k->key = in->data[k->index];
     }
+    k_->downstream = k->v_k;
     
     while (in->i < in->n) {
         real key = in->data[in->i + k->index];
         if (key != k->key) {
-            out->eos = 1;
-            nile_Buffer_deliver (nl, out, nile_Kernel_clone (nl, k_->downstream));
             k->key = key;
-            nile_Kernel_pause (nl, k_, in);
-            *pause = 1;
-            return NULL;
+            out->eos = 1;
+            k_->downstream = nile_Kernel_clone (nl, k_->downstream);
+            nile_Kernel_pause (nl, k_, in, pause);
+            break;
         }
         int q = k->quantum;
         while (q--)
@@ -526,10 +537,6 @@ nile_GroupBy_process (nile_t *nl, nile_Kernel_t *k_,
         out = nile_flush_if_full (nl, k_, out, k->quantum);
     }
 
-    if (in->eos) {
-        nile_Kernel_free (nl, k_);
-        out->eos = 1;
-    }
     nile_Buffer_free (nl, in);
     return out;
 }
@@ -541,11 +548,11 @@ nile_GroupBy (nile_t *nl, int index, int quantum, nile_Kernel_t *v_k)
     k->index = index;
     k->quantum = quantum;
     k->v_k = v_k;
-    return nile_Pipeline (nl, nile_SortBy (nl, index, quantum), &k->kernel, NULL);
+    return nile_Pipeline (nl, nile_SortBy (nl, index, quantum), &k->base, NULL);
 }
 
 typedef struct {
-    nile_Kernel_t kernel;
+    nile_Kernel_t base;
     int index;
     int quantum;
     nile_Buffer_t *out;
@@ -613,13 +620,11 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
         out->n += k->quantum;
     }
 
-    if (in->eos) {
-        k->out->eos = 1;
-        nile_Buffer_deliver (nl, k->out, k_->downstream);
-        nile_Kernel_free (nl, k_);
-    }
     nile_Buffer_free (nl, in);
-    return unused;
+    if (in->eos)
+        return k->out;
+    else 
+        return unused;
 }
 
 nile_Kernel_t *
@@ -628,5 +633,5 @@ nile_SortBy (nile_t *nl, int index, int quantum)
     nile_SortBy_t *k = NILE_KERNEL_NEW (nl, nile_SortBy);
     k->index = index;
     k->quantum = quantum;
-    return &k->kernel;
+    return &k->base;
 }
