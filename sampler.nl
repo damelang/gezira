@@ -56,18 +56,17 @@ LinearGradientShape (s00, ds/dx, ds/dy) : GradientShape
 
 RadialGradientShape (c : Point, r) : GradientShape
     ∀ p
-        d = p - c
-        >> √(d.x × d.x + d.y × d.y) / r
+        >> ‖ p - c ‖ / r
 
-GradientPad : GradientExtendMode
+GradientExtendPad : GradientExtendMode
     ∀ s
         >> 0 ⋗ s ⋖ 1
 
-GradientRepeat : GradientExtendMode
+GradientExtendRepeat : GradientExtendMode
     ∀ s
         >> s - ⌊ s ⌋
 
-GradientMirror : GradientExtendMode
+GradientExtendMirror : GradientExtendMode
     ∀ s
         >> 1 - | (| s | % 2 - 1) |
 

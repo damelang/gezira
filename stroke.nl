@@ -1,9 +1,6 @@
 StrokeJoin :: (o) Bezier >> Bezier
 StrokeCap :: (o) Bezier >> Bezier
 
-‖ a : Point ‖ : Real
-    √(a.x × a.x + a.y × a.y) 
-
 ^(a : Point) : Point
     if ‖ a ‖ ≠ 0
         a / ‖ a ‖
@@ -72,7 +69,7 @@ StrokeOffsetCurve (o) : Bezier >> Bezier
         f = c + (b ⟂ c) × o
         m = (a ~ b) ~ (b ~ c)
         n = m + ((a ⟂ b) ~ (b ⟂ c)) × o
-        e = 2 × n - 0.5 × d - 0.5 × f
+        e = d $(n)$ f
         error = ‖ (a ⟂ b) - (d ⟂ e) ‖ + ‖ (b ⟂ c) - (e ⟂ f) ‖
         if error < 0.1
             >> [d, e, f]
@@ -80,7 +77,7 @@ StrokeOffsetCurve (o) : Bezier >> Bezier
             << [a, a ~ b, m] << [m, b ~ c, c]
 
 StrokeSide (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
-    ⇒ Mix (StrokeOffsetCurve (o), c (o), j (o))
+    ⇒ Mix (StrokeOffsetCurve (o), Mix (c (o), j (o)))
 
 ReverseBezier : Bezier >> Bezier
     ∀ [a, b, c]

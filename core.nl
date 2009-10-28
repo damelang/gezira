@@ -12,6 +12,9 @@ Canvas :: (start : Point) : [Color, Real] >>|
     [m.a × p.x + m.c × p.y + m.e,
      m.b × p.x + m.d × p.y + m.f]
 
+(‖ a : Point ‖) : Real
+    √(a.x × a.x + a.y × a.y) 
+
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
     ⇒ Interleave (s1, s2) → c
 
