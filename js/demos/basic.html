@@ -9,13 +9,15 @@
         var canvas = document.getElementsByTagName('canvas')[0];
         var cxt = canvas.getContext('2d');
         var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
-        var star = shapes.star(image.width / 2, image.height / 2, 42, 100, 5);
                                       
         with (gezira) {
-          nile.pipeline(DecomposeBezier,
-                        Render(UniformColor(1, 1, 0, 0),
-                               WriteImage(image)))(star.slice(0));
+          var s = UniformColor(1, 1, 0, 0);
+          var p = nile.Pipeline(DecomposeBezier,
+                                Render(s, WriteImage(image)));
+
+          p(null)(shapes.centeredStar(image));
         }
+
         cxt.putImageData(image, 0, 0);
       };
     </script>

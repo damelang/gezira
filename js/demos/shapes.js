@@ -23,10 +23,14 @@ shapes.star = function(c_x, c_y, r0, r1, n) {
   for (var i = 0; i < points.length; i += 6) {
     var a_x = points[i];
     var a_y = points[i + 1];
-    var c_x = points[i + 4];
-    var c_y = points[i + 5];
-    points[i + 2] = (a_x + c_x) / 2;
-    points[i + 3] = (a_y + c_y) / 2;
+    var c_x_ = points[i + 4];
+    var c_y_ = points[i + 5];
+    points[i + 2] = (a_x + c_x_) / 2;
+    points[i + 3] = (a_y + c_y_) / 2;
   }
   return points;
+};
+
+shapes.centeredStar = function(image) {
+  return shapes.star(image.width / 2, image.height / 2, 42, 100, 5);
 };

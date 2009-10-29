@@ -1,6 +1,12 @@
+- change GroupBy to clone downstream. Passing in the kernel parameter
+  is getting strange. Maybe have kernels clone their downstream too?
+  If set?
 - finish pen stroking
-    - fix bugs
+    - find crash in js reason
+    - tangency might not be the right error metric. need to be
+      more sensitive to ...
     - find the right magic number for stroke offset curve
+      close to 0.03 now.
     - reuse joins for caps
     - miter (see formula in cairo)
     - what to do about closed pen paths?

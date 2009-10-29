@@ -6,7 +6,7 @@
     <script src="shapes.js"></script>
     <script>
 
-      function createLinearGradient(x0, y0, x1, y1) {
+      function createGradientShape(x0, y0, x1, y1) {
         var ds_dx, ds_dy;
         var dx = x1 - x0;
         var dy = y1 - y0;
@@ -22,27 +22,30 @@
         else {
           var angle = Math.atan(dy / dx);
           if (dx < 0)
-            angle += 3.14159;
+            angle += Math.PI;
           var s0 = dx * Math.cos(angle);
           ds_dx = s0 / (length * dx);
           ds_dy = (1 - s0 / length) / dy;
         }
         var s00 = 0 - x0 * ds_dx - y0 * ds_dy;
-        return gezira.LinearGradient(s00, ds_dx, ds_dy);
+        return gezira.LinearGradientShape(s00, ds_dx, ds_dy);
       }
 
       function main() {
         var canvas = document.getElementsByTagName('canvas')[0];
         var cxt = canvas.getContext('2d');
         var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
-        var star = shapes.star(image.width / 2, image.height / 2, 42, 100, 5);
+                                      
         with (gezira) {
-          var l = createLinearGradient(0, 0, 150, 150);
-          var c = GradientColorSpan(1, 1, 0, 0, 0, -1, 0, 1, 1);
-          nile.pipeline(DecomposeBezier,
-                        Render(Gradient(l, GradientMirror, c),
-                               WriteImage(image)))(star.slice(0));
+          var spans = GradientColorSpan(1,  1, 0, 0,
+                                        0, -1, 0, 1, 1);
+          var s = Gradient(createGradientShape(0, 0, 150, 150),
+                           GradientExtendMirror, spans);
+          var p = nile.Pipeline(DecomposeBezier, Render(s, WriteImage(image)));
+
+          p(null)(shapes.centeredStar(image));
         }
+
         cxt.putImageData(image, 0, 0);
       };
     </script>

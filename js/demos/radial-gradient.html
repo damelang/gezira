@@ -9,14 +9,17 @@
         var canvas = document.getElementsByTagName('canvas')[0];
         var cxt = canvas.getContext('2d');
         var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
-        var star = shapes.star(image.width / 2, image.height / 2, 42, 100, 5);
+                                      
         with (gezira) {
-          var r = RadialGradient(250, 250, 100);
-          var c = GradientColorSpan(1, 0, 1, 0, -1, 0, -1, 1, 1);
-          nile.pipeline(DecomposeBezier,
-                        Render(Gradient(r, GradientMirror, c),
-                               WriteImage(image)))(star.slice(0));
+          var spans = GradientColorSpan( 1, 0,  1, 0,
+                                        -1, 0, -1, 1, 1);
+          var s = Gradient(RadialGradientShape(250, 250, 50),
+                           GradientExtendMirror, spans)
+          var p = nile.Pipeline(DecomposeBezier, Render(s, WriteImage(image)));
+
+          p(null)(shapes.centeredStar(image));
         }
+
         cxt.putImageData(image, 0, 0);
       };
     </script>
