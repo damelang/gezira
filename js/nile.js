@@ -22,7 +22,6 @@ nile.Reverse = function(quantum) {
       var output = [];
       var i = 0;
       var j = input.length;
-      debugger;
       while (i < input.length) {
         for (var jj = j - quantum; jj < j; jj++)
           output[jj] = input[i++];

@@ -220,7 +220,6 @@ gezira.ClipBezier = function(min_x, min_y, max_x, max_y) {
   return function(downstream) {
     return function(input) {
       var output = [];
-      debugger;
       while (input.length) {
         var a_x = input.shift();
         var a_y = input.shift();
@@ -488,17 +487,19 @@ gezira.Gradient = function(s, e, c) {
 gezira.norm = function(a_x, a_y) {
   return Math.sqrt(a_x * a_x + a_y * a_y);
 };
+gezira.normalize = function(a_x, a_y) {
+  var n = gezira.norm(a_x, a_y);
+  if (n != 0)
+    return [a_x / n, a_y / n];
+  else
+    return [a_x, a_y];
+};
 gezira.perp = function(a_x, a_y, b_x, b_y) {
-  var _1_x = b_x - a_x;
-  var _1_y = b_y - a_y;
-  // || b - a ||
-  var _2 = gezira.norm(_1_x, _1_y);
-  // ^(b - a)
-  var _3_x = _2 != 0 ? _1_x / _2 : _1_x;
-  var _3_y = _2 != 0 ? _1_y / _2 : _1_y;
-  var _4_x = 0 - _3_y;
-  var _4_y = _3_x;
-  return [_4_x, _4_y];
+  var _1 = gezira.normalize(b_x - a_x, b_y - a_y);
+  return [0 - _1[1], _1[0]];
+};
+gezira.dot = function(a_x, a_y, b_x, b_y) {
+  return a_x * b_x + a_y * b_y;
 };
 
 gezira.StrokeCapButt = function(o) {
@@ -557,8 +558,8 @@ gezira.StrokeJoinBevel = function(o) {
   };
 };
 
-/* TODO this looks OK for the examples I've tried */
 gezira.stroke_error = 0.03;
+gezira.offset_points = [];
 
 gezira.StrokeOffsetCurve = function(o) {
   return function(downstream) {
@@ -579,12 +580,20 @@ gezira.StrokeOffsetCurve = function(o) {
         var f_y = c_y + b_c[1] * o;
         var m_x = (((a_x + b_x) / 2) + ((b_x + c_x) / 2)) / 2;
         var m_y = (((a_y + b_y) / 2) + ((b_y + c_y) / 2)) / 2;
-        var n_x = m_x + ((a_b[0] + b_c[0]) / 2) * o;
-        var n_y = m_y + ((a_b[1] + b_c[1]) / 2) * o;
+        var _1 = gezira.normalize((a_b[0] + b_c[0]) / 2, (a_b[1] + b_c[1]) / 2);
+        var n_x = m_x + _1[0] * o;
+        var n_y = m_y + _1[1] * o;
+        gezira.offset_points.push({x: n_x, y: n_y});
         var e_x = 2 * n_x - 0.5 * d_x - 0.5 * f_x;
         var e_y = 2 * n_y - 0.5 * d_y - 0.5 * f_y;
         var d_e = gezira.perp(d_x, d_y, e_x, e_y);
         var e_f = gezira.perp(e_x, e_y, f_x, f_y);
+        /*
+        var error_1 = gezira.dot(a_b[0], a_b[1], d_e[0], d_e[1]);
+        var error_2 = gezira.dot(b_c[0], b_c[1], e_f[0], e_f[1]);
+        if (error_1 > gezira.stroke_error && error_2 > gezira.stroke_error)
+          output.push(d_x, d_y, e_x, e_y, f_x, f_y);
+        */
         var error = gezira.norm(a_b[0] - d_e[0], a_b[1] - d_e[1]) +
                     gezira.norm(b_c[0] - e_f[0], b_c[1] - e_f[1]);
         if (error < gezira.stroke_error)

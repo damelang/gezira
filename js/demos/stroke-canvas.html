@@ -1,9 +1,6 @@
 <html>
   <head>
-    <title>Pen Stroke</title>
-    <script src="../nile.js"></script>
-    <script src="../gezira.js"></script>
-    <script src="shapes.js"></script>
+    <title>Pen Stroke (using HTML Canvas Tag)</title>
     <script>
 
       var Point = function(x, y) { this.x = x; this.y = y; }
@@ -22,50 +19,23 @@
         });
       }
 
-      function drawOffsets(cxt) {
-        var width = 5;
-        cxt.fillStyle = "rgba(0, 255, 0, 0.5)";
-        gezira.offset_points.forEach(function(p) {
-          cxt.beginPath();
-          cxt.arc(p.x, p.y, 3, 0, Math.PI*2, true);
-          cxt.closePath();
-          cxt.fill();
-        });
-      }
-
       function render() {
-        gezira.offset_points = [];
         var canvas = document.getElementsByTagName('canvas')[0];
         var cxt = canvas.getContext('2d');
         cxt.clearRect(0, 0, 500, 500);
-        var image = cxt.getImageData(0, 0, canvas.width, canvas.height);
-        var lines = [path[0].x, path[0].y, path[1].x, path[1].y, path[2].x, path[2].y];
-        with (gezira) {
-          var s = UniformColor(1, 0, 0, 0);
-          var p = nile.Pipeline(Stroke(StrokeCapButt, StrokeJoinBevel, stroke_width / 2),
-                                ClipBezier(0, 0, image.width, image.height),
-                                DecomposeBezier,
-                                Render(s, WriteImage(image)));
-
-          p(null)(lines);
-        }
-        cxt.putImageData(image, 0, 0);
+        cxt.fillStyle = "black";
+        cxt.lineWidth = stroke_width;
+        cxt.beginPath();
+        cxt.moveTo(path[0].x, path[0].y);
+        cxt.quadraticCurveTo(path[1].x, path[1].y, path[2].x, path[2].y);
+        cxt.stroke();
         drawHandles(cxt);
-        drawOffsets(cxt);
       }
 
       function newStrokeWidth(e) {
         var w = parseFloat(e.value);
         if (!isNaN(w)) {
           stroke_width = w;
-          render();
-        }
-      };
-
-      function newErrorTolerance(e) {
-        var t = parseFloat(e.value);
-        if (!isNaN(t)) {
-          gezira.stroke_error = t;
           render();
         }
       };
@@ -111,8 +81,5 @@
       <p />
       Stroke width: <input type="text" size="2" value="10"
                      onchange="newStrokeWidth(this);">
-      <p />
-      Error tolerance: <input type="text" size="5" value="0.03"
-                        onchange="newErrorTolerance(this);">
   </body>
 </html>
