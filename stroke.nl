@@ -68,7 +68,7 @@ StrokeOffsetCurve (o) : Bezier >> Bezier
         d = a + (a ⟂ b) × o
         f = c + (b ⟂ c) × o
         m = (a ~ b) ~ (b ~ c)
-        n = m + ((a ⟂ b) ~ (b ⟂ c)) × o
+        n = m + ^((a ⟂ b) ~ (b ⟂ c)) × o
         e = d $(n)$ f
         error = ‖ (a ⟂ b) - (d ⟂ e) ‖ + ‖ (b ⟂ c) - (e ⟂ f) ‖
         if error < 0.1
