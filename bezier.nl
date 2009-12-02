@@ -1,6 +1,6 @@
 TransformBezier (m : Matrix) : Bezier >> Bezier
-    ∀ [a, b, c]
-        >> [m × a, m × b, m × c]
+    ∀ b
+        >> m × b
 
 ClipBezier (min, max : Point) : Bezier >> Bezier
     ∀ [a, b, c]
@@ -25,7 +25,7 @@ DecomposeBezier : Bezier >> EdgeContribution
             p = ⌊ a ⌋ ⋖ ⌊ c ⌋
             w = p.x + 1 - (c.x ~ a.x)
             h = c.y - a.y
-            >> [p, w, h]
+            >> [p.x, p.y, w, h]
         else
             abbc    = (a ~ b) ~ (b ~ c)
             min     = ⌊ abbc ⌋

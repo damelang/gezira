@@ -1,8 +1,8 @@
-Color <: [a, r, g, b]
-Point <: [x, y]
-Matrix <: [a, b, c, d, e, f]
+Color <: [a, r, g, b : Real]
+Point <: [x, y : Real]
+Matrix <: [a, b, c, d, e, f : Real]
 Bezier <: [a, b, c : Point]
-EdgeContribution <: [p : Point, w, h]
+EdgeContribution <: [x, y, w, h : Real]
 
 Sampler :: Point >> Color
 Compositor :: [Color, Color] >> Color
@@ -26,13 +26,13 @@ CompositeOver : Compositor
     ∀ [a, b]
         >> a + b × (1 - a.a)
 
-FillBetweenEdges (start : Point) : EdgeContribution >> Real
-    x = start.x
+FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
+    x = x0
     local = 0
     run   = 0
-    ∀ [[x', y], w, h]
-        run' = run + h
+    ∀ [x', y, w, h]
         n = x' - x
+        run' = run + h
         if n = 0
             local' = local + w × h
         else
@@ -50,10 +50,11 @@ CreateSamplePoints (start : Point) : Real >> Point
         >> [x, y]
 
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
-    & [p, w, h]
-        ⇒ FillBetweenEdges (p) →
-          Interleave (CreateSamplePoints (p + 0.5) → s, (→)) →
-          c (p + 0.5)
+    & [x, y, w, h]
+        p = [x, y] + 0.5
+        ⇒ FillBetweenEdges (x) →
+          Interleave (CreateSamplePoints (p) → s, (→)) →
+          c (p)
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    ⇒ GroupBy (@p.y, SortBy (@p.x) → Render' (s, c))
+    ⇒ GroupBy (@y) → SortBy (@x) → Render' (s, c)

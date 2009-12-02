@@ -1,5 +1,5 @@
-StrokeJoin :: (o) Bezier >> Bezier
-StrokeCap :: (o) Bezier >> Bezier
+StrokeJoin :: (o : Real) Bezier >> Bezier
+StrokeCap :: (o : Real) Bezier >> Bezier
 
 ^(a : Point) : Point
     if ‖ a ‖ ≠ 0
@@ -10,6 +10,10 @@ StrokeCap :: (o) Bezier >> Bezier
 (a : Point ⟂ b : Point) : Point
     c = b - a
     [0 - ^(c).y, ^(c).x]
+
+(a : Point ⟂^ b : Point) : Point
+    c = b - a
+    [0 - c.y, c.x]
 
 (a : Point ~ b : Point ~ c : Point) : Point
     y = (a ~ c) - b
@@ -63,26 +67,29 @@ StrokeJoinRound : StrokeJoin
             >> [i, i $(i ~c~ j)$ j, j]
             >> [j, j $(j ~c~ k)$ k, k]
 
-StrokeOffsetCurve (o) : Bezier >> Bezier
+StrokeOffsetCurve (o : Real) : Bezier >> Bezier
     ∀ [a, b, c]
         d = a + (a ⟂ b) × o
         f = c + (b ⟂ c) × o
         m = (a ~ b) ~ (b ~ c)
-        n = m + ^((a ⟂ b) ~ (b ⟂ c)) × o
+        n = m + ^((a ⟂^ b) ~ (b ⟂^ c)) × o
         e = d $(n)$ f
+        theta1 = acos((b - a) * (e - d))
+        theta2 = acos((c - b) * (f - e))
+        error = | theta1 | + | theta2 |
         error = ‖ (a ⟂ b) - (d ⟂ e) ‖ + ‖ (b ⟂ c) - (e ⟂ f) ‖
         if error < 0.1
             >> [d, e, f]
         else
             << [a, a ~ b, m] << [m, b ~ c, c]
 
-StrokeSide (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
+StrokeSide (c : StrokeCap, j : StrokeJoin, o : Real) : Bezier >> Bezier
     ⇒ Mix (StrokeOffsetCurve (o), Mix (c (o), j (o)))
 
 ReverseBezier : Bezier >> Bezier
     ∀ [a, b, c]
         >> [c, b, a]
 
-Stroke (c : StrokeCap, j : StrokeJoin, o) : Bezier >> Bezier
+Stroke (c : StrokeCap, j : StrokeJoin, o : Real) : Bezier >> Bezier
     ⇒ Mix (StrokeSide (c, j, o),
            ReverseBezier → Reverse → StrokeSide (c, j, o))

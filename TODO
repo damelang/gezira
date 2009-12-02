@@ -1,25 +1,9 @@
-- change GroupBy to clone downstream. Passing in the kernel parameter
-  is getting strange. Maybe have kernels clone their downstream too?
-  If set?
-- finish pen stroking
-    - find crash in js reason
-    - tangency might not be the right error metric. need to be
-      more sensitive to ...
-    - find the right magic number for stroke offset curve
-      close to 0.03 now.
-    - reuse joins for caps
-    - miter (see formula in cairo)
-    - what to do about closed pen paths?
-- fix ImageExtendModes!
+- propagate nile-level code changes to manually generated code (js and c)
+- kernel cloning has to clone downstream, too, now (see GroupBy)
 - c generation
-    - fill in thread/semaphore code
-
+    - figure out buffer management
     - kernels now have to allocate their out buffer if NULL at function start
     - kernels now have to free the in buffer now
-
-    - debug
-    - write SDL versions of ReadImage and WriteImage
-    - demos
 
     - make recursion part of the normal scheduling scheme. this will allow ordered
       output, etc. Might need to change order of recursion elements nile code.
@@ -38,6 +22,12 @@
             nile_Lock_unlock (nl->kernellock);
             in = in_;
         }
+
+    - fill in thread/semaphore code
+
+    - debug
+    - write SDL versions of ReadImage and WriteImage
+    - demos
 
     - comments by Alex:
         - prearrange freelist
@@ -61,6 +51,19 @@
     - kernel constructor calls separate populate function?
       reuse populate function for field write back?
       what about fields that belong to "middle types"?
+- finish pen stroking
+    - see comparison demos
+    - tangency apparently is not linearly interpolated at
+      't' is.
+    - find crash in js reason
+    - tangency might not be the right error metric. need to be
+      more sensitive to ...
+    - find the right magic number for stroke offset curve
+      close to 0.03 now.
+    - reuse joins for caps
+    - miter (see formula in cairo)
+    - what to do about closed pen paths?
+- fix ImageExtendModes!
 - document (and add compiler support) for the fact that kernel parameters are
   immutable
 - introduce _ vars back into the language
