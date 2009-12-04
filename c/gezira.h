@@ -3,32 +3,30 @@
 
 #include "nile.h"
 
-typedef nile_Kernel_t gezira_Sampler_t;
+nile_Kernel_t *
+gezira_Canvas (nile_t *nl, nile_Kernel_t *k_, 
+               nile_Real_t v_start_x,
+               nile_Real_t v_start_y);
 
-typedef nile_Kernel_t gezira_Compositor_t;
-
-typedef struct gezira_Canvas_ gezira_Canvas_t;
-
-gezira_Sampler_t *
+nile_Kernel_t *
 gezira_CompositeSamplers (nile_t *nl,
-                          gezira_Sampler_t *v_s1,
-                          gezira_Sampler_t *v_s2,
-                          gezira_Compositor_t *v_c);
+                          nile_Kernel_t *v_s1,
+                          nile_Kernel_t *v_s2,
+                          nile_Kernel_t *v_c);
 
-gezira_Sampler_t *
+nile_Kernel_t *
 gezira_UniformColor (nile_t *nl,
                      nile_Real_t v_c_a,
                      nile_Real_t v_c_r,
                      nile_Real_t v_c_g,
                      nile_Real_t v_c_b);
 
-gezira_Compositor_t *
+nile_Kernel_t *
 gezira_CompositeOver (nile_t *nl);
 
 nile_Kernel_t *
 gezira_FillBetweenEdges (nile_t *nl,
-                         nile_Real_t v_start_x,
-                         nile_Real_t v_start_y);
+                         nile_Real_t v_x0);
 
 nile_Kernel_t *
 gezira_CreateSamplePoints (nile_t *nl,
@@ -37,13 +35,13 @@ gezira_CreateSamplePoints (nile_t *nl,
 
 nile_Kernel_t *
 gezira_Render_ (nile_t *nl,
-                gezira_Sampler_t *v_s,
-                gezira_Canvas_t *v_c);
+                nile_Kernel_t *v_s,
+                nile_Kernel_t *v_c);
 
 nile_Kernel_t *
 gezira_Render (nile_t *nl,
-               gezira_Sampler_t *v_s,
-               gezira_Canvas_t *v_c);
+               nile_Kernel_t *v_s,
+               nile_Kernel_t *v_c);
 
 nile_Kernel_t *
 gezira_TransformBezier (nile_t *nl,

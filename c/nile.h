@@ -72,10 +72,12 @@ nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b);
 void
 nile_Buffer_free (nile_t *nl, nile_Buffer_t *b);
 
-typedef nile_Buffer_t * (*nile_Kernel_process_t)
-    (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *in, nile_Buffer_t *out, int *pause);
+typedef void
+(*nile_Kernel_process_t) (nile_t *nl, nile_Kernel_t *k_,
+                          nile_Buffer_t **in_, nile_Buffer_t **out_);
 
-typedef void * (*nile_Kernel_clone_t) (nile_t *nl, void *k);
+typedef nile_Kernel_t *
+(*nile_Kernel_clone_t) (nile_t *nl, nile_Kernel_t *k_);
 
 struct nile_Kernel_ {
     nile_Kernel_t *next;
@@ -93,18 +95,14 @@ nile_Kernel_new (nile_t *nl, nile_Kernel_process_t process,
 #define NILE_KERNEL_NEW(nl, name) \
     ((name##_t *) nile_Kernel_new ((nl), name##_process, name##_clone))
 
-static inline void *
-nile_Kernel_clone (nile_t *nl, void *k_)
+static inline nile_Kernel_t *
+nile_Kernel_clone (nile_t *nl, nile_Kernel_t *k_)
 {
-    nile_Kernel_t *k = (nile_Kernel_t *) k_;
-    return nile_Kernel_new (nl, k->process, k->clone);
+    return nile_Kernel_new (nl, k_->process, k_->clone);
 }
 
 void
 nile_Kernel_free (nile_t *nl, nile_Kernel_t *k);
-
-void
-nile_Kernel_pause (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b, int *pause);
 
 void
 nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k);
@@ -139,7 +137,7 @@ static inline nile_Buffer_t *
 nile_flush_if_full (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out, int quantum)
 {
     if (out->n > NILE_BUFFER_SIZE - quantum) {
-        nile_deliver (nl, k->downstream, out);
+        nile_deliver (nl, k, out);
         out = nile_Buffer_new (nl);
     }
     return out;
@@ -182,21 +180,10 @@ nile_produce_1_repeat (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out,
 }
 
 static inline nile_Buffer_t *
-nile_recurse (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *r, nile_Buffer_t *out)
+nile_rewind (nile_t *nl, nile_Buffer_t *b, int quantum)
 {
-    return k->process (nl, k, r, out, NULL);
-}
-
-static inline nile_Buffer_t *
-nile_recurse_if_full (nile_t *nl, nile_Kernel_t *k,
-                      nile_Buffer_t *r, int quantum, nile_Buffer_t *out)
-{
-    if (r->n > NILE_BUFFER_SIZE - quantum) {
-        out = nile_recurse (nl, k, r, out);
-        r->i = 0;
-        r->n = 0;
-    }
-    return out;
+    /* TODO */
+    return b;
 }
 
 nile_Kernel_t *
@@ -204,7 +191,7 @@ nile_Interleave (nile_t *nl, nile_Kernel_t *k1, int quantum1,
                  nile_Kernel_t *k2, int quantum2);
 
 nile_Kernel_t *
-nile_GroupBy (nile_t *nl, int index, int quantum, nile_Kernel_t *k);
+nile_GroupBy (nile_t *nl, int index, int quantum);
 
 nile_Kernel_t *
 nile_SortBy (nile_t *nl, int index, int quantum);

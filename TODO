@@ -1,3 +1,6 @@
+- go through nile.h, nile.c
+    - make sure k_->downstream is being passed to the flush etc. functions
+
 - propagate nile-level code changes to manually generated code (js and c)
 - kernel cloning has to clone downstream, too, now (see GroupBy)
 - c generation
