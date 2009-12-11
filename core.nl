@@ -57,4 +57,4 @@ Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
           c (p)
 
 Render (s : Sampler, c : Canvas) : EdgeContribution >>|
-    ⇒ GroupBy (@y) → SortBy (@x) → Render' (s, c)
+    ⇒ GroupBy (@y) → (SortBy (@x) → Render' (s, c))
