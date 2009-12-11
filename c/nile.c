@@ -1,50 +1,216 @@
 #include <stdarg.h>
-#include <stdlib.h>
 #include "nile.h"
 
 #define real nile_Real_t
+#define MAX_THREADS 50
+#define READY_Q_LENGTH_TOO_LONG 25
 
-#include <libkern/OSAtomic.h>
-typedef OSSpinLock nile_Lock_t;
-static inline void nile_Lock_init (nile_Lock_t *l) { *l = OS_SPINLOCK_INIT; }
-static inline void nile_Lock_fini (nile_Lock_t *l) { }
-static inline void nile_Lock_lock (nile_Lock_t *l) { OSSpinLockLock (l); }
-static inline void nile_Lock_unlock (nile_Lock_t *l) { OSSpinLockUnlock (l); }
+/* Spin locks */
+
+#if defined(__SSE2__) || defined(_M_IX86)
+#   include <xmmintrin.h>
+#else
+#   error Unsupported platform!
+#endif
+
+#if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(__linux)
+/* Nothing to do */
+#elif defined(__MACH__) && defined(__APPLE__)
+#   include <libkern/OSAtomic.h>
+#   define __sync_lock_test_and_set(l, v) OSAtomicTestAndSetBarrier   (0, l)
+#   define __sync_lock_release(l)         OSAtomicTestAndClearBarrier (0, l)
+#elif defined(_MSC_VER)
+#   define __sync_lock_test_and_set InterlockedExchangeAcquire
+#   define __sync_lock_release      InterlockedDecrementRelease 
+#else
+#   error Unsupported platform!
+#endif
+
+static void
+nile_lock (int * volatile lock)
+{
+    while (*lock || __sync_lock_test_and_set (lock, 1))
+        _mm_pause ();
+}
+
+static void
+nile_unlock (int * volatile lock)
+{
+    __sync_lock_release (lock);
+}
+
+/* Threads */
+
+#if defined(__unix__) || defined(__DARWIN_UNIX03)
+
+#include <pthread.h>
+typedef pthread_t nile_Thread_t;
+
+static void
+nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
+{
+    pthread_create (t, NULL, (void * (*) (void *) ) f, nl);
+}
+
+static void
+nile_Thread_join (nile_Thread_t *t)
+{
+    pthread_join (*t, NULL);
+}
+
+#elif defined(_WIN32)
+
+typedef HANDLE nile_Thread_t;
+
+static void
+nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
+{
+    *t = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) f, nl, 0, NULL);
+}
+
+static void
+nile_Thread_join (nile_Thread_t *t)
+{
+    WaitForSingleObject (*t, INFINITE);
+    CloseHandle (*t);
+}
+
+#else
+#   error Unsupported platform!
+#endif
+
+/* Semaphores */
+
+#if defined(__MACH__)
+
+#include <mach/mach.h>
+#include <mach/semaphore.h>
+typedef semaphore_t nile_Sem_t;
+
+static void
+nile_Sem_new (nile_Sem_t *s, int value)
+{
+    semaphore_create (mach_task_self (), s, SYNC_POLICY_FIFO, value);
+}
+
+static void
+nile_Sem_free (nile_Sem_t *s)
+{
+    semaphore_destroy (mach_task_self (), *s);
+}
+
+static void
+nile_Sem_signal (nile_Sem_t *s)
+{
+    semaphore_signal (*s);
+}
+
+static void
+nile_Sem_wait (nile_Sem_t *s)
+{
+    semaphore_wait (*s);
+}
+
+#elif defined(__linux)
+#   error Need to implement nile_Sem_t for Linux!
+#elif defined(_WIN32)
+#   error Need to implement nile_Sem_t for Windows!
+#else
+#   error Unsupported platform!
+#endif
+
+/* Startup */
+
+static void * 
+nile_loop (nile_t *nl);
 
 struct nile_ {
     int nthreads;
-
-    nile_Lock_t memlock;
-    char *mem;
-    char *memend;
-    void *freelist;
-
-    nile_Lock_t kernellock;
-    nile_Kernel_t *ready;
+    int nthreads_active;
+    nile_Kernel_t *ready_q;
+    int ready_q_length;
+    int shutdown;
+    nile_Buffer_t *freelist;
+    int freelist_lock;
+    int ready_q_lock;
+    nile_Sem_t ready_q_not_empty_sem;
+    nile_Sem_t ready_q_not_too_long_sem;
+    nile_Sem_t idle_sem;
+    nile_Thread_t threads[MAX_THREADS];
 };
 
 nile_t *
 nile_begin (int nthreads, char *mem, int memsize)
 {
+    int i;
     nile_t *nl = (nile_t *) mem;
-    nl->nthreads = nthreads;
-    
-    nile_Lock_init (&nl->memlock);
-    nl->mem = mem + sizeof (nile_t); 
-    nl->memend = mem + memsize;
-    nl->freelist = NULL;
+    nl->nthreads = nthreads < MAX_THREADS ? nthreads : MAX_THREADS;
+    nl->nthreads_active = nl->nthreads;
+    nl->ready_q = NULL;
+    nl->ready_q_length = 0;
+    nl->shutdown = 0;
 
-    nile_Lock_init (&nl->kernellock);
-    nl->ready = NULL;
+    nl->freelist = (nile_Buffer_t *) (mem + sizeof (nile_t));
+    int n = (memsize - sizeof (nile_t)) / sizeof (nile_Buffer_t);
+    for (i = 0; i < n - 1; i++)
+        nl->freelist[i].next = &(nl->freelist[i + 1]);
+    nl->freelist[n - 1].next = NULL;
+
+    nl->freelist_lock = 0;
+    nl->ready_q_lock = 0;
+    nile_Sem_new (&nl->ready_q_not_empty_sem, 0);
+    nile_Sem_new (&nl->ready_q_not_too_long_sem, 0);
+    nile_Sem_new (&nl->idle_sem, 0);
+
+    for (i = 0; i < nl->nthreads; i++)
+        nile_Thread_new (nl, &(nl->threads[i]), nile_loop);
 
     return nl;
 }
+
+/* Shutdown */
+
+char *
+nile_end (nile_t *nl)
+{
+    int i;
+
+    nile_lock (&nl->ready_q_lock);
+        nl->shutdown = 1;
+    nile_unlock (&nl->ready_q_lock);
+
+    for (i = 0; i < nl->nthreads; i++)
+        nile_Sem_signal (&nl->ready_q_not_empty_sem);
+
+    for (i = 0; i < nl->nthreads; i++)
+        nile_Thread_join (&(nl->threads[i]));
+
+    nile_Sem_free (&nl->idle_sem);
+    nile_Sem_free (&nl->ready_q_not_too_long_sem);
+    nile_Sem_free (&nl->ready_q_not_empty_sem);
+
+    return (char *) nl;
+}
+
+/* Stream input from outside */
 
 void
 nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos)
 {
     nile_Buffer_t *in;
     int i = 0;
+    int ready_q_length;
+
+    nile_lock (&nl->ready_q_lock);
+        ready_q_length = nl->ready_q_length;
+    nile_unlock (&nl->ready_q_lock);
+
+    while (!(ready_q_length < READY_Q_LENGTH_TOO_LONG)) {
+        nile_Sem_wait (&nl->ready_q_not_too_long_sem);
+        nile_lock (&nl->ready_q_lock);
+            ready_q_length = nl->ready_q_length;
+        nile_unlock (&nl->ready_q_lock);
+    }
 
     while (n) {
         in = nile_Buffer_new (nl);
@@ -53,77 +219,52 @@ nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos)
         n -= in->n;
         if (n == 0)
             in->eos = eos;
-        nile_deliver (nl, k, in);
+        nile_Kernel_inbox_append (nl, k, in);
     }
 }
+
+/* External synchronization (waiting until all kernels are done) */
 
 void
 nile_sync (nile_t *nl)
 {
-    /* TODO wait on the threads */
-}
-
-char *
-nile_end (nile_t *nl)
-{
-    /* TODO kill the threads */
-    nile_Lock_fini (&nl->memlock);
-    nile_Lock_fini (&nl->kernellock);
-    return (char *) nl;
-}
-
-static inline void
-nile_signal_kernel_ready (nile_t *nl)
-{
-    /* TODO */
-}
-
-static inline void
-nile_wait_for_kernel_ready (nile_t *nl)
-{
-    /* TODO */
-}
-
-static inline void *
-nile_alloc (nile_t *nl)
-{
-    void *v;
-    nile_Lock_lock (&nl->memlock);
-    {
-        v = nl->freelist;
-        if (v == NULL) {
-            v = nl->mem;
-            nl->mem += sizeof (nile_Buffer_t);
-            if (nl->mem > nl->memend)
-                abort ();
-        }
-        else
-            nl->freelist = *((void **) v);
+    int idle = 0;
+    while (!idle) {
+        nile_Sem_wait (&nl->idle_sem);
+        nile_lock (&nl->ready_q_lock);
+            idle = !nl->nthreads_active && !nl->ready_q;
+        nile_unlock (&nl->ready_q_lock);
     }
-    nile_Lock_unlock (&nl->memlock);
-    return v;
 }
 
-static inline void
-nile_free (nile_t *nl, void *v)
-{
-    nile_Lock_lock (&nl->memlock);
-    {
-        *((void **) v) = nl->freelist;
-        nl->freelist = v;
-    }
-    nile_Lock_unlock (&nl->memlock);
-}
+/* Buffers */
 
 nile_Buffer_t *
 nile_Buffer_new (nile_t *nl)
 {
-    nile_Buffer_t *b = nile_alloc (nl);
+    nile_Buffer_t *b;
+
+    nile_lock (&nl->freelist_lock);
+        b = nl->freelist;
+        if (!b)
+            abort ();
+        nl->freelist = b->next;
+    nile_unlock (&nl->freelist_lock);
+
     b->next = NULL;
     b->i = 0;
     b->n = 0;
     b->eos = 0;
     return b;
+}
+
+void
+nile_Buffer_free (nile_t *nl, nile_Buffer_t *b)
+{
+    nile_lock (&nl->freelist_lock);
+        b->next = nl->freelist;
+        nl->freelist = b;
+    nile_unlock (&nl->freelist_lock);
 }
 
 nile_Buffer_t *
@@ -139,121 +280,208 @@ nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b)
     return clone;
 }
 
-void
-nile_Buffer_free (nile_t *nl, nile_Buffer_t *b)
-{
-    nile_free (nl, b);
-}
+/* Kernels */
 
 nile_Kernel_t *
 nile_Kernel_new (nile_t *nl, nile_Kernel_process_t process,
                              nile_Kernel_clone_t clone)
 {
-    nile_Kernel_t *k = nile_alloc (nl);
+    nile_Kernel_t *k = (nile_Kernel_t *) nile_Buffer_new (nl);
     k->next = NULL;
     k->process = process;
     k->clone = clone;
     k->downstream = NULL;
+    k->lock = 0;
     k->inbox = NULL;
     k->initialized = 0;
+    k->active = 0;
     return k;
 }
 
 void
 nile_Kernel_free (nile_t *nl, nile_Kernel_t *k)
 {
-    nile_free (nl, k);
+    nile_Buffer_free (nl, (nile_Buffer_t *) k);
 }
 
-void
-nile_Kernel_resume (nile_t *nl, nile_Kernel_t *k)
+nile_Kernel_t *
+nile_Kernel_clone (nile_t *nl, nile_Kernel_t *k)
 {
-    nile_Lock_lock (&nl->kernellock);
-    {
-        k->next = nl->ready;
-        nl->ready = k;
-        nile_signal_kernel_ready (nl);
-    }
-    nile_Lock_unlock (&nl->kernellock);
+    nile_Kernel_t *clone = nile_Kernel_new (nl, k->process, k->clone);
+    return clone;
 }
 
-void
-nile_deliver (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b)
+static void
+nile_Kernel_ready (nile_t *nl, nile_Kernel_t *k)
 {
-    nile_Lock_lock (&nl->kernellock);
-    {
-        nile_Buffer_t *inbox = k->inbox;
-        if (inbox == NULL) {
-            k->inbox = b;
-            nile_Kernel_t *ready = nl->ready;
-            if (ready == NULL)
-                nl->ready = k;
-            else {
-                while (ready->next != NULL)
-                    ready = ready->next;
-                ready->next = k;
-            }
-            nile_signal_kernel_ready (nl);
+    nile_lock (&nl->ready_q_lock);
+        if (nl->ready_q) {
+            nile_Kernel_t *ready_q = nl->ready_q;
+            while (ready_q->next)
+                ready_q = ready_q->next;
+            ready_q->next = k;
         }
-        else {
-            while (inbox->next != NULL)
+        else
+            nl->ready_q = k;
+        nl->ready_q_length++;
+    nile_unlock (&nl->ready_q_lock);
+
+    nile_Sem_signal (&nl->ready_q_not_empty_sem);
+}
+
+/* Kernel inbox management */
+
+void
+nile_Kernel_inbox_append (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b)
+{
+    int must_activate;
+
+    nile_lock (&k->lock); 
+        if (k->inbox) {
+            nile_Buffer_t *inbox = k->inbox;
+            while (inbox->next)
                 inbox = inbox->next;
             inbox->next = b;
+            must_activate = 0;
         }
-    }
-    nile_Lock_unlock (&nl->kernellock);
+        else {
+            k->inbox = b;
+            must_activate = !k->active;
+        }
+    nile_unlock (&k->lock); 
+
+    if (must_activate)
+        nile_Kernel_ready (nl, k);
 }
 
-static void 
+void
+nile_Kernel_inbox_prepend (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b)
+{
+    nile_lock (&k->lock);
+        b->next = k->inbox;
+        k->inbox = b;
+    nile_unlock (&k->lock);
+}
+
+/* Kernel execution */
+
+static int
+nile_Kernel_exec (nile_t *nl, nile_Kernel_t *k)
+{
+    int response = NILE_INPUT_FORWARD;
+    int eos = 0;
+    nile_Buffer_t *out = nile_Buffer_new (nl);
+    nile_Buffer_t *in;
+
+    for (;;) { 
+        nile_lock (&k->lock);
+            in = k->inbox;
+            k->inbox = in ? in->next : in;
+        nile_unlock (&k->lock);
+        if (!in)
+            break;
+        in->next = NULL;
+        eos = in->eos;
+
+        response = k->process (nl, k, &in, &out);
+        switch (response) {
+            case NILE_INPUT_CONSUMED:
+                nile_Buffer_free (nl, in);
+                break;
+            case NILE_INPUT_FORWARD:
+                if (out && out->n) {
+                    nile_Kernel_inbox_append (nl, k->downstream, out);
+                    out = nile_Buffer_new (nl);
+                }
+                nile_Kernel_inbox_append (nl, k->downstream, in);
+                break;
+            case NILE_INPUT_SUSPEND:
+                if (in)
+                    nile_Kernel_inbox_prepend (nl, k, in);
+                eos = 0;
+                break;
+        }
+        if (response == NILE_INPUT_SUSPEND)
+            break;
+    }
+
+    if (out) {
+        out->eos = eos;
+        if (response != NILE_INPUT_FORWARD && out->n)
+            nile_Kernel_inbox_append (nl, k->downstream, out);
+        else
+            nile_Buffer_free (nl, out);
+    }
+
+    if (eos) {
+        nile_Kernel_free (nl, k);
+        response = NILE_INPUT_EOS;
+    }
+
+    return response;
+}
+
+/* Thread loop */
+        
+static void * 
 nile_loop (nile_t *nl)
 {
+    nile_Kernel_t *k;
+    int eos;
+    int shutdown;
+    int signal_idle;
+    int signal_q_not_too_long;
+    int active;
+    int response;
+
     for (;;) {
-        nile_Kernel_t *k;
-        nile_wait_for_kernel_ready (nl);
-        nile_Lock_lock (&nl->kernellock);
-        {
-            k = nl->ready;
-            nl->ready = k->next;
-            k->next = NULL;
-        }
-        nile_Lock_unlock (&nl->kernellock);
+        nile_lock (&nl->ready_q_lock);
+            nl->nthreads_active--;
+            shutdown = nl->shutdown;
+            signal_idle = !nl->nthreads_active && !nl->ready_q;
+        nile_unlock (&nl->ready_q_lock);
 
-        nile_Buffer_t *in;
-        nile_Lock_lock (&nl->kernellock);
-        {
-            in = k->inbox;
-            k->inbox = in->next;
-        }
-        nile_Lock_unlock (&nl->kernellock);
+        if (shutdown)
+            break;
 
-        /* TODO update this
-        int eos;
-        int pause = 0;
-        nile_Buffer_t *out = NULL;
-        while (in != NULL) {
-            eos = in->eos;
-            out = k->process (nl, k, in, out, &pause);
-            if (pause)
-                break;
-            nile_Lock_lock (&nl->kernellock);
-            {
-                in = k->inbox;
-                k->inbox = in ? in->next : NULL;
+        if (signal_idle)
+           nile_Sem_signal (&nl->idle_sem);
+
+        nile_Sem_wait (&nl->ready_q_not_empty_sem);
+
+        nile_lock (&nl->ready_q_lock);
+            nl->nthreads_active++;
+            k = nl->ready_q;
+            if (k) {
+                nl->ready_q = k->next;
+                nl->ready_q_length--;
             }
-            nile_Lock_unlock (&nl->kernellock);
-        }
+            signal_q_not_too_long =
+                nl->ready_q_length == READY_Q_LENGTH_TOO_LONG - 1;
+        nile_unlock (&nl->ready_q_lock);
+        
+        if (!k)
+            continue;
 
-        nile_Kernel_t *downstream = k->downstream;
-        if (eos && !pause) {
-            nile_Kernel_free (nl, k);
-            if (out)
-                out->eos = 1;
+        if (signal_q_not_too_long)
+           nile_Sem_signal (&nl->ready_q_not_too_long_sem);
+
+        for (;;) {
+            nile_lock (&k->lock);
+                active = k->active = (k->inbox != NULL);
+            nile_unlock (&k->lock);
+            if (!active)
+                break;
+            response = nile_Kernel_exec (nl, k);
+            if (response == NILE_INPUT_SUSPEND || NILE_INPUT_EOS)
+                break;
         }
-        if (out)
-            nile_deliver (nl, downstream, out);
-        */
     }
+            
+    return NULL;
 }
+
+/* Pipeline kernel */
 
 typedef struct {
     nile_Kernel_t base;
@@ -269,15 +497,16 @@ nile_Pipeline_clone (nile_t *nl, nile_Kernel_t *k_)
         (nile_Pipeline_t *) nile_Kernel_clone (nl, k_);
     int i;
 
+    clone->n = k->n;
     for (i = 0; i < k->n; i++)
-        clone->ks[clone->n++] = k->ks[i]->clone (nl, k->ks[i]);
+        clone->ks[i] = k->ks[i]->clone (nl, k->ks[i]);
 
     return (nile_Kernel_t *) clone;
 }
 
-static void
+static int
 nile_Pipeline_process (nile_t *nl, nile_Kernel_t *k_,
-                       nile_Buffer_t **in_, nile_Buffer_t **out_)
+                       nile_Buffer_t **in, nile_Buffer_t **out)
 {
     nile_Pipeline_t *k = (nile_Pipeline_t *) k_;
 
@@ -289,9 +518,7 @@ nile_Pipeline_process (nile_t *nl, nile_Kernel_t *k_,
             k_->downstream = k->ks[i];
         }
     }
-
-    nile_deliver (nl, k_->downstream, *in_);
-    *in_ = NULL;
+    return NILE_INPUT_FORWARD;
 }
 
 nile_Kernel_t *
@@ -311,6 +538,8 @@ nile_Pipeline (nile_t *nl, ...)
 
     return (nile_Kernel_t *) k;
 }
+
+/* Interleave kernel */
 
 typedef struct {
     nile_Kernel_t base;
@@ -335,7 +564,7 @@ nile_Interleave_clone (nile_t *nl, nile_Kernel_t *k_)
 
 typedef struct {
     nile_Kernel_t base;
-    nile_Lock_t lock;
+    int lock;
     nile_Buffer_t *out;
 } nile_Interleave__shared_t;
 
@@ -344,11 +573,10 @@ typedef struct nile_Interleave__ nile_Interleave__t;
 struct nile_Interleave__ {
     nile_Kernel_t base;
     nile_Interleave__shared_t *shared;
-    nile_Interleave__t *sibling;
     int quantum;
-    int skip;
-    int j;
     int j0;
+    nile_Interleave__t *sibling;
+    int j;
     int n;
 };
 
@@ -361,121 +589,113 @@ nile_Interleave__clone (nile_t *nl, nile_Kernel_t *k_)
     return NULL;
 }
 
-static void
+static int
 nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
                           nile_Buffer_t **in_, nile_Buffer_t **out_)
 {
-    /* TODO update
     nile_Interleave__t *k = (nile_Interleave__t *) k_;
-    nile_Lock_t *lock = &k->shared->lock;
+    int *lock = &k->shared->lock;
+    nile_Buffer_t *in = *in_;
     nile_Buffer_t *out;
     int done = 0;
-    int j;
+    int j; 
 
-    while (in->i < in->n) {
-        nile_Lock_lock (lock);
-        {
-            out = k->shared->out;
-            j = k->j;
-        }
-        nile_Lock_unlock (lock);
+    if (!k_->initialized) {
+        k_->initialized = 1;
+        k->j = k->j0;
+        k->n = NILE_BUFFER_SIZE - (k->quantum + k->sibling->quantum) + k->j0 + 1;
+    }
 
-        if (j == -1) {
-            nile_Kernel_pause (nl, k_, in, pause);
-            return unused;
-        }
+    nile_lock (lock);
+        out = k->shared->out;
+        j = k->j;
+    nile_unlock (lock);
 
+    while (in->i < in->n && j != -1) {
         int i0 = in->i;
         while (in->i < in->n && j < k->n) {
             int q = k->quantum;
             while (q--)
                 out->data[j++] = in->data[in->i++];
-            j += k->skip;
+            j += k->sibling->quantum;
         }
         int flush_needed = (in->eos && !(in->i < in->n)) || !(j < k->n);
 
-        nile_Lock_lock (lock);
-        {
+        nile_lock (lock);
             out->n += in->i - i0;
             if (flush_needed) {
-                k->j = -1;
+                j = -1;
                 if (k->sibling->j == -1) {
                     done = in->eos && !(in->i < in->n);
                     if (done)
                         out->eos = 1;
-                    nile_deliver (nl, k_->downstream, out);
+                    nile_Kernel_inbox_append (nl, k_->downstream, out);
                     if (!done) {
-                        k->shared->out = nile_Buffer_new (nl);
-                        k->j = k->j0;
+                        out = nile_Buffer_new (nl);
+                        j = k->j0;
                         k->sibling->j = k->sibling->j0;
-                        nile_Kernel_resume (nl, &k->sibling->base);
+                        nile_Kernel_ready (nl, &k->sibling->base);
                     }
                 }
             }
-            else
-                k->j = j;
-        }
-        nile_Lock_unlock (lock);
+            k->shared->out = out;
+            k->j = j;
+        nile_unlock (lock);
     }
 
-    if (done) {
-        nile_Lock_fini (lock);
+    if (done)
         nile_Kernel_free (nl, &k->shared->base);
+
+    if (*out_) {
+        nile_Buffer_free (nl, *out_);
+        *out_ = NULL;
     }
 
-    nile_Buffer_free (nl, in);
-    return unused;
-    */
+    return (j == -1 ? NILE_INPUT_SUSPEND : NILE_INPUT_CONSUMED);
 }
 
 static nile_Interleave__t *
-nile_Interleave_ (nile_t *nl, nile_Interleave__shared_t *shared, int quantum,
-                  int skip, int j0, nile_Kernel_t *downstream)
+nile_Interleave_ (nile_t *nl, nile_Interleave__shared_t *shared, int quantum, int j0)
 {
     nile_Interleave__t *k = NILE_KERNEL_NEW (nl, nile_Interleave_);
     k->shared = shared;
     k->quantum = quantum;
-    k->skip = skip;
-    k->j = j0;
     k->j0 = j0;
-    k->n = NILE_BUFFER_SIZE - (quantum + skip) + j0 + 1;
-    k->base.downstream = downstream;
     return k;
 }
 
-static void
+static int
 nile_Interleave_process (nile_t *nl, nile_Kernel_t *k_,
-                         nile_Buffer_t **in_, nile_Buffer_t **out_)
+                         nile_Buffer_t **in, nile_Buffer_t **out)
 {
-    /* TODO update
     nile_Interleave_t *k = (nile_Interleave_t *) k_;
 
     if (!k_->initialized) {
         k_->initialized = 1;
         nile_Interleave__shared_t *shared =
             (nile_Interleave__shared_t *) nile_Kernel_new (nl, NULL, NULL);
-        nile_Lock_init (&shared->lock);
+        shared->lock = 0;
         shared->out = nile_Buffer_new (nl);
         nile_Interleave__t *child1 =
-            nile_Interleave_ (nl, shared, k->quantum1, k->quantum2, 0, k_->downstream);
+            nile_Interleave_ (nl, shared, k->quantum1, 0);
         nile_Interleave__t *child2 =
-            nile_Interleave_ (nl, shared, k->quantum2, k->quantum1, k->quantum1, k_->downstream);
+            nile_Interleave_ (nl, shared, k->quantum2, k->quantum1);
         child1->sibling = child2;
         child2->sibling = child1;
+        child1->base.downstream = k_->downstream;
+        child2->base.downstream = k_->downstream;
         k->v_k1->downstream = &child1->base;
         k->v_k2->downstream = &child2->base;
+        k_->downstream = k->v_k2;
     }
 
-    nile_deliver (nl, k->v_k1, nile_Buffer_clone (nl, in));
-    nile_deliver (nl, k->v_k2, in);
-
-    return out;
-    */
+    nile_Kernel_inbox_append (nl, k->v_k1, nile_Buffer_clone (nl, *in));
+    return NILE_INPUT_FORWARD;
 }
 
 nile_Kernel_t *
 nile_Interleave (nile_t *nl, nile_Kernel_t *v_k1, int quantum1,
-                 nile_Kernel_t *v_k2, int quantum2)
+                             nile_Kernel_t *v_k2, int quantum2)
 {
     nile_Interleave_t *k = NILE_KERNEL_NEW (nl, nile_Interleave);
     k->v_k1 = v_k1;
@@ -484,6 +704,8 @@ nile_Interleave (nile_t *nl, nile_Kernel_t *v_k1, int quantum1,
     k->quantum2 = quantum2;
     return (nile_Kernel_t *) k;
 }
+
+/* GroupBy kernel */
 
 typedef struct {
     nile_Kernel_t base;
@@ -503,38 +725,42 @@ nile_GroupBy_clone (nile_t *nl, nile_Kernel_t *k_)
     return (nile_Kernel_t *) clone;
 }
 
-static void
+static int
 nile_GroupBy_process (nile_t *nl, nile_Kernel_t *k_,
                       nile_Buffer_t **in_, nile_Buffer_t **out_)
 {
-    /* TODO update
     nile_GroupBy_t *k = (nile_GroupBy_t *) k_;
-    out = out ? out : nile_Buffer_new (nl);
+    nile_Kernel_t *clone;
+    nile_Buffer_t *in = *in_;
+    nile_Buffer_t *out = *out_;
 
     if (!k_->initialized) {
         k_->initialized = 1;
         k->key = in->data[k->index];
     }
-    k_->downstream = k->v_k;
     
     while (in->i < in->n) {
         real key = in->data[in->i + k->index];
         if (key != k->key) {
             k->key = key;
+            clone = k_->downstream->clone (nl, k_->downstream);
             out->eos = 1;
-            k_->downstream = nile_Kernel_clone (nl, k_->downstream);
-            nile_Kernel_pause (nl, k_, in, pause);
-            break;
+            nile_Kernel_inbox_append (nl, k_->downstream, out);
+            nile_Kernel_inbox_prepend (nl, k_, in);
+            k_->downstream = clone;
+            *out_ = NULL;
+            *in_ = NULL;
+            nile_Kernel_ready (nl, k_);
+            return NILE_INPUT_SUSPEND;
         }
+        out = nile_prepare_to_produce (nl, k_, out, k->quantum);
         int q = k->quantum;
         while (q--)
             out->data[out->n++] = in->data[in->i++];
-        out = nile_flush_if_full (nl, k_, out, k->quantum);
     }
 
-    nile_Buffer_free (nl, in);
-    return out;
-    */
+    *out_ = out;
+    return NILE_INPUT_CONSUMED;
 }
 
 nile_Kernel_t *
@@ -545,6 +771,8 @@ nile_GroupBy (nile_t *nl, int index, int quantum)
     k->quantum = quantum;
     return nile_Pipeline (nl, nile_SortBy (nl, index, quantum), &k->base, NULL);
 }
+
+/* SortBy kernel */
 
 typedef struct {
     nile_Kernel_t base;
@@ -564,13 +792,12 @@ nile_SortBy_clone (nile_t *nl, nile_Kernel_t *k_)
     return (nile_Kernel_t *) clone;
 }
 
-static void
+static int
 nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
                      nile_Buffer_t **in_, nile_Buffer_t **out_)
 {
-    /* TODO update */
-#if 0
     nile_SortBy_t *k = (nile_SortBy_t *) k_;
+    nile_Buffer_t *in = *in_;
 
     if (!k_->initialized) {
         k_->initialized = 1;
@@ -609,7 +836,7 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
             int q = k->quantum;
             while (q--)
                 out->data[jj++] = out->data[j++];
-            j = j - k->quantum - k->quantum;
+            j -= (k->quantum + k->quantum);
         }
         j += k->quantum;
         int q = k->quantum;
@@ -618,12 +845,15 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
         out->n += k->quantum;
     }
 
-    nile_Buffer_free (nl, in);
+    if (*out_)
+        nile_Buffer_free (nl, *out_);
+
     if (in->eos)
-        return k->out;
-    else 
-        return unused;
-#endif
+        *out_ = k->out;
+    else
+        *out_ = NULL;
+
+    return NILE_INPUT_CONSUMED;
 }
 
 nile_Kernel_t *
