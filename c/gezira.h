@@ -3,10 +3,19 @@
 
 #include "nile.h"
 
+typedef struct {
+    nile_Kernel_t base;
+    nile_Real_t v_start_x;
+    nile_Real_t v_start_y;
+} gezira_Canvas_t;
+
 nile_Kernel_t *
-gezira_Canvas (nile_t *nl, nile_Kernel_t *k_, 
+gezira_Canvas (nile_t *nl, nile_Kernel_t *k_,
                nile_Real_t v_start_x,
                nile_Real_t v_start_y);
+
+nile_Kernel_t *
+gezira_Canvas_clone (nile_t *nl, nile_Kernel_t *k_);
 
 nile_Kernel_t *
 gezira_CompositeSamplers (nile_t *nl,
