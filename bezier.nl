@@ -1,6 +1,6 @@
 TransformBezier (m : Matrix) : Bezier >> Bezier
-    ∀ b
-        >> m × b
+    ∀ [a, b, c]
+        >> [m × a, m × b, m × c]
 
 ClipBezier (min, max : Point) : Bezier >> Bezier
     ∀ [a, b, c]
