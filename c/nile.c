@@ -192,6 +192,7 @@ nile_main (nile_t *nl)
         
         if (!k)
             continue;
+        k->next = NULL;
 
         if (signal_q_no_longer_too_long)
            nile_Sem_signal (&nl->ready_q_no_longer_too_long_sem);
