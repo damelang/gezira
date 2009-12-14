@@ -1,12 +1,46 @@
 Kernel code generation looks sort of like this:
 
+*** FOR KERNEL TYPES ***
+
+--- In the .h file ---
+
+typedef struct {
+    $KERNEL_BASE$_t base;
+    $KERNEL_FIELDS$ (only the parameters are needed)
+} gezira_$KERNEL_NAME$_t;
+
+nile_Kernel_t *
+gezira_$KERNEL_NAME$ (nile_t *nl, nile_Kernel_t *k_,
+                      $KERNEL_PARAMETERS$);
+
+nile_Kernel_t *
+gezira_$KERNEL_NAME$_clone (nile_t *nl, nile_Kernel_t *k_);
+
+--- In the .c file ---
+
+nile_Kernel_t *
+gezira_$KERNEL_NAME$ (nile_t *nl, nile_Kernel_t *k_,
+                      $KERNEL_PARAMETERS$)
+{
+    gezira_$KERNEL_NAME$_t *k = (gezira_$KERNEL_NAME$_t *) k_;
+    $KERNEL_PARAMETERS_ASSIGNMENT$
+    return k_;
+}
+
+Here we also generate the clone function, which is the same as for kernels (see below).
+Although the function visibility is static below, here it is public.
+
+*** FOR KERNELS ***
+
+--- In the .h file ---
+
 typedef struct {
     $KERNEL_BASE$_t base;
     $KERNEL_FIELDS$ (this includes parameters and prologue vars)
 } gezira_$KERNEL_NAME$_t;
 
-nile_Kernel_t *
-gezira_$KERNEL_NAME$_clone (nile_t *nl, nile_Kernel_t *k)
+static nile_Kernel_t *
+gezira_$KERNEL_NAME$_clone (nile_t *nl, nile_Kernel_t *k_)
 {
     gezira_$KERNEL_NAME$_t *k = (gezira_$KERNEL_NAME$_t *) k_;
     gezira_$KERNEL_NAME$_t *clone =
@@ -17,7 +51,7 @@ gezira_$KERNEL_NAME$_clone (nile_t *nl, nile_Kernel_t *k)
     return (nile_Kernel_t *) clone;
 }
 
-static void
+static int
 gezira_$KERNEL_NAME$_process (nile_t *nl, nile_Kernel_t *k_,
                               nile_Buffer_t **in_, nile_Buffer_t **out_)
 {
@@ -34,32 +68,35 @@ gezira_$KERNEL_NAME$_process (nile_t *nl, nile_Kernel_t *k_,
         $KERNEL_PROLOGUE$
 
         $FOR FORWARDING KERNELS, THE FOLLOWING$
-            $PEEK_VARS$
+            $FOR EACH peek variable at offset i $
+                $VAR$ = nile_Buffer_peek (in, $i$);
             nile_Kernel_t *f =
-                $FORWARDING EXPRESSION$
+                $FORWARDING STATEMENT BODY$
 
             f->downstream = k_->downstream;
             k_->downstream = f;
     }
 
     $FOR FORWARDING KERNELS, THE FOLLOWING$
-        nile_deliver (nl, k_->downstream, in);
-        *in_ = NULL;
+        return NILE_INPUT_FOWARD;
 
     $FOR COMPUTATION KERNELS, THE FOLLOWING$
         while (in->i < in->n) {
             $DECLARE KERNEL_PRIME_VARS$
-            NILE_CONSUME_n (in, $KERNEL_INPUT_VARS$);
+            $FOR EACH INPUT VAR$
+                real $VAR$ = nile_Buffer_shift (in);
             $KERNEL_BODY$
 
             $OUTPUT IS:$
-                nile_produce_n (out, $KERNEL_OUTPUT_VARS$);
-                out = nile_flush_if_full (nl, k_->downstream, out, OUT_QUANTUM);
+                out = nile_Buffer_prepare_to_append (nl, out, OUT_QUANTUM, k_);
+                $FOR EACH OUTPUT VAR$
+                      nile_Buffer_append (out, $VAR$);
             $OR$
-                out = nile_produce_n_repeat (...);
+                out = nile_Buffer_append_repeat (nl, out, $VAR$, $TIMES$, k_);
             $OR$
-                in = nile_rewind (nl, in, IN_QUANTUM);
-                nile_produce_n (in, ...);
+                in = nile_Buffer_prepare_to_prepend (nl, in, IN_QUANTUM, k_);
+                $FOR EACH OUTPUT FEEDBACK VAR$
+                    nile_Buffer_prepend (in, $VAR$);
                 in->i -= IN_QUANTUM;
 
             $KERNEL_PRIME_VARS_UPDATE$
@@ -69,11 +106,12 @@ gezira_$KERNEL_NAME$_process (nile_t *nl, nile_Kernel_t *k_,
             $KERNEL_EPILOGUE$
         }
         else {
-            $KERNEL_FIELDS WRITE BACK FROM LOCAL VARS$
+            $KERNEL_FIELDS WRITE BACK FROM LOCAL VARS
+             (only prologue vars needed, not parameters)$
         }
         *in_ = in;
         *out_ = out;
-
+        return NILE_INPUT_CONSUMED;
 
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
