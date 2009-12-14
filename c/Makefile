@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wno-unused -O2 -mfpmath=sse -ffast-math -fstrict-aliasing
+CFLAGS := -Wall -Werror -Wno-unused -O2 -mfpmath=sse -ffast-math -fstrict-aliasing
 SDL_CFLAGS := $(shell sdl-config --cflags)
 SDL_LIBS := $(shell sdl-config --libs)
 

@@ -3,81 +3,53 @@
 
 #define real nile_Real_t
 #define MAX_THREADS 50
-#define READY_Q_LENGTH_TOO_LONG 25
+#define READY_Q_TOO_LONG_LENGTH 25
 
-/* Spin locks */
+/* CPU pause */
 
 #if defined(__SSE2__) || defined(_M_IX86)
-#   include <xmmintrin.h>
+#include <xmmintrin.h>
+static inline void nile_pause () { _mm_pause (); }
+#else
+static inline void nile_pause () { }
+#endif
+
+/* Atomic functions */
+
+#if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(__linux)
+static inline int nile_atomic_test_and_set (int * volatile l)
+    { return __sync_lock_test_and_set (l, 1); }
+static inline void nile_atomic_clear (int * volatile l)
+    { __sync_lock_release (l); }
+#elif defined(__MACH__) && defined(__APPLE__)
+#include <libkern/OSAtomic.h>
+static inline int nile_atomic_test_and_set (int * volatile l)
+    { return OSAtomicTestAndSetBarrier (0, l); }
+static inline void nile_atomic_clear (int * volatile l)
+    { OSAtomicTestAndClearBarrier (0, l); }
+#elif defined(_MSC_VER)
+static inline int nile_atomic_test_and_set (int * volatile l)
+    { return InterlockedExchangeAcquire (l, 1); }
+static inline void nile_atomic_clear (int * volatile l)
+    { InterlockedDecrementRelease (l); }
 #else
 #   error Unsupported platform!
 #endif
 
-#if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(__linux)
-/* Nothing to do */
-#elif defined(__MACH__) && defined(__APPLE__)
-#   include <libkern/OSAtomic.h>
-#   define __sync_lock_test_and_set(l, v) OSAtomicTestAndSetBarrier   (0, l)
-#   define __sync_lock_release(l)         OSAtomicTestAndClearBarrier (0, l)
-#elif defined(_MSC_VER)
-#   define __sync_lock_test_and_set InterlockedExchangeAcquire
-#   define __sync_lock_release      InterlockedDecrementRelease 
-#else
-#   error Unsupported platform!
-#endif
+/* Spin locks */
 
 static void
 nile_lock (int * volatile lock)
 {
-    while (*lock || __sync_lock_test_and_set (lock, 1))
-        _mm_pause ();
+    while (*lock || nile_atomic_test_and_set (lock))
+        nile_pause ();
 }
 
 static void
 nile_unlock (int * volatile lock)
 {
-    __sync_lock_release (lock);
+    nile_atomic_clear (lock);
 }
-
-/* Threads */
-
-#if defined(__unix__) || defined(__DARWIN_UNIX03)
-
-#include <pthread.h>
-typedef pthread_t nile_Thread_t;
-
-static void
-nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
-{
-    pthread_create (t, NULL, (void * (*) (void *) ) f, nl);
-}
-
-static void
-nile_Thread_join (nile_Thread_t *t)
-{
-    pthread_join (*t, NULL);
-}
-
-#elif defined(_WIN32)
-
-typedef HANDLE nile_Thread_t;
-
-static void
-nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
-{
-    *t = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) f, nl, 0, NULL);
-}
-
-static void
-nile_Thread_join (nile_Thread_t *t)
-{
-    WaitForSingleObject (*t, INFINITE);
-    CloseHandle (*t);
-}
-
-#else
-#   error Unsupported platform!
-#endif
 
 /* Semaphores */
 
@@ -119,10 +91,47 @@ nile_Sem_wait (nile_Sem_t *s)
 #   error Unsupported platform!
 #endif
 
-/* Startup */
+/* Threads */
 
-static void * 
-nile_loop (nile_t *nl);
+#if defined(__unix__) || defined(__DARWIN_UNIX03)
+
+#include <pthread.h>
+typedef pthread_t nile_Thread_t;
+
+static void
+nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
+{
+    pthread_create (t, NULL, (void * (*) (void *) ) f, nl);
+}
+
+static void
+nile_Thread_join (nile_Thread_t *t)
+{
+    pthread_join (*t, NULL);
+}
+
+#elif defined(_WIN32)
+
+typedef HANDLE nile_Thread_t;
+
+static void
+nile_Thread_new (nile_t *nl, nile_Thread_t *t, void * (*f) (nile_t *))
+{
+    *t = CreateThread (NULL, 0, (LPTHREAD_START_ROUTINE) f, nl, 0, NULL);
+}
+
+static void
+nile_Thread_join (nile_Thread_t *t)
+{
+    WaitForSingleObject (*t, INFINITE);
+    CloseHandle (*t);
+}
+
+#else
+#   error Unsupported platform!
+#endif
+
+/* Execution context */
 
 struct nile_ {
     int nthreads;
@@ -133,14 +142,79 @@ struct nile_ {
     nile_Buffer_t *freelist;
     int freelist_lock;
     int ready_q_lock;
-    nile_Sem_t ready_q_not_empty_sem;
-    nile_Sem_t ready_q_not_too_long_sem;
+    nile_Sem_t ready_q_has_kernel;
+    nile_Sem_t ready_q_no_longer_too_long_sem;
     nile_Sem_t idle_sem;
     nile_Thread_t threads[MAX_THREADS];
 };
 
+/* Main thread loop */
+
+static int
+nile_Kernel_exec (nile_t *nl, nile_Kernel_t *k);
+
+static void * 
+nile_main (nile_t *nl)
+{
+    nile_Kernel_t *k;
+    int eos;
+    int shutdown;
+    int signal_idle;
+    int signal_q_no_longer_too_long;
+    int active;
+    int response;
+
+    for (;;) {
+        nile_lock (&nl->ready_q_lock);
+            nl->nthreads_active--;
+            shutdown = nl->shutdown;
+            signal_idle = !nl->nthreads_active && !nl->ready_q;
+        nile_unlock (&nl->ready_q_lock);
+
+        if (shutdown)
+            break;
+
+        if (signal_idle)
+           nile_Sem_signal (&nl->idle_sem);
+
+        nile_Sem_wait (&nl->ready_q_has_kernel);
+
+        nile_lock (&nl->ready_q_lock);
+            nl->nthreads_active++;
+            k = nl->ready_q;
+            if (k) {
+                nl->ready_q = k->next;
+                nl->ready_q_length--;
+            }
+            signal_q_no_longer_too_long =
+                nl->ready_q_length == READY_Q_TOO_LONG_LENGTH - 1;
+        nile_unlock (&nl->ready_q_lock);
+        
+        if (!k)
+            continue;
+
+        if (signal_q_no_longer_too_long)
+           nile_Sem_signal (&nl->ready_q_no_longer_too_long_sem);
+
+        for (;;) {
+            nile_lock (&k->lock);
+                active = k->active = (k->inbox != NULL);
+            nile_unlock (&k->lock);
+            if (!active)
+                break;
+            response = nile_Kernel_exec (nl, k);
+            if (response == NILE_INPUT_SUSPEND || NILE_INPUT_EOS)
+                break;
+        }
+    }
+            
+    return NULL;
+}
+
+/* Context new/free */
+
 nile_t *
-nile_begin (int nthreads, char *mem, int memsize)
+nile_new (int nthreads, char *mem, int memsize)
 {
     int i;
     nile_t *nl = (nile_t *) mem;
@@ -158,20 +232,18 @@ nile_begin (int nthreads, char *mem, int memsize)
 
     nl->freelist_lock = 0;
     nl->ready_q_lock = 0;
-    nile_Sem_new (&nl->ready_q_not_empty_sem, 0);
-    nile_Sem_new (&nl->ready_q_not_too_long_sem, 0);
+    nile_Sem_new (&nl->ready_q_has_kernel, 0);
+    nile_Sem_new (&nl->ready_q_no_longer_too_long_sem, 0);
     nile_Sem_new (&nl->idle_sem, 0);
 
     for (i = 0; i < nl->nthreads; i++)
-        nile_Thread_new (nl, &(nl->threads[i]), nile_loop);
+        nile_Thread_new (nl, &(nl->threads[i]), nile_main);
 
     return nl;
 }
 
-/* Shutdown */
-
 char *
-nile_end (nile_t *nl)
+nile_free (nile_t *nl)
 {
     int i;
 
@@ -180,19 +252,19 @@ nile_end (nile_t *nl)
     nile_unlock (&nl->ready_q_lock);
 
     for (i = 0; i < nl->nthreads; i++)
-        nile_Sem_signal (&nl->ready_q_not_empty_sem);
+        nile_Sem_signal (&nl->ready_q_has_kernel);
 
     for (i = 0; i < nl->nthreads; i++)
         nile_Thread_join (&(nl->threads[i]));
 
     nile_Sem_free (&nl->idle_sem);
-    nile_Sem_free (&nl->ready_q_not_too_long_sem);
-    nile_Sem_free (&nl->ready_q_not_empty_sem);
+    nile_Sem_free (&nl->ready_q_no_longer_too_long_sem);
+    nile_Sem_free (&nl->ready_q_has_kernel);
 
     return (char *) nl;
 }
 
-/* Stream input from outside */
+/* External stream data */
 
 void
 nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos)
@@ -205,8 +277,8 @@ nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos)
         ready_q_length = nl->ready_q_length;
     nile_unlock (&nl->ready_q_lock);
 
-    while (!(ready_q_length < READY_Q_LENGTH_TOO_LONG)) {
-        nile_Sem_wait (&nl->ready_q_not_too_long_sem);
+    while (!(ready_q_length < READY_Q_TOO_LONG_LENGTH)) {
+        nile_Sem_wait (&nl->ready_q_no_longer_too_long_sem);
         nile_lock (&nl->ready_q_lock);
             ready_q_length = nl->ready_q_length;
         nile_unlock (&nl->ready_q_lock);
@@ -326,7 +398,7 @@ nile_Kernel_ready (nile_t *nl, nile_Kernel_t *k)
         nl->ready_q_length++;
     nile_unlock (&nl->ready_q_lock);
 
-    nile_Sem_signal (&nl->ready_q_not_empty_sem);
+    nile_Sem_signal (&nl->ready_q_has_kernel);
 }
 
 /* Kernel inbox management */
@@ -419,66 +491,6 @@ nile_Kernel_exec (nile_t *nl, nile_Kernel_t *k)
     }
 
     return response;
-}
-
-/* Thread loop */
-        
-static void * 
-nile_loop (nile_t *nl)
-{
-    nile_Kernel_t *k;
-    int eos;
-    int shutdown;
-    int signal_idle;
-    int signal_q_not_too_long;
-    int active;
-    int response;
-
-    for (;;) {
-        nile_lock (&nl->ready_q_lock);
-            nl->nthreads_active--;
-            shutdown = nl->shutdown;
-            signal_idle = !nl->nthreads_active && !nl->ready_q;
-        nile_unlock (&nl->ready_q_lock);
-
-        if (shutdown)
-            break;
-
-        if (signal_idle)
-           nile_Sem_signal (&nl->idle_sem);
-
-        nile_Sem_wait (&nl->ready_q_not_empty_sem);
-
-        nile_lock (&nl->ready_q_lock);
-            nl->nthreads_active++;
-            k = nl->ready_q;
-            if (k) {
-                nl->ready_q = k->next;
-                nl->ready_q_length--;
-            }
-            signal_q_not_too_long =
-                nl->ready_q_length == READY_Q_LENGTH_TOO_LONG - 1;
-        nile_unlock (&nl->ready_q_lock);
-        
-        if (!k)
-            continue;
-
-        if (signal_q_not_too_long)
-           nile_Sem_signal (&nl->ready_q_not_too_long_sem);
-
-        for (;;) {
-            nile_lock (&k->lock);
-                active = k->active = (k->inbox != NULL);
-            nile_unlock (&k->lock);
-            if (!active)
-                break;
-            response = nile_Kernel_exec (nl, k);
-            if (response == NILE_INPUT_SUSPEND || NILE_INPUT_EOS)
-                break;
-        }
-    }
-            
-    return NULL;
 }
 
 /* Pipeline kernel */
@@ -753,7 +765,7 @@ nile_GroupBy_process (nile_t *nl, nile_Kernel_t *k_,
             nile_Kernel_ready (nl, k_);
             return NILE_INPUT_SUSPEND;
         }
-        out = nile_prepare_to_produce (nl, k_, out, k->quantum);
+        out = nile_Buffer_prepare_to_append (nl, out, k->quantum, k_);
         int q = k->quantum;
         while (q--)
             out->data[out->n++] = in->data[in->i++];

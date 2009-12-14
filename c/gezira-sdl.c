@@ -33,7 +33,8 @@ gezira_SDL_ReadImage_process (nile_t *nl, nile_Kernel_t *k_,
     uint32_t *p;
 
     while (in->i < in->n) {
-        NILE_CONSUME_2 (in, v_x, v_y);
+        real v_x = nile_Buffer_shift (in);
+        real v_y = nile_Buffer_shift (in);
         p = pixels + ((int) v_y) * stride + ((int) v_x);
         // FIXME assuming alpha = 1 for now
         real v_a = 1;
@@ -42,8 +43,11 @@ gezira_SDL_ReadImage_process (nile_t *nl, nile_Kernel_t *k_,
         real v_r = ((nile_Real_t) (*p >> 16 & 0xff)) / 255;
         real v_g = ((nile_Real_t) (*p >>  8 & 0xff)) / 255;
         real v_b = ((nile_Real_t) (*p >>  0 & 0xff)) / 255;
-        nile_prepare_to_produce (nl, k_, out, OUT_QUANTUM);
-        nile_produce_4 (out, v_a, v_r, v_g, v_b);
+        out = nile_Buffer_prepare_to_append (nl, out, OUT_QUANTUM, k_);
+        nile_Buffer_append (out, v_a);
+        nile_Buffer_append (out, v_r);
+        nile_Buffer_append (out, v_g);
+        nile_Buffer_append (out, v_b);
     }
 
     *out_ = out;
@@ -97,7 +101,11 @@ gezira_SDL_WriteImage_process (nile_t *nl, nile_Kernel_t *k_,
     }
 
     while (in->i < in->n) {
-        NILE_CONSUME_5 (in, v_a, v_r, v_g, v_b, v_m);
+        real v_a = nile_Buffer_shift (in);
+        real v_r = nile_Buffer_shift (in);
+        real v_g = nile_Buffer_shift (in);
+        real v_b = nile_Buffer_shift (in);
+        real v_m = nile_Buffer_shift (in);
         // FIXME this _should_ be nile_Real_div etc.
         real d_r = ((nile_Real_t) (*v_p >> 16 & 0xff)) / 255;
         real d_g = ((nile_Real_t) (*v_p >>  8 & 0xff)) / 255;

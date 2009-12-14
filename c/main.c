@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "gezira-sdl.h"
 
-#define NTHREADS 4
+#define NTHREADS 1
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -13,9 +13,9 @@ do { \
 
 nile_Real_t path[] =
 {
-    100, 100, 300, 200,
-    300, 200, 200, 300,
-    200, 300, 100, 100
+    100, 100, 300, 200, 300, 200,
+    300, 200, 200, 300, 200, 300,
+    200, 300, 100, 100, 100, 100
 };
 int path_n = sizeof (path) / sizeof (path[0]);
 
@@ -33,7 +33,7 @@ main (int argc, char **argv)
         DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
     image = SDL_GetVideoSurface ();
 
-    nl = nile_begin (NTHREADS, mem, sizeof (mem));
+    nl = nile_new (NTHREADS, mem, sizeof (mem));
 
     SDL_LockSurface (image);
 
@@ -42,7 +42,7 @@ main (int argc, char **argv)
             gezira_Render (nl,
                 gezira_UniformColor (nl, 1, 1, 0, 0),
                 gezira_SDL_WriteImage (nl, image)),
-                NULL);
+            NULL);
 
         nile_feed (nl, pipeline, path, path_n, 1);
         nile_sync (nl);
@@ -52,7 +52,7 @@ main (int argc, char **argv)
 
     SDL_Delay (10000);
 
-    nile_end (nl);
+    nile_free (nl);
     SDL_Quit ();
     printf ("done\n");
 

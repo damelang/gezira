@@ -5,13 +5,14 @@
 
 typedef float nile_Real_t;
 typedef struct nile_Kernel_ nile_Kernel_t;
+typedef struct nile_Buffer_ nile_Buffer_t;
 typedef struct nile_ nile_t;
 
 nile_t *
-nile_begin (int nthreads, char *mem, int memsize);
+nile_new (int nthreads, char *mem, int memsize);
 
 char *
-nile_end (nile_t *nl);
+nile_free (nile_t *nl);
 
 void
 nile_feed (nile_t *nl, nile_Kernel_t *k, nile_Real_t *data, int n, int eos);
@@ -52,28 +53,6 @@ static inline real nile_Real_min (real a, real b) { return a < b ? a : b; }
 static inline real nile_Real_max (real a, real b) { return a > b ? a : b; }
 static inline real nile_Real_ave (real a, real b) { return (a + b) / 2; }
 static inline real nile_Real_sel (real a, real b, real c) { return b ? a : c; }
-
-/* Stream buffers */
-
-#define NILE_BUFFER_SIZE 128
-
-typedef struct nile_Buffer_ nile_Buffer_t;
-struct nile_Buffer_ {
-    nile_Buffer_t *next;
-    int i;
-    int n;
-    int eos;
-    real data[NILE_BUFFER_SIZE];
-};
-
-nile_Buffer_t *
-nile_Buffer_new (nile_t *nl);
-
-void
-nile_Buffer_free (nile_t *nl, nile_Buffer_t *b);
-
-nile_Buffer_t *
-nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b);
 
 /* Kernels */
 
@@ -119,54 +98,30 @@ nile_Kernel_inbox_append (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
 void
 nile_Kernel_inbox_prepend (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *b);
 
-/* Stream consumption */
+/* Stream buffers */
 
-#define NILE_CONSUME_1(in, v) \
-    real (v) = (in)->data[(in)->i++]
+#define NILE_BUFFER_SIZE 128
 
-#define NILE_CONSUME_2(in, v1, v2) \
-    NILE_CONSUME_1 (in, v1); NILE_CONSUME_1 (in, v2)
+struct nile_Buffer_ {
+    nile_Buffer_t *next;
+    int i;
+    int n;
+    int eos;
+    real data[NILE_BUFFER_SIZE];
+};
 
-#define NILE_CONSUME_4(in, v1, v2, v3, v4) \
-    NILE_CONSUME_2 (in, v1, v2); NILE_CONSUME_2 (in, v3, v4)
+nile_Buffer_t *
+nile_Buffer_new (nile_t *nl);
 
-#define NILE_CONSUME_5(in, v1, v2, v3, v4, v5) \
-    NILE_CONSUME_4 (in, v1, v2, v3, v4); NILE_CONSUME_1(in, v5)
+void
+nile_Buffer_free (nile_t *nl, nile_Buffer_t *b);
 
-#define NILE_CONSUME_6(in, v1, v2, v3, v4, v5, v6) \
-    NILE_CONSUME_2 (in, v1, v2); NILE_CONSUME_2 (in, v3, v4); \
-    NILE_CONSUME_2 (in, v5, v6)
-
-#define NILE_CONSUME_8(in, v1, v2, v3, v4, v5, v6, v7, v8) \
-    NILE_CONSUME_4 (in, v1, v2, v3, v4); \
-    NILE_CONSUME_4 (in, v5, v6, v7, v8)
-
-#define NILE_PEEK_4(in, v1, v2, v3, v4) \
-    real (v1) = (in)->data[(in)->i + 0]; \
-    real (v2) = (in)->data[(in)->i + 1]; \
-    real (v3) = (in)->data[(in)->i + 2]; \
-    real (v4) = (in)->data[(in)->i + 3]
-
-/* Stream production */
+nile_Buffer_t *
+nile_Buffer_clone (nile_t *nl, nile_Buffer_t *b);
 
 static inline nile_Buffer_t *
-nile_prepare_to_produce_before (nile_t *nl, nile_Kernel_t *k,
-                                nile_Buffer_t *b, int quantum)
-{
-    b->i -= quantum;
-    if (b->i < 0) {
-        b->i += quantum;
-        nile_Kernel_inbox_prepend (nl, k, b);
-        b = nile_Buffer_new (nl);
-        b->i = NILE_BUFFER_SIZE - quantum;
-        b->n = NILE_BUFFER_SIZE;
-    }
-    return b;
-}
-
-static inline nile_Buffer_t *
-nile_prepare_to_produce (nile_t *nl, nile_Kernel_t *k,
-                         nile_Buffer_t *b, int quantum)
+nile_Buffer_prepare_to_append (nile_t *nl, nile_Buffer_t *b, int quantum,
+                               nile_Kernel_t *k)
 {
     if (b->n > NILE_BUFFER_SIZE - quantum) {
         nile_Kernel_inbox_append (nl, k->downstream, b);
@@ -176,41 +131,50 @@ nile_prepare_to_produce (nile_t *nl, nile_Kernel_t *k,
 }
 
 static inline void
-nile_produce_1 (nile_Buffer_t *out, real v)
-    { out->data[out->n++] = v; }
-
-static inline void
-nile_produce_2 (nile_Buffer_t *out, real v1, real v2)
-    { nile_produce_1 (out, v1); nile_produce_1 (out, v2); }
-
-static inline void
-nile_produce_4 (nile_Buffer_t *out, real v1, real v2, real v3, real v4)
-    { nile_produce_2 (out, v1, v2); nile_produce_2 (out, v3, v4); }
-
-static inline void
-nile_produce_6 (nile_Buffer_t *out, real v1, real v2, real v3, real v4,
-                real v5, real v6)
-{
-    nile_produce_2 (out, v1, v2);
-    nile_produce_2 (out, v3, v4);
-    nile_produce_2 (out, v5, v6);
-}
+nile_Buffer_append (nile_Buffer_t *b, real v)
+{ b->data[b->n++] = v; }
 
 static inline nile_Buffer_t *
-nile_produce_1_repeat (nile_t *nl, nile_Kernel_t *k, nile_Buffer_t *out,
-                       int quantum, int times, real v)
+nile_Buffer_append_repeat (nile_t *nl, nile_Buffer_t *b, real v,
+                           int times, nile_Kernel_t *k)
 {
     while (times) {
-        int room = (NILE_BUFFER_SIZE - out->n) / quantum;
+        b = nile_Buffer_prepare_to_append (nl, b, 1, k);
+        int room = NILE_BUFFER_SIZE - b->n;
         int n = times < room ? times : room;
         times -= n;
         while (n--)
-            nile_produce_1 (out, v);
-        if (times)
-            out = nile_prepare_to_produce (nl, k, out, quantum);
+            nile_Buffer_append (b, v);
     }
-    return out;
+    return b;
 }
+
+static inline nile_Buffer_t *
+nile_Buffer_prepare_to_prepend (nile_t *nl, nile_Buffer_t *b, int quantum,
+                                nile_Kernel_t *k)
+{
+    b->i -= quantum;
+    if (b->i < 0) {
+        b->i += quantum;
+        nile_Kernel_inbox_prepend (nl, k, b);
+        b = nile_Buffer_new (nl);
+        b->n = NILE_BUFFER_SIZE;
+        b->i = NILE_BUFFER_SIZE - quantum;
+    }
+    return b;
+}
+
+static inline void
+nile_Buffer_prepend (nile_Buffer_t *b, real v)
+{ b->data[b->i++] = v; }
+
+static inline real
+nile_Buffer_shift (nile_Buffer_t *b)
+{ return b->data[b->i++]; }
+
+static inline real
+nile_Buffer_peek (nile_Buffer_t *b, int i)
+{ return b->data[b->i + i]; }
 
 /* Primitive kernels */
 
