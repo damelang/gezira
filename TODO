@@ -1,48 +1,20 @@
-- go through nile.h, nile.c
-    - make sure k_->downstream is being passed to the flush etc. functions
-
-- propagate nile-level code changes to manually generated code (js and c)
-- kernel cloning has to clone downstream, too, now (see GroupBy)
+- should pipeline kernels take more than two kernels are args
 - c generation
-    - figure out buffer management
-    - kernels now have to allocate their out buffer if NULL at function start
-    - kernels now have to free the in buffer now
-
-    - make recursion part of the normal scheduling scheme. this will allow ordered
-      output, etc. Might need to change order of recursion elements nile code.
-      Recursion will now look something like this:
-
-        in->i -= quantum;
-        nile_produce_6 (in, 1, 2, 3, 4, 5, 6);
-        in->i -= quantum;
-        if (in->i < quantum) {
-            nile_Buffer_t *in_ = nile_Buffer_split (nl, in);
-            nile_Lock_lock (nl->kernellock);
-            {
-                in->next = k->inbox;
-                k->inbox = in;
-            }
-            nile_Lock_unlock (nl->kernellock);
-            in = in_;
-        }
-
-    - fill in thread/semaphore code
-
+    - write demo
     - debug
-    - write SDL versions of ReadImage and WriteImage
-    - demos
 
-    - comments by Alex:
-        - prearrange freelist
-        - have freelist operate on buffers
-        - alignment of freelist nodes (make them e.g., 512 bytes large and
-          align them?)
-    - one spin lock per kernel?
+    - on uniprocessors, we should make nile_pause relinquish the processor?
+    - don't write back kernel vars that aren't prologue vars
+      (i.e., no need to write parameters back)
+    - move nile_produce_n macros into the compiler
     - optimize SortBy for when the input stream is wholly contained
       in the first input buffer. Do an in-place sort and
       just forward the input to the next kernel.
     - rename "initialized" field to something related to first_time
       or prologue or something
+    - nile_feed should copy using simd mem read instructions, since
+      this is the most likely place for us having to read from
+      far away. (does the compiler already do this?)
     - what about the scheduling heuristic that has the thread execute
       the downstream kernel when all the output fit in one buffer?
     - rename nile_consume and nile_produce to nile_input and nile_output ?
@@ -51,9 +23,7 @@
       we just have to split them up into multiple pipelines, not too hard?
     - document the kernel clone rules (when a kernel is referenced more that
       once in a pipeline expression)
-    - kernel constructor calls separate populate function?
-      reuse populate function for field write back?
-      what about fields that belong to "middle types"?
+- propagate nile-level code changes to manually generated js code
 - finish pen stroking
     - see comparison demos
     - tangency apparently is not linearly interpolated at
