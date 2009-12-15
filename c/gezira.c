@@ -1,8 +1,13 @@
-
 /* THE .C FILE */
 
 #include <stddef.h>
 #include "gezira.h"
+
+#include <stdio.h>
+
+#define log(s, ...) \
+    fprintf (stderr, "(%s:%4d) " s "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+
 
 nile_Kernel_t *
 gezira_Sampler_clone(nile_t *nl, nile_Kernel_t *k_) {
@@ -1051,6 +1056,8 @@ gezira_DecomposeBezier_process(
 		nile_Real_t v_b_y = nile_Buffer_shift(in);
 		nile_Real_t v_c_x = nile_Buffer_shift(in);
 		nile_Real_t v_c_y = nile_Buffer_shift(in);
+            log("(a) (b) (c): (%2.f, %.2f) (%2.f, %.2f) (%2.f, %.2f)",
+                v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
 nile_Real_t t_1_x = nile_Real_flr(v_a_x);
 nile_Real_t t_1_y = nile_Real_flr(v_a_y);
 nile_Real_t t_2_x = nile_Real_flr(v_c_x);
