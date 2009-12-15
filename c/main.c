@@ -50,10 +50,15 @@ main (int argc, char **argv)
     SDL_UnlockSurface (image);
     SDL_UpdateRect (image, 0, 0, 0, 0);
 
-    SDL_Delay (10000);
+    for (;;) {
+        SDL_Event event;
+        SDL_WaitEvent (&event);
 
+        if (event.type == SDL_QUIT)
+            break;
+    }
+ 
     nile_free (nl);
-    SDL_Quit ();
     printf ("done\n");
 
     return 0;
