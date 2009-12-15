@@ -1,4 +1,3 @@
-
 /* THE .C FILE */
 
 #include <stddef.h>
@@ -320,10 +319,10 @@ gezira_FillBetweenEdges_process(
 	if (!k_->initialized) {
 		k_->initialized = 1;
 v_x = v_x0;
-nile_Real_t t_1 = 0;
-v_local = t_1;
-nile_Real_t t_2 = 0;
-v_run = t_2;
+nile_Real_t t_3 = 0;
+v_local = t_3;
+nile_Real_t t_4 = 0;
+v_run = t_4;
 	}
 
 	while (in->i < in->n) {
@@ -331,31 +330,31 @@ v_run = t_2;
 		nile_Real_t v_y = nile_Buffer_shift(in);
 		nile_Real_t v_w = nile_Buffer_shift(in);
 		nile_Real_t v_h = nile_Buffer_shift(in);
-nile_Real_t t_3 = nile_Real_sub(v_x_, v_x);
-nile_Real_t v_n = t_3;
-nile_Real_t t_4 = nile_Real_add(v_run, v_h);
-v_run_ = t_4;
-nile_Real_t t_5 = 0;
-nile_Real_t t_6 = nile_Real_eq(v_n, t_5);
-if (t_6) {
-nile_Real_t t_7 = nile_Real_mul(v_w, v_h);
-nile_Real_t t_8 = nile_Real_add(v_local, t_7);
-v_local_ = t_8;
-} else {
+nile_Real_t t_5 = nile_Real_sub(v_x_, v_x);
+nile_Real_t v_n = t_5;
+nile_Real_t t_6 = nile_Real_add(v_run, v_h);
+v_run_ = t_6;
+nile_Real_t t_7 = 0;
+nile_Real_t t_8 = nile_Real_eq(v_n, t_7);
+if (t_8) {
 nile_Real_t t_9 = nile_Real_mul(v_w, v_h);
-nile_Real_t t_10 = nile_Real_add(v_run, t_9);
+nile_Real_t t_10 = nile_Real_add(v_local, t_9);
 v_local_ = t_10;
-nile_Real_t t_11 = nile_Real_abs(v_local);
-nile_Real_t t_12 = 1;
-nile_Real_t t_13 = nile_Real_min(t_11, t_12);
-out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
-nile_Buffer_append(out, t_13);
+} else {
+nile_Real_t t_11 = nile_Real_mul(v_w, v_h);
+nile_Real_t t_12 = nile_Real_add(v_run, t_11);
+v_local_ = t_12;
+nile_Real_t t_13 = nile_Real_abs(v_local);
 nile_Real_t t_14 = 1;
-nile_Real_t t_15 = nile_Real_sub(v_n, t_14);
-nile_Real_t t_16 = nile_Real_abs(v_run);
-nile_Real_t t_17 = 1;
-nile_Real_t t_18 = nile_Real_min(t_16, t_17);
-out = nile_Buffer_append_repeat(nl, out, t_18, t_15, k_);
+nile_Real_t t_15 = nile_Real_min(t_13, t_14);
+out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
+nile_Buffer_append(out, t_15);
+nile_Real_t t_16 = 1;
+nile_Real_t t_17 = nile_Real_sub(v_n, t_16);
+nile_Real_t t_18 = nile_Real_abs(v_run);
+nile_Real_t t_19 = 1;
+nile_Real_t t_20 = nile_Real_min(t_18, t_19);
+out = nile_Buffer_append_repeat(nl, out, t_20, t_17, k_);
 }
 		v_x = v_x_;
 		v_local = v_local_;
@@ -363,14 +362,14 @@ out = nile_Buffer_append_repeat(nl, out, t_18, t_15, k_);
 	}
 
 	if (in->eos) {
-nile_Real_t t_19 = 0;
-nile_Real_t t_20 = nile_Real_neq(v_local, t_19);
-if (t_20) {
-nile_Real_t t_21 = nile_Real_abs(v_local);
-nile_Real_t t_22 = 1;
-nile_Real_t t_23 = nile_Real_min(t_21, t_22);
+nile_Real_t t_21 = 0;
+nile_Real_t t_22 = nile_Real_neq(v_local, t_21);
+if (t_22) {
+nile_Real_t t_23 = nile_Real_abs(v_local);
+nile_Real_t t_24 = 1;
+nile_Real_t t_25 = nile_Real_min(t_23, t_24);
 out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
-nile_Buffer_append(out, t_23);
+nile_Buffer_append(out, t_25);
 } else {
 { }
 }
@@ -529,21 +528,23 @@ nile_Real_t t_3_1 = t_2;
 nile_Real_t t_3_2 = t_2;
 nile_Real_t t_4_1 = nile_Real_add(t_1_1, t_3_1);
 nile_Real_t t_4_2 = nile_Real_add(t_1_2, t_3_2);
-nile_Real_t t_5_x = t_4_1;
-nile_Real_t t_5_y = t_4_2;
-nile_Real_t v_p_x = t_5_x;
-nile_Real_t v_p_y = t_5_y;
-nile_Kernel_t *t_6 = gezira_FillBetweenEdges(nl, v_x);
-nile_Kernel_t *t_7 = gezira_CreateSamplePoints(nl, v_p_x, v_p_y);
+nile_Real_t v_p_1 = t_4_1;
+nile_Real_t v_p_2 = t_4_2;
+nile_Kernel_t *t_5 = gezira_FillBetweenEdges(nl, v_x);
+nile_Real_t t_6_x = v_p_1;
+nile_Real_t t_6_y = v_p_2;
+nile_Kernel_t *t_7 = gezira_CreateSamplePoints(nl, t_6_x, t_6_y);
 nile_Kernel_t *t_8 = nile_Pipeline(nl, t_7, v_s, NULL);
 nile_Real_t t_9 = 4;
 nile_Kernel_t *t_10 = nile_Pipeline(nl, NULL);
 nile_Real_t t_11 = 1;
 nile_Kernel_t *t_12 = nile_Interleave(nl, t_8, t_9, t_10, t_11);
-nile_Kernel_t *t_13 = gezira_Canvas(nl, v_c, v_p_x, v_p_y);
-nile_Kernel_t *t_14 = nile_Pipeline(nl, t_12, t_13, NULL);
-nile_Kernel_t *t_15 = nile_Pipeline(nl, t_6, t_14, NULL);
-		nile_Kernel_t *f = t_15;
+nile_Real_t t_13_x = v_p_1;
+nile_Real_t t_13_y = v_p_2;
+nile_Kernel_t *t_14 = gezira_Canvas(nl, v_c, t_13_x, t_13_y);
+nile_Kernel_t *t_15 = nile_Pipeline(nl, t_12, t_14, NULL);
+nile_Kernel_t *t_16 = nile_Pipeline(nl, t_5, t_15, NULL);
+		nile_Kernel_t *f = t_16;
 		f->downstream = k_->downstream;
 		k_->downstream = f;
 	}
