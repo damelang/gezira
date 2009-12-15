@@ -538,7 +538,7 @@ nile_Kernel_t *t_7 = gezira_CreateSamplePoints(nl, v_p_x, v_p_y);
 nile_Kernel_t *t_8 = nile_Pipeline(nl, t_7, v_s, NULL);
 nile_Real_t t_9 = 4;
 nile_Kernel_t *t_10 = nile_Pipeline(nl, NULL);
-nile_Real_t t_11 = 4;
+nile_Real_t t_11 = 1;
 nile_Kernel_t *t_12 = nile_Interleave(nl, t_8, t_9, t_10, t_11);
 nile_Kernel_t *t_13 = gezira_Canvas(nl, v_c, v_p_x, v_p_y);
 nile_Kernel_t *t_14 = nile_Pipeline(nl, t_12, t_13, NULL);
@@ -598,7 +598,7 @@ gezira_Render_process(
 	if (!k_->initialized) {
 		k_->initialized = 1;
 { }
-nile_Real_t t_1 = 0;
+nile_Real_t t_1 = 1;
 nile_Real_t t_2 = 4;
 nile_Kernel_t *t_3 = nile_GroupBy(nl, t_1, t_2);
 nile_Real_t t_4 = 0;
