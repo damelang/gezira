@@ -503,8 +503,10 @@ gezira_Render__process (nile_t *nl, nile_Kernel_t *k_,
             gezira_FillBetweenEdges (nl, v_x),
             nile_Interleave (nl,
                 nile_Pipeline (nl,
-                    gezira_CreateSamplePoints (nl, v_p_0, v_p_1), v_s, NULL), 4,
-                nile_Pipeline (nl, NULL), 1),
+                    gezira_CreateSamplePoints (nl, v_p_0, v_p_1), v_s, NULL),
+                4,
+                nile_Pipeline (nl, NULL),
+                1),
             gezira_Canvas (nl, v_c, v_p_0, v_p_1), NULL);
 
         f->downstream = k_->downstream;

@@ -190,9 +190,10 @@ nile_main (nile_t *nl)
                 nl->ready_q_length == READY_Q_TOO_LONG_LENGTH - 1;
         nile_unlock (&nl->ready_q_lock);
         
-        if (!k)
+        if (k)
+            k->next = NULL;
+        else
             continue;
-        k->next = NULL;
 
         if (signal_q_no_longer_too_long)
            nile_Sem_signal (&nl->ready_q_no_longer_too_long_sem);
@@ -204,7 +205,7 @@ nile_main (nile_t *nl)
             if (!active)
                 break;
             response = nile_Kernel_exec (nl, k);
-            if (response == NILE_INPUT_SUSPEND || NILE_INPUT_EOS)
+            if (response == NILE_INPUT_SUSPEND || response == NILE_INPUT_EOS)
                 break;
         }
     }
@@ -619,6 +620,11 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
         k->n = NILE_BUFFER_SIZE - (k->quantum + k->sibling->quantum) + k->j0 + 1;
     }
 
+    if (*out_) {
+        nile_Buffer_free (nl, *out_);
+        *out_ = NULL;
+    }
+
     nile_lock (lock);
         out = k->shared->out;
         j = k->j;
@@ -659,12 +665,7 @@ nile_Interleave__process (nile_t *nl, nile_Kernel_t *k_,
     if (done)
         nile_Kernel_free (nl, &k->shared->base);
 
-    if (*out_) {
-        nile_Buffer_free (nl, *out_);
-        *out_ = NULL;
-    }
-
-    return (j == -1 ? NILE_INPUT_SUSPEND : NILE_INPUT_CONSUMED);
+    return (j == -1 && !done ? NILE_INPUT_SUSPEND : NILE_INPUT_CONSUMED);
 }
 
 static nile_Interleave__t *
@@ -814,7 +815,14 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
 
     if (!k_->initialized) {
         k_->initialized = 1;
-        k->out = nile_Buffer_new (nl);
+        k->out = *out_;
+        k->out->eos = 1;
+        *out_ = NULL;
+    }
+
+    if (*out_) {
+        nile_Buffer_free (nl, *out_);
+        *out_ = NULL;
     }
 
     while (in->i < in->n) {
@@ -828,7 +836,9 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
         /* split the buffer if it's full */
         if (out->n > NILE_BUFFER_SIZE - k->quantum) {
             nile_Buffer_t *next = nile_Buffer_new (nl);
+            next->eos = out->eos;
             next->next = out->next;
+            out->eos = 0;
             out->next = next;
 
             int j = out->n / k->quantum / 2 * k->quantum;
@@ -858,13 +868,8 @@ nile_SortBy_process (nile_t *nl, nile_Kernel_t *k_,
         out->n += k->quantum;
     }
 
-    if (*out_)
-        nile_Buffer_free (nl, *out_);
-
     if (in->eos)
-        *out_ = k->out;
-    else
-        *out_ = NULL;
+        nile_Kernel_inbox_append (nl, k_->downstream, k->out);
 
     return NILE_INPUT_CONSUMED;
 }
