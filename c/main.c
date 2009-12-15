@@ -26,10 +26,10 @@ main (int argc, char **argv)
     nile_t *nl;
     char mem[1000000];
 
-    if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) == -1)
+    if (SDL_Init (SDL_INIT_VIDEO) == -1)
         DIE ("SDL_Init failed: %s", SDL_GetError ());
     if (!SDL_SetVideoMode (DEFAULT_WIDTH, DEFAULT_HEIGHT, 0,
-                           SDL_HWSURFACE | SDL_ANYFORMAT))
+                           SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF))
         DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
     image = SDL_GetVideoSurface ();
 
@@ -48,7 +48,7 @@ main (int argc, char **argv)
         nile_sync (nl);
 
     SDL_UnlockSurface (image);
-    SDL_UpdateRect (image, 0, 0, 0, 0);
+    SDL_Flip (image);
 
     for (;;) {
         SDL_Event event;
