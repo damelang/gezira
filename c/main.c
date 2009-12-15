@@ -57,7 +57,7 @@ main (int argc, char **argv)
         if (event.type == SDL_QUIT)
             break;
     }
- 
+
     nile_free (nl);
     printf ("done\n");
 
