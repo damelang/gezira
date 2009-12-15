@@ -1,13 +1,8 @@
+
 /* THE .C FILE */
 
 #include <stddef.h>
 #include "gezira.h"
-
-#include <stdio.h>
-
-#define log(s, ...) \
-    fprintf (stderr, "(%s:%4d) " s "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-
 
 nile_Kernel_t *
 gezira_Sampler_clone(nile_t *nl, nile_Kernel_t *k_) {
@@ -946,10 +941,10 @@ nile_Real_t t_34_x = nile_Real_lt(t_31_x, t_33_x);
 nile_Real_t t_34_y = nile_Real_lt(t_31_y, t_33_y);
 nile_Real_t v_nearmax_x = t_34_x;
 nile_Real_t v_nearmax_y = t_34_y;
-nile_Real_t t_35_x = v_max_x ? v_nearmax_x : v_abbc_x;
-nile_Real_t t_35_y = v_max_y ? v_nearmax_y : v_abbc_y;
-nile_Real_t t_36_x = v_min_x ? v_nearmin_x : t_35_x;
-nile_Real_t t_36_y = v_min_y ? v_nearmin_y : t_35_y;
+nile_Real_t t_35_x = v_nearmax_x ? v_max_x : v_abbc_x;
+nile_Real_t t_35_y = v_nearmax_y ? v_max_y : v_abbc_y;
+nile_Real_t t_36_x = v_nearmin_x ? v_min_x : t_35_x;
+nile_Real_t t_36_y = v_nearmin_y ? v_min_y : t_35_y;
 nile_Real_t v_m_x = t_36_x;
 nile_Real_t v_m_y = t_36_y;
 nile_Real_t t_38_x = nile_Real_ave(v_a_x, v_b_x);
@@ -1056,8 +1051,6 @@ gezira_DecomposeBezier_process(
 		nile_Real_t v_b_y = nile_Buffer_shift(in);
 		nile_Real_t v_c_x = nile_Buffer_shift(in);
 		nile_Real_t v_c_y = nile_Buffer_shift(in);
-            log("(a) (b) (c): (%2.f, %.2f) (%2.f, %.2f) (%2.f, %.2f)",
-                v_a_x, v_a_y, v_b_x, v_b_y, v_c_x, v_c_y);
 nile_Real_t t_1_x = nile_Real_flr(v_a_x);
 nile_Real_t t_1_y = nile_Real_flr(v_a_y);
 nile_Real_t t_2_x = nile_Real_flr(v_c_x);
@@ -1142,10 +1135,10 @@ nile_Real_t t_33_x = nile_Real_lt(t_30_x, t_32_x);
 nile_Real_t t_33_y = nile_Real_lt(t_30_y, t_32_y);
 nile_Real_t v_nearmax_x = t_33_x;
 nile_Real_t v_nearmax_y = t_33_y;
-nile_Real_t t_34_x = v_max_x ? v_nearmax_x : v_abbc_x;
-nile_Real_t t_34_y = v_max_y ? v_nearmax_y : v_abbc_y;
-nile_Real_t t_35_x = v_min_x ? v_nearmin_x : t_34_x;
-nile_Real_t t_35_y = v_min_y ? v_nearmin_y : t_34_y;
+nile_Real_t t_34_x = v_nearmax_x ? v_max_x : v_abbc_x;
+nile_Real_t t_34_y = v_nearmax_y ? v_max_y : v_abbc_y;
+nile_Real_t t_35_x = v_nearmin_x ? v_min_x : t_34_x;
+nile_Real_t t_35_y = v_nearmin_y ? v_min_y : t_34_y;
 nile_Real_t v_m_x = t_35_x;
 nile_Real_t v_m_y = t_35_y;
 nile_Real_t t_37_x = nile_Real_ave(v_a_x, v_b_x);
