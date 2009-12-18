@@ -1,12 +1,24 @@
+- render star
 - clip and transform
 - get it to work with multiple threads
+- port to Linux and Windows
+- create nile repository
 - snowflakes
+- make nile_Sem_t try to avoid using the OS sem.
+- make nile_Kernel_exec aware of the shutdown flag.
+- get rid of nile_Interleave__clone
 - nlc
     - parse code as-is
     - nary pipeline
     - use templates?
 - should pipeline kernels take more than two kernels are args
+- rename certain parts to match OS terminology (e.g., OS process state names)
+- rename nile_feed to nile_send ?
 - c generation
+    - align the incoming memory to 32-bits?
+    - use binary semaphores (Events on Win32?) instead of
+      counting semaphores, since we can count ourselves and just
+      need a sleep/wakup mechanism
     - keep a reference to nl in kernels so that we don't have to
       pass around nl so much.
     - on uniprocessors, we should make nile_pause relinquish the processor?
