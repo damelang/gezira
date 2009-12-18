@@ -1,45 +1,3 @@
-- render star
-- clip and transform
-- get it to work with multiple threads
-- port to Linux and Windows
-- create nile repository
-- snowflakes
-- make nile_Sem_t try to avoid using the OS sem.
-- make nile_Kernel_exec aware of the shutdown flag.
-- get rid of nile_Interleave__clone
-- nlc
-    - parse code as-is
-    - nary pipeline
-    - use templates?
-- should pipeline kernels take more than two kernels are args
-- rename certain parts to match OS terminology (e.g., OS process state names)
-- rename nile_feed to nile_send ?
-- c generation
-    - align the incoming memory to 32-bits?
-    - use binary semaphores (Events on Win32?) instead of
-      counting semaphores, since we can count ourselves and just
-      need a sleep/wakup mechanism
-    - keep a reference to nl in kernels so that we don't have to
-      pass around nl so much.
-    - on uniprocessors, we should make nile_pause relinquish the processor?
-    - don't write back kernel vars that aren't prologue vars
-      (i.e., no need to write parameters back)
-    - optimize SortBy for when the input stream is wholly contained
-      in the first input buffer. Do an in-place sort and
-      just forward the input to the next kernel.
-    - rename "initialized" field to something related to first_time
-      or prologue or something
-    - nile_feed should copy using simd mem read instructions, since
-      this is the most likely place for us having to read from
-      far away. (does the compiler already do this?)
-    - what about the scheduling heuristic that has the thread execute
-      the downstream kernel when all the output fit in one buffer?
-    - what if they give us an input buffer that isn't a multiple of in_quantum?
-    - handle limit on number of kernels that can be pipelined.
-      we just have to split them up into multiple pipelines, not too hard?
-    - document the kernel clone rules (when a kernel is referenced more that
-      once in a pipeline expression)
-- propagate nile-level code changes to manually generated js code
 - finish pen stroking
     - see comparison demos
     - tangency apparently is not linearly interpolated at
@@ -53,10 +11,6 @@
     - miter (see formula in cairo)
     - what to do about closed pen paths?
 - fix ImageExtendModes!
-- document (and add compiler support) for the fact that kernel parameters are
-  immutable
-- introduce _ vars back into the language
-- update PDF doc
 - think about restructuring Render this way:
 
   Mask :: (start : Point) Real >>|
@@ -74,12 +28,6 @@
   RenderToMask (m : Mask) : EdgeContribution >>|
       ⇒ GroupBy (@p.y, SortBy (@p.x) → RenderToMask' (m))
 
-- parser
-- javascript generation
-- fix font problem on windows (add missing chars to DejaVu Sans Mono and/or Inconsolata)
-- make zlib.nl and png.nl real
-- what about things like 2b + 0.5c
-    - math mode? (single letter variables, etc.?)
-      perhaps only in the body of ∀ blocks?
+- make zlib.nl and png.nl work
 - cubic >> quadratic bezier kernel
 - image filters (blur, etc.)
