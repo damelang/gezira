@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "gezira-sdl.h"
 
-#define NTHREADS 1
+#define NTHREADS 4
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
