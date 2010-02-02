@@ -1,5 +1,5 @@
 NILE_RUNTIME := ../../nile/runtimes/c
-CFLAGS := -Wall -Werror -Wno-unused -O2 -mfpmath=sse -ffast-math -fstrict-aliasing \
+CFLAGS := -O2 -Wall -Werror -Wno-unused -mfpmath=sse -ffast-math -fstrict-aliasing \
           -L$(NILE_RUNTIME) -I$(NILE_RUNTIME)
 SDL_CFLAGS := $(shell sdl-config --cflags)
 SDL_LIBS := $(shell sdl-config --libs)
