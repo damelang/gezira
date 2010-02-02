@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "gezira-sdl.h"
 
+typedef nile_Real_t real;
+
 #define NTHREADS 4
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
@@ -11,7 +13,37 @@ do { \
     exit (1); \
 } while (0)
 
-nile_Real_t path[] =
+typedef struct {
+    real a, b, c, d, e, f;
+} matrix_t;
+
+matrix_t
+matrix_new () {
+    matrix_t M = { 1, 0, 0, 1, 0, 0 };
+    return M;
+}
+
+matrix_t
+matrix_translate (matrix_t M, real x, real y)
+{
+    matrix_t N = { M.a, M.b, M.c, M.d,
+                   M.a * x + M.c * y + M.e,
+                   M.b * x + M.d * y + M.f};
+    return N;
+}
+
+matrix_t
+matrix_rotate (matrix_t M, real t)
+{
+    matrix_t N = { M.a *  cos (t) + M.c * sin (t),
+                   M.b *  cos (t) + M.d * sin (t),
+                   M.a * -sin (t) + M.c * cos (t),
+                   M.b * -sin (t) + M.d * cos (t),
+                   M.e, M.f};
+    return N;
+}
+
+real path[] =
 {
     250.00000, 150.00000, 237.65650, 183.01064, 225.31301, 216.02128,
     225.31301, 216.02128, 190.10368, 217.55979, 154.89434, 219.09830,
@@ -32,6 +64,7 @@ main (int argc, char **argv)
     SDL_Surface *image;
     nile_t *nl;
     char mem[1000000];
+    real angle = 0;
 
     if (SDL_Init (SDL_INIT_VIDEO) == -1)
         DIE ("SDL_Init failed: %s", SDL_GetError ());
@@ -42,27 +75,34 @@ main (int argc, char **argv)
 
     nl = nile_new (NTHREADS, mem, sizeof (mem));
 
-    SDL_LockSurface (image);
-
-        nile_Kernel_t *pipeline = nile_Pipeline (nl,
-            gezira_DecomposeBezier (nl),
-            gezira_Render (nl,
-                gezira_UniformColor (nl, 1, 1, 0, 0),
-                gezira_SDL_WriteImage (nl, image)),
-            NULL);
-
-        nile_feed (nl, pipeline, path, path_n, 1);
-        nile_sync (nl);
-
-    SDL_UnlockSurface (image);
-    SDL_Flip (image);
-
     for (;;) {
+        angle += 0.001;
         SDL_Event event;
-        SDL_WaitEvent (&event);
-
-        if (event.type == SDL_QUIT)
+        if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
             break;
+
+        SDL_FillRect (image, NULL, 0);
+        SDL_LockSurface (image);
+
+            matrix_t M = matrix_new ();
+            M = matrix_translate (M, 250, 250);
+            M = matrix_rotate (M, angle);
+            M = matrix_translate (M, -250, -250);
+
+            nile_Kernel_t *pipeline = nile_Pipeline (nl,
+                gezira_TransformBezier (nl, M.a, M.b, M.c, M.d, M.e, M.f),
+                gezira_ClipBezier (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
+                gezira_DecomposeBezier (nl),
+                gezira_Render (nl,
+                    gezira_UniformColor (nl, 1, 1, 0, 0),
+                    gezira_SDL_WriteImage (nl, image)),
+                NULL);
+
+            nile_feed (nl, pipeline, path, path_n, 1);
+            nile_sync (nl);
+
+        SDL_UnlockSurface (image);
+        SDL_Flip (image);
     }
 
     nile_free (nl);
