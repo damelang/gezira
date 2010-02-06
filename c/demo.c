@@ -43,6 +43,13 @@ matrix_rotate (matrix_t M, real t)
     return N;
 }
 
+matrix_t
+matrix_scale (matrix_t M, real sx, real sy)
+{
+    matrix_t N = { M.a * sx, M.b * sx, M.c * sy, M.d * sy, M.e, M.f};
+    return N;
+}
+
 real path[] =
 {
     250.00000, 150.00000, 237.65650, 183.01064, 225.31301, 216.02128,
@@ -65,6 +72,7 @@ main (int argc, char **argv)
     nile_t *nl;
     char mem[1000000];
     real angle = 0;
+    real scale;
 
     if (SDL_Init (SDL_INIT_VIDEO) == -1)
         DIE ("SDL_Init failed: %s", SDL_GetError ());
@@ -77,6 +85,7 @@ main (int argc, char **argv)
 
     for (;;) {
         angle += 0.001;
+        scale = fabs (angle - (int) angle - 0.5) * 10;
         SDL_Event event;
         if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
             break;
@@ -87,6 +96,7 @@ main (int argc, char **argv)
             matrix_t M = matrix_new ();
             M = matrix_translate (M, 250, 250);
             M = matrix_rotate (M, angle);
+            M = matrix_scale (M, scale, scale);
             M = matrix_translate (M, -250, -250);
 
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
