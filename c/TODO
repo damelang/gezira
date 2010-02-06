@@ -1,3 +1,4 @@
+- make WriteImage generic? (just take pixels, w, h, stride, etc.)
 - fix freeze
 - fix bad scanlines
 - snowflakes
