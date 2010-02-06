@@ -27,7 +27,7 @@ CompositeOver : Compositor
         >> a + b × (1 - a.a)
 
 FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
-    x = x0
+    x     = x0
     local = 0
     run   = 0
     ∀ [x', y, w, h]
