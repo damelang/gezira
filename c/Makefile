@@ -16,4 +16,4 @@ gezira-sdl.o: gezira-sdl.c *.h $(MAKEFILE_LIST)
 	gcc -c $(CFLAGS) $(SDL_CFLAGS) $<
 
 clean:
-	/bin/rm -rf demo *.o *.a *.gch
+	/bin/rm -rf demo *.o *.a *.gch *.dSYM
