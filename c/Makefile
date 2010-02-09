@@ -7,13 +7,13 @@ SDL_LIBS := $(shell sdl-config --libs 2>/dev/null || \
               echo -framework SDL -framework Cocoa SDLMain.m)
 
 demo: demo.c gezira-sdl.o gezira.o
-	gcc -o $@ $(CFLAGS) $(SDL_CFLAGS) $^ $(SDL_LIBS) -lnile
+	$(CC) -o $@ $(CFLAGS) $(SDL_CFLAGS) $^ $(SDL_LIBS) -lnile
 
 %.o: %.c *.h $(MAKEFILE_LIST)
-	gcc -c $(CFLAGS) $<
+	$(CC) -c $(CFLAGS) $<
 
 gezira-sdl.o: gezira-sdl.c *.h $(MAKEFILE_LIST)
-	gcc -c $(CFLAGS) $(SDL_CFLAGS) $<
+	$(CC) -c $(CFLAGS) $(SDL_CFLAGS) $<
 
 clean:
 	/bin/rm -rf demo *.o *.a *.gch *.dSYM
