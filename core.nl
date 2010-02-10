@@ -48,18 +48,14 @@ Canvas :: (start : Point) : (Color, Real) >>|
 (A : Point) ⇀ (B : Point) : Vector
     ^(B.x - A.x, B.y - A.y)
 
-(A : Point) + (u : Vector) : Point
-    (A.x + u.x, A.y + u.y)
-
-(M : Matrix) × (A : Point) : Point
-    (M.a × A.x + M.c × A.y + M.e,
-     M.b × A.x + M.d × A.y + M.f)
+(M : Matrix) ⊗ (A : Point) : Point
+    (M.a × A.x + M.c × A.y + M.e, M.b × A.x + M.d × A.y + M.f)
 
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
     ⇒ Interleave (s1, s2) → c
 
 UniformColor (c : Color) : Sampler
-    ∀ _
+    ∀ P
         >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
 
 CompositeOver : Compositor

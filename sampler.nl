@@ -28,7 +28,7 @@ FilterSampler (s : Sampler) : Sampler
 
 TransformPoints (M : Matrix) : Point >> Point
     ∀ P
-        >> M × P
+        >> M ⊗ P
 
 ImageExtendPad : ImageExtendMode
     D = (w, h)
