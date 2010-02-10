@@ -9,6 +9,9 @@ Sampler :: Point >> Color
 Compositor :: (Color, Color) >> Color
 Canvas :: (start : Point) : (Color, Real) >>|
 
+¬(a : Real) : Real
+    a = 0
+
 | (a : Real) | : Real
     { -a if a < 0, a }
 
@@ -24,10 +27,10 @@ Canvas :: (start : Point) : (Color, Real) >>|
 (a : Real) ~ (b : Real) : Real
     (a + b) / 2
 
-(A : Point) = (B : Point) : Real
+(A : Point) #= (B : Point) : Real
     A.x = B.x ∧ A.y = B.y
 
-(u : Vector) = (v : Vector) : Real
+(u : Vector) &= (v : Vector) : Real
     u.x = v.x ∧ u.y = v.y
 
 (u : Vector) ?? (v : Vector) : Vector

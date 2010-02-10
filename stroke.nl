@@ -12,7 +12,7 @@ StrokeOffset (o : Real) : Bezier >> Bezier
             N = M + o × w
             E = 2 × N - (D ~ F)
             >> (D, E, F)
-        else if u ≠ 0 ∧ v ≠ 0
+        else if ¬(u &= 0) ∧ ¬(v &= 0)
             << (A, A ~ B, M) << (M, B ~ C, C)
 
 StrokeJoinMiter (l, d : Real) : StrokeJoin
@@ -65,9 +65,9 @@ PrepareBeziersForStroke : Bezier >> Bezier
             t = L.x ? L.y
             M = (1 - t) × (1 - t) × A + 2 × (1 - t) × t × B + t × t × C
             >> (A, A ~ M, M) >> (M, M ~ C, C)
-        else if u = 0 ∨ v = 0
+        else if u &= 0 ∨ v &= 0
             M = A ~ C
-            if A ⟂ M ≠ 0 ∧ M ⟂ C ≠ 0
+            if ¬(A ⟂ M &= 0) ∧ ¬(M ⟂ C &= 0)
                 >> (A, M, C)
         else
             >> (A, B, C)
@@ -87,7 +87,7 @@ PrepareBeziersForJoin : Bezier >> (Bezier, Bezier)
                 first' = 0
             else
                 >> ((D, E, F), (D', E', F')) >> ((F', E', D'), (F, E, D))
-        if A = F ∧ first = 0
+        if A #= F ∧ first = 0
             >> ((D, E, F), (A, B, C)) >> ((C, B, A), (F, E, D))
 
 PrepareBeziersForCap : Bezier >> (Bezier, Bezier)
@@ -96,7 +96,7 @@ PrepareBeziersForCap : Bezier >> (Bezier, Bezier)
         E = 0
         F = 0
         ∀ (D', E', F')
-        if A ≠ F
+        if ¬(A #= F)
             >> ((C, B, A), (A, B, C)) >> ((D, E, F), (F, E, D))
 
 StrokeBeziers (o : Real, j, c : StrokeJoin) : Bezier >> Bezier
