@@ -12,12 +12,6 @@ Canvas :: (start : Point) : (Color, Real) >>|
 | (a : Real) | : Real
     { -a if a < 0, a }
 
-¬(a : Real) : Real
-    a = 0
-
-(a : Any) ≠ (b : Any) : Real
-    ¬(a = b)
-
 (a : Real) ⋖ (b : Real) : Real
     {a if a < b, b}
 
