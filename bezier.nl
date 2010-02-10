@@ -1,36 +1,39 @@
-TransformBezier (m : Matrix) : Bezier >> Bezier
-    ∀ [a, b, c]
-        >> [m × a, m × b, m × c]
+TransformBeziers (M : Matrix) : Bezier >> Bezier
+    ∀ (A, B, C)
+        >> (M × A, M × B, M × C)
 
-ClipBezier (min, max : Point) : Bezier >> Bezier
-    ∀ [a, b, c]
-        bmin = a ⋖ b ⋖ c
-        bmax = a ⋗ b ⋗ c
-        if ∧[ min ≤ bmin ∧ bmax ≤ max ]
-            >> [a, b, c]
-        else if ∨[ bmax ≤ min ∨ max ≤ bmin ]
-            ca = min ⋗ a ⋖ max
-            cc = min ⋗ c ⋖ max
-            >> [ca, ca ~ cc, cc]
-        else 
-            abbc    = (a ~ b) ~ (b ~ c)
-            nearmin = | abbc - min | < 0.1
-            nearmax = | abbc - max | < 0.1
-            m       = min ?(nearmin)? (max ?(nearmax)? abbc)
-            << [a, a ~ b, m] << [m, b ~ c, c]
-
-DecomposeBezier : Bezier >> EdgeContribution
-    ∀ [a, b, c]
-        if ∧[ ⌊ a ⌋ = ⌊ c ⌋ ∨ ⌈ a ⌉ = ⌈ c ⌉ ]
-            p = ⌊ a ⌋ ⋖ ⌊ c ⌋
-            w = p.x + 1 - (c.x ~ a.x)
-            h = c.y - a.y
-            >> [p.x, p.y, w, h]
+ClipBeziers (min, max : Point) : Bezier >> Bezier
+    ∀ (A, B, C)
+        bmin   = A ⋖ B ⋖ C
+        bmax   = A ⋗ B ⋗ C
+        inside = min  ≤ bmin ∧ bmax ≤ max
+        cross  = bmax ≤ min  ∨ max  ≤ bmin
+        if inside.x ∧ inside.y
+            >> (A, B, C)
+        else if cross.x ∨ cross.y
+            cA = min ⋗ A ⋖ max
+            cC = min ⋗ C ⋖ max
+            >> (cA, cA ~ cC, cC)
         else
-            abbc    = (a ~ b) ~ (b ~ c)
-            min     = ⌊ abbc ⌋
-            max     = ⌈ abbc ⌉
-            nearmin = | abbc - min | < 0.1
-            nearmax = | abbc - max | < 0.1
-            m       = min ?(nearmin)? (max ?(nearmax)? abbc)
-            << [a, a ~ b, m] << [m, b ~ c, c]
+            ABBC    = (A ~ B) ~ (B ~ C)
+            nearmin = | ABBC - min | < 0.1
+            nearmax = | ABBC - max | < 0.1
+            M       = {min if nearmin, max if nearmax, ABBC}
+            << (A, A ~ B, M) << (M, B ~ C, C)
+
+DecomposeBeziers : Bezier >> EdgeContribution
+    ∀ (A, B, C)
+        inside = ⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉
+        if inside.x ∧ inside.y
+            P = ⌊ A ⌋ ⋖ ⌊ C ⌋
+            w = P.x + 1 - (C.x ~ A.x)
+            h = C.y - A.y
+            >> (P.x, P.y, w, h)
+        else
+            ABBC    = (A ~ B) ~ (B ~ C)
+            min     = ⌊ ABBC ⌋
+            max     = ⌈ ABBC ⌉
+            nearmin = | ABBC - min | < 0.1
+            nearmax = | ABBC - max | < 0.1
+            M       = {min if nearmin, max if nearmax, ABBC}
+            << (A, A ~ B, M) << (M, B ~ C, C)

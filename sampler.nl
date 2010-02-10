@@ -1,13 +1,13 @@
-ImageExtendMode :: (size : Point) Point >> Point
+ImageExtendMode :: (w, h : Real) Point >> Point
 GradientShape :: Point >> Real
 GradientExtendMode :: Real >> Real
-GradientColor :: [Real, Color] >> [Real, Color]
+GradientColor :: (Real, Color) >> (Real, Color)
 
 FilterBegin : Point >> Point
-    ∀ [x, y]
-        >>                  [x, y + 0.5]
-        >> [x - 0.5, y]  >> [x, y      ] >> [x + 0.5, y]
-        >>                  [x, y - 0.5]
+    ∀ (x, y)
+        >>                  (x, y + 0.5)
+        >> (x - 0.5, y)  >> (x, y      ) >> (x + 0.5, y)
+        >>                  (x, y - 0.5)
 
 {- FilterEnd : Color >> Color
     ∀ a, b, c, d, e
@@ -15,48 +15,45 @@ FilterBegin : Point >> Point
 -} 
 
 FilterEnd : Color >> Color
-    sum : Color = 0
     n = 1
+    sum : Color = 0
     ∀ c
+        n'   = n % 6 + 1
+        sum' = {0 if n = 6, sum + c + c if n = 3, sum + c}
         if n = 6
-            >> (sum + c) / n
-            sum' = 0
-            n' = 1
-        else
-            if i = 3
-                sum' = sum + c + c
-            else
-                sum' = sum + c
-            n' = n + 1
+            >> (sum + c) / 6
 
 FilterSampler (s : Sampler) : Sampler
     ⇒ FilterBegin → s → FilterEnd
 
-TransformPoint (m : Matrix) : Point >> Point
-    ∀ p
-        >> m × p
+TransformPoints (M : Matrix) : Point >> Point
+    ∀ P
+        >> M × P
 
 ImageExtendPad : ImageExtendMode
-    ∀ p
-        >> 0 ⋗ (p - 0.5) ⋖ (size - 1)
+    D = (w, h)
+    ∀ P
+        >> 0 ⋗ (P - 0.5) ⋖ (D - 1)
 
 ImageExtendRepeat : ImageExtendMode
-    ∀ p
-        q = (p - 0.5) / size
-        >> (q - ⌊ q ⌋) × size
+    D = (w, h)
+    ∀ P
+        Q = (P - 0.5) / D
+        >> (Q - ⌊ Q ⌋) × D
 
 ImageExtendMirror : ImageExtendMode
-    ∀ p
-        q = | p - 0.5 | % (2 × size) - size
-        >> size - | q |
+    D = (w, h)
+    ∀ P
+        Q = | P - 0.5 | % (2 × D) - D
+        >> D - | Q |
 
-LinearGradientShape (s00, ds/dx, ds/dy : Real) : GradientShape
-    ∀ [x, y]
-        >> s00 + x × ds/dx + y × ds/dy
+LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
+    ∀ (x, y)
+        >> s00 + x × dsdx + y × dsdy
 
-RadialGradientShape (c : Point, r : Real) : GradientShape
-    ∀ p
-        >> ‖ p - c ‖ / r
+RadialGradientShape (C : Point, r : Real) : GradientShape
+    ∀ P
+        >> ‖ P ⇀ C ‖ / r
 
 GradientExtendPad : GradientExtendMode
     ∀ s
@@ -70,18 +67,18 @@ GradientExtendMirror : GradientExtendMode
     ∀ s
         >> 1 - | (| s | % 2 - 1) |
 
-GradientColorBegin : Real >> [Real, Color]
+GradientColorBegin : Real >> (Real, Color)
     ∀ s
-        >> [s, 0]
+        >> (s, 0)
 
-GradientColorSpan (c0, dc/ds : Color, l : Real) : GradientColor
-    ∀ [s, c]
-        d = c0 + s × dc/ds
-        >> [s - l, c ?(s < 0)? d]
+GradientColorSpan (c0, dcds : Color, l : Real) : GradientColor
+    ∀ (s, c)
+        d = c0 + s × dcds
+        >> (s - l, {c if s < 0, d})
 
-GradientColorEnd : [Real, Color] >> Color
-    ∀ [s, c]
-        >> [c.a, c.r × c.a, c.g × c.a, c.b × c.a]
+GradientColorEnd : (Real, Color) >> Color
+    ∀ (s, c)
+        >> (c.a, c.r × c.a, c.g × c.a, c.b × c.a)
 
 Gradient (s : GradientShape, e : GradientExtendMode, c : GradientColor) : Sampler
     ⇒ s → e → GradientColorBegin → c → GradientColorEnd
