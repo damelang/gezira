@@ -12,14 +12,17 @@ Canvas :: (start : Point) : (Color, Real) >>|
 | (a : Real) | : Real
     { -a if a < 0, a }
 
+(a : Real) ? (b : Real) : Real
+    {a if a ≠ 0, b}
+
+(a : Real) % (n : Real) : Real
+    a - ⌊ a / (n ? 1) ⌋ × n
+
 (a : Real) ⋖ (b : Real) : Real
     {a if a < b, b}
 
 (a : Real) ⋗ (b : Real) : Real
     {a if a > b, b}
-
-(a : Real) ? (b : Real) : Real
-    {a if a ≠ 0, b}
 
 (a : Real) ~ (b : Real) : Real
     (a + b) / 2
