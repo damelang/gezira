@@ -18,10 +18,13 @@ FilterEnd : Color >> Color
     n = 1
     sum : Color = 0
     ∀ c
-        n'   = n % 6 + 1
-        sum' = {0 if n = 6, sum + c + c if n = 3, sum + c}
         if n = 6
+            n'   = 1
+            sum' = 0
             >> (sum + c) / 6
+        else
+            n'   = n + 1
+            sum' = {sum + c + c if n = 3, sum + c}
 
 FilterSampler (s : Sampler) : Sampler
     ⇒ FilterBegin → s → FilterEnd
@@ -33,27 +36,19 @@ TransformPoints (M : Matrix) : Point >> Point
 ImageExtendPad : ImageExtendMode
     D = (w, h)
     ∀ P
-        >> 0 ⋗ (P - 0.5) ⋖ (D - 1)
+        >> 0 ⋗ P ⋖ D
 
 ImageExtendRepeat : ImageExtendMode
     D = (w, h)
     ∀ P
-        Q = (P - 0.5) / D
+        Q = P / D
         >> (Q - ⌊ Q ⌋) × D
 
-ImageExtendMirror : ImageExtendMode
+ImageExtendReflect : ImageExtendMode
     D = (w, h)
     ∀ P
-        Q = | P - 0.5 | % (2 × D) - D
-        >> D - | Q |
-
-LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
-    ∀ (x, y)
-        >> s00 + x × dsdx + y × dsdy
-
-RadialGradientShape (C : Point, r : Real) : GradientShape
-    ∀ P
-        >> ‖ P ⇀ C ‖ / r
+        Q = | P / D | % 2 - 1
+        >> (1 - | Q |) × D
 
 GradientExtendPad : GradientExtendMode
     ∀ s
@@ -63,9 +58,18 @@ GradientExtendRepeat : GradientExtendMode
     ∀ s
         >> s - ⌊ s ⌋
 
-GradientExtendMirror : GradientExtendMode
+GradientExtendReflect : GradientExtendMode
     ∀ s
-        >> 1 - | (| s | % 2 - 1) |
+        t = | s | % 2 - 1
+        >> 1 - | t |
+
+LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
+    ∀ (x, y)
+        >> s00 + x × dsdx + y × dsdy
+
+RadialGradientShape (C : Point, r : Real) : GradientShape
+    ∀ P
+        >> ‖ P ⇀ C ‖ / r
 
 GradientColorBegin : Real >> (Real, Color)
     ∀ s
@@ -77,8 +81,8 @@ GradientColorSpan (c0, dcds : Color, l : Real) : GradientColor
         >> (s - l, {c if s < 0, d})
 
 GradientColorEnd : (Real, Color) >> Color
-    ∀ (s, c)
-        >> (c.a, c.r × c.a, c.g × c.a, c.b × c.a)
+    ∀ (_, c)
+        >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
 
 Gradient (s : GradientShape, e : GradientExtendMode, c : GradientColor) : Sampler
     ⇒ s → e → GradientColorBegin → c → GradientColorEnd
