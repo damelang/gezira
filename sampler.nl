@@ -18,10 +18,13 @@ FilterEnd : Color >> Color
     n = 1
     sum : Color = 0
     ∀ c
-        n'   = n % 6 + 1
-        sum' = {0 if n = 6, sum + c + c if n = 3, sum + c}
         if n = 6
+            n'   = 1
+            sum' = 0
             >> (sum + c) / 6
+        else
+            n'   = n + 1
+            sum' = {sum + c + c if n = 3, sum + c}
 
 FilterSampler (s : Sampler) : Sampler
     ⇒ FilterBegin → s → FilterEnd
