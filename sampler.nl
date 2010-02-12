@@ -33,10 +33,18 @@ TransformPoints (M : Matrix) : Point >> Point
     ∀ P
         >> M ⊗ P
 
+GradientExtendPad : GradientExtendMode
+    ∀ s
+        >> 0 ⋗ s ⋖ 1
+
 ImageExtendPad : ImageExtendMode
     D = (w, h)
     ∀ P
         >> 0 ⋗ P ⋖ D
+
+GradientExtendRepeat : GradientExtendMode
+    ∀ s
+        >> s - ⌊ s ⌋
 
 ImageExtendRepeat : ImageExtendMode
     D = (w, h)
@@ -44,24 +52,15 @@ ImageExtendRepeat : ImageExtendMode
         Q = P / D
         >> (Q - ⌊ Q ⌋) × D
 
+GradientExtendReflect : GradientExtendMode
+    ∀ s
+        >> | (| s - 1 | % 2 - 1) |
+
 ImageExtendReflect : ImageExtendMode
     D = (w, h)
     ∀ P
-        Q = | P / D | % 2 - 1
-        >> (1 - | Q |) × D
-
-GradientExtendPad : GradientExtendMode
-    ∀ s
-        >> 0 ⋗ s ⋖ 1
-
-GradientExtendRepeat : GradientExtendMode
-    ∀ s
-        >> s - ⌊ s ⌋
-
-GradientExtendReflect : GradientExtendMode
-    ∀ s
-        t = | s | % 2 - 1
-        >> 1 - | t |
+        Q = P / D
+        >> | (| Q - 1 | % 2 - 1) | × D
 
 LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
     ∀ (x, y)
