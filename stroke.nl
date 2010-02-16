@@ -77,27 +77,23 @@ PrepareBeziersForOffset : Bezier >> Bezier
         >> (A, B, C) >> (C, B, A)
 
 PrepareBeziersForJoin : Bezier >> (Bezier, Bezier)
-    first = 1
     & (A, B, C)
-        D = 0
-        E = 0
-        F = 0
-        ∀ (D', E', F')
-            if first
-                first' = 0
-            else
-                >> ((D, E, F), (D', E', F')) >> ((F', E', D'), (F, E, D))
-        if A = F ∧ first = 0
-            >> ((D, E, F), (A, B, C)) >> ((C, B, A), (F, E, D))
+    first = 1
+    (D, E, F) = 0
+    ∀ (D', E', F')
+        if first
+            first' = 0
+        else
+            >> ((D, E, F), (D', E', F')) >> ((F', E', D'), (F, E, D))
+    if A = F ∧ first = 0
+        >> ((D, E, F), (A, B, C)) >> ((C, B, A), (F, E, D))
 
 PrepareBeziersForCap : Bezier >> (Bezier, Bezier)
     & (A, B, C)
-        D = 0
-        E = 0
-        F = 0
-        ∀ (D', E', F')
-        if A ≠ F
-            >> ((C, B, A), (A, B, C)) >> ((D, E, F), (F, E, D))
+    (D, E, F) = 0
+    ∀ (D', E', F')
+    if A ≠ F
+        >> ((C, B, A), (A, B, C)) >> ((D, E, F), (F, E, D))
 
 StrokeBeziers (o : Real, j, c : StrokeJoin) : Bezier >> Bezier
     ⇒ PrepareBeziersForStroke →
