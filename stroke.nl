@@ -1,4 +1,4 @@
-StrokeJoin :: (o : Real) (Bezier, Bezier) >> Bezier
+StrokeJoin :: (o : Real) : (Bezier, Bezier) >> Bezier
 
 StrokeOffset (o : Real) : Bezier >> Bezier
     ∀ (A, B, C)
