@@ -1,4 +1,4 @@
-ImageExtendMode :: (w, h : Real) Point >> Point
+ImageExtendMode :: (w, h : Real) : Point >> Point
 GradientShape :: Point >> Real
 GradientExtendMode :: Real >> Real
 GradientColor :: (Real, Color) >> (Real, Color)
