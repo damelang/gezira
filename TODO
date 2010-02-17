@@ -1,16 +1,7 @@
-- finish pen stroking
-    - see comparison demos
-    - tangency apparently is not linearly interpolated at
-      't' is.
-    - find crash in js reason
-    - tangency might not be the right error metric. need to be
-      more sensitive to ...
-    - find the right magic number for stroke offset curve
-      close to 0.03 now.
-    - reuse joins for caps
-    - miter (see formula in cairo)
-    - what to do about closed pen paths?
-- fix ImageExtendModes!
+- make pen stroking comparison demos
+- consider issue with compositors clamping color channels
+  to 1 instead of clamping to the opacity (for Porter-Duff ops,
+  this is not a problem).
 - think about restructuring Render this way:
 
   Mask :: (start : Point) Real >>|
