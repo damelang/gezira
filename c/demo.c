@@ -1,9 +1,11 @@
 #include <stdio.h>
-#include "gezira-sdl.h"
+#include "gezira.h"
+#include "gezira-image.h"
+#include "SDL.h"
 
 typedef nile_Real_t real;
 
-#define NTHREADS 4
+#define NTHREADS 1
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -90,7 +92,7 @@ main (int argc, char **argv)
         if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
             break;
 
-        SDL_FillRect (image, NULL, 0);
+        SDL_FillRect (image, NULL, 0xffffffff);
         SDL_LockSurface (image);
 
             matrix_t M = matrix_new ();
@@ -99,13 +101,22 @@ main (int argc, char **argv)
             M = matrix_scale (M, scale, scale);
             M = matrix_translate (M, -250, -250);
 
+            //nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
+            nile_Kernel_t *sampler = gezira_CompositeSamplers (nl,
+                gezira_UniformColor (nl, 0.5, 1, 0, 0),
+                gezira_ReadImage_ARGB32 (nl, image->pixels,
+                                         DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                         image->pitch / 4),
+                gezira_CompositeOver (nl));
+
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBezier (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBezier (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
                 gezira_DecomposeBezier (nl),
-                gezira_Render (nl,
-                    gezira_UniformColor (nl, 1, 1, 0, 0),
-                    gezira_SDL_WriteImage (nl, image)),
+                gezira_Render (nl, sampler,
+                    gezira_WriteImage_ARGB32 (nl, image->pixels,
+                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                              image->pitch / 4)),
                 NULL);
 
             nile_feed (nl, pipeline, path, path_n, 1);
