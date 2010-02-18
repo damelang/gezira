@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include "gezira.h"
 #include "gezira-image.h"
+
 #include "SDL.h"
+#ifdef main
+#undef main
+#endif 
 
 typedef nile_Real_t real;
 
