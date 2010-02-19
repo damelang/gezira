@@ -100,4 +100,7 @@ PrepareBeziersForCap : Bezier >> (Bezier, Bezier)
         >> ((C, B, A), (A, B, C)) >> ((D, E, F), (F, E, D))
 
 StrokeBeziers (o : Real, j, c : StrokeJoin) : Bezier >> Bezier
-    ⇒ PrepareBeziersForStroke → Mix (PrepareBeziersForOffset → StrokeOffset (o), Mix (PrepareBeziersForJoin → j (o), PrepareBeziersForCap → c (o)))
+    ⇒ PrepareBeziersForStroke →
+      Mix (PrepareBeziersForOffset → StrokeOffset (o),
+      Mix (PrepareBeziersForJoin   → j (o),
+           PrepareBeziersForCap    → c (o)))
