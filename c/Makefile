@@ -1,19 +1,27 @@
 NILE_RUNTIME := ../../nile/runtimes/c
-CFLAGS := -O2 -Wall -Werror -Wno-unused -mfpmath=sse -ffast-math -fstrict-aliasing \
-          -L$(NILE_RUNTIME) -I$(NILE_RUNTIME)
-SDL_CFLAGS := $(shell sdl-config --cflags 2>/dev/null || \
-                echo -I/Library/Frameworks/SDL.framework/Headers)
-SDL_LIBS := $(shell sdl-config --libs 2>/dev/null || \
-              echo -framework SDL -framework Cocoa SDLMain.m)
+CFLAGS := -O2 -Wall -Werror -Wno-unused \
+          -mfpmath=sse -ffast-math -fstrict-aliasing -I$(NILE_RUNTIME)
+LIBS   := -L$(NILE_RUNTIME) -lnile
 
-demo: demo.c gezira-sdl.o gezira.o
-	$(CC) -o $@ $(CFLAGS) $(SDL_CFLAGS) $^ $(SDL_LIBS) -lnile
+ifeq ($(findstring exe,$(SHELL)),)
+  CFLAGS += $(shell sdl-config --cflags 2>/dev/null || \
+                    echo -I/Library/Frameworks/SDL.framework/Headers)
+  LIBS   += $(shell sdl-config --libs 2>/dev/null || \
+                    echo -framework SDL -framework Cocoa SDLMain.m)
+else
+  ifeq ($(SDL_DIR),)
+    $(error Must set SDL_DIR environment variable (e.g., ../../SDL-1.2.14.mingw32))
+  else
+    CFLAGS += -I$(SDL_DIR)/include/SDL
+    LIBS   += -L$(SDL_DIR)/lib -lSDL -mwindows
+  endif
+endif
+
+demo: demo.c gezira-image.o gezira.o
+	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 
 %.o: %.c *.h $(MAKEFILE_LIST)
 	$(CC) -c $(CFLAGS) $<
 
-gezira-sdl.o: gezira-sdl.c *.h $(MAKEFILE_LIST)
-	$(CC) -c $(CFLAGS) $(SDL_CFLAGS) $<
-
 clean:
-	/bin/rm -rf demo *.o *.a *.gch *.dSYM
+	rm -rf demo *.o *.a *.gch *.dSYM
