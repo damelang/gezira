@@ -3,6 +3,10 @@
   to 1 instead of clamping to the opacity (for Porter-Duff ops,
   this is not a problem). Maybe define a color operator that
   clamps alpha first, then uses that to clamp the other channels
+- Fix usage of '='. In bezier we want pairwise '=', in other
+  places we want a scalar result. Perhaps define '=,=' or something
+  for pairwise. Or '==' for the scalar result?
+- rename Canvas to Target?
 - think about restructuring Render this way:
 
   Mask :: (start : Point) Real >>|
