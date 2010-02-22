@@ -16,7 +16,7 @@ FilterBegin : Point >> Point
 
 FilterEnd : Color >> Color
     n = 1
-    sum : Color = 0
+    sum = 0 : Color
     ∀ c
         if n = 6
             n'   = 1
