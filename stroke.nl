@@ -79,9 +79,9 @@ PrepareBeziersForOffset : Bezier >> Bezier
 PrepareBeziersForJoin : Bezier >> (Bezier, Bezier)
     & (A, B, C)
     first = 1
-    D = (0, 0) : Point
-    E = (0, 0) : Point
-    F = (0, 0) : Point
+    D = 0 : Point
+    E = 0 : Point
+    F = 0 : Point
     ∀ (D', E', F')
         if first
             first' = 0
@@ -92,9 +92,9 @@ PrepareBeziersForJoin : Bezier >> (Bezier, Bezier)
 
 PrepareBeziersForCap : Bezier >> (Bezier, Bezier)
     & (A, B, C)
-    D = (0, 0) : Point
-    E = (0, 0) : Point
-    F = (0, 0) : Point
+    D = 0 : Point
+    E = 0 : Point
+    F = 0 : Point
     ∀ (D', E', F')
     if ¬(A #= F)
         >> ((C, B, A), (A, B, C)) >> ((D, E, F), (F, E, D))
