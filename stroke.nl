@@ -36,7 +36,7 @@ StrokeJoinMiter (l, d : Real) : StrokeJoin
             N = C + q × w
             >> (G, G ~ N, N) >> (N, N ~ J, J)
 
-StrokeJoinRound : StrokeJoin
+StrokeJoinRound () : StrokeJoin
     ∀ ((A, B, C), (D, E, F))
         u = B ⟂ C
         v = D ⟂ E
