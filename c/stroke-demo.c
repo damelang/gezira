@@ -51,8 +51,8 @@ main (int argc, char **argv)
         SDL_LockSurface (image);
 
             nile_Kernel_t *stroke =
-                gezira_Stroke (nl, 1, gezira_StrokeJoinRound (nl),
-                                      gezira_StrokeJoinRound (nl));
+                gezira_StrokeBeziers (nl, 1, gezira_StrokeJoinRound (nl),
+                                             gezira_StrokeJoinRound (nl));
             nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 stroke,
