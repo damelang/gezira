@@ -53,7 +53,7 @@ gezira_Render (nile_t *nl,
                nile_Kernel_t *v_c);
 
 nile_Kernel_t *
-gezira_TransformBezier (nile_t *nl,
+gezira_TransformBeziers (nile_t *nl,
                         nile_Real_t v_m_a,
                         nile_Real_t v_m_b,
                         nile_Real_t v_m_c,
@@ -62,13 +62,13 @@ gezira_TransformBezier (nile_t *nl,
                         nile_Real_t v_m_f);
 
 nile_Kernel_t *
-gezira_ClipBezier (nile_t *nl,
+gezira_ClipBeziers (nile_t *nl,
                    nile_Real_t v_min_x,
                    nile_Real_t v_min_y,
                    nile_Real_t v_max_x,
                    nile_Real_t v_max_y);
 
 nile_Kernel_t *
-gezira_DecomposeBezier (nile_t *nl);
+gezira_DecomposeBeziers (nile_t *nl);
 
 #endif

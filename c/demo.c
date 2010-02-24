@@ -114,9 +114,9 @@ main (int argc, char **argv)
                 gezira_CompositeOver (nl));
 
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
-                gezira_TransformBezier (nl, M.a, M.b, M.c, M.d, M.e, M.f),
-                gezira_ClipBezier (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_DecomposeBezier (nl),
+                gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
+                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
+                gezira_DecomposeBeziers (nl),
                 gezira_Render (nl, sampler,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
