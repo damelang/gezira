@@ -6476,6 +6476,68 @@ static int gezira_PrepareBeziersForCap_process(nile_t *nl,
     #undef OUT_QUANTUM
 }
 
+typedef struct {
+    nile_Kernel_t base;
+    nile_Real_t v_o;
+    nile_Kernel_t *v_j;
+    nile_Kernel_t *v_c;
+} gezira_StrokeBeziers_t;
+
+static nile_Kernel_t *gezira_StrokeBeziers_clone(nile_t *nl, nile_Kernel_t *k_) {
+    gezira_StrokeBeziers_t *k = (gezira_StrokeBeziers_t *) k_;
+    gezira_StrokeBeziers_t *clone = (gezira_StrokeBeziers_t *) nile_Kernel_clone(nl, k_);
+    clone->v_o = k->v_o;
+    clone->v_j = k->v_j->clone(nl, k->v_j);
+    clone->v_c = k->v_c->clone(nl, k->v_c);
+    return (nile_Kernel_t *) clone;
+}
+
+nile_Kernel_t *gezira_StrokeBeziers(nile_t *nl, 
+                                    nile_Real_t v_o, 
+                                    nile_Kernel_t *v_j, 
+                                    nile_Kernel_t *v_c) {
+    gezira_StrokeBeziers_t *k = NILE_KERNEL_NEW(nl, gezira_StrokeBeziers);
+    k->v_o = v_o;
+    k->v_j = v_j;
+    k->v_c = v_c;
+    return (nile_Kernel_t *) k;
+}
+
+static int gezira_StrokeBeziers_process(nile_t *nl,
+                                        nile_Kernel_t *k_,
+                                        nile_Buffer_t **in_,
+                                        nile_Buffer_t **out_) {
+    #define IN_QUANTUM 6
+    #define OUT_QUANTUM 6
+    nile_Buffer_t *in = *in_;
+    nile_Buffer_t *out = *out_;
+    gezira_StrokeBeziers_t *k = (gezira_StrokeBeziers_t *) k_;
+    nile_Real_t v_o = k->v_o;
+    nile_Kernel_t *v_j = k->v_j;
+    nile_Kernel_t *v_c = k->v_c;
+    
+    if (!k_->initialized) {
+        k_->initialized = 1;
+        ; /* no-op */
+        nile_Kernel_t *t_1 = gezira_StrokeOffset(nl, v_o);
+        nile_Kernel_t *t_2 = nile_Pipeline(nl, gezira_PrepareBeziersForOffset, t_1, NULL);
+        nile_Kernel_t *t_3 = gezira_StrokeJoinRound(nl, v_j, v_o);
+        nile_Kernel_t *t_4 = nile_Pipeline(nl, gezira_PrepareBeziersForJoin, t_3, NULL);
+        nile_Kernel_t *t_5 = gezira_StrokeJoinRound(nl, v_c, v_o);
+        nile_Kernel_t *t_6 = nile_Pipeline(nl, gezira_PrepareBeziersForCap, t_5, NULL);
+        nile_Kernel_t *t_7 = nile_Mix(nl, t_4, t_6);
+        nile_Kernel_t *t_8 = nile_Mix(nl, t_2, t_7);
+        nile_Kernel_t *t_9 = nile_Pipeline(nl, gezira_PrepareBeziersForStroke, t_8, NULL);
+        nile_Kernel_t *f = t_9;
+        f->downstream = k_->downstream;
+        k_->downstream = f;
+    }
+    
+    return NILE_INPUT_FORWARD;
+    #undef IN_QUANTUM
+    #undef OUT_QUANTUM
+}
+
 nile_Kernel_t *gezira_ImageExtendMode_clone(nile_t *nl, nile_Kernel_t *k_) {
     gezira_ImageExtendMode_t *k = (gezira_ImageExtendMode_t *) k_;
     gezira_ImageExtendMode_t *clone = (gezira_ImageExtendMode_t *) nile_Kernel_clone(nl, k_);

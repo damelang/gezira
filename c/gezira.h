@@ -363,6 +363,16 @@ static int gezira_PrepareBeziersForCap_process(nile_t *nl,
                                                nile_Buffer_t **in_,
                                                nile_Buffer_t **out_);
 
+nile_Kernel_t *gezira_StrokeBeziers(nile_t *nl, 
+                                    nile_Real_t v_o, 
+                                    nile_Kernel_t *v_j, 
+                                    nile_Kernel_t *v_c);
+
+static int gezira_StrokeBeziers_process(nile_t *nl,
+                                        nile_Kernel_t *k_,
+                                        nile_Buffer_t **in_,
+                                        nile_Buffer_t **out_);
+
 typedef struct {
     nile_Kernel_t base;
     nile_Real_t v_w;
@@ -536,7 +546,5 @@ static int gezira_Gradient_process(nile_t *nl,
                                    nile_Kernel_t *k_,
                                    nile_Buffer_t **in_,
                                    nile_Buffer_t **out_);
-
-
 
 #endif
