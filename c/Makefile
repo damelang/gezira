@@ -17,11 +17,13 @@ else
   endif
 endif
 
-demo: demo.c gezira-image.o gezira.o
+DEFAULT: star-demo
+
+%-demo: %-demo.c gezira-image.o gezira.o
 	$(CC) -o $@ $(CFLAGS) $^ $(LIBS)
 
 %.o: %.c *.h $(MAKEFILE_LIST)
 	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm -rf demo *.o *.a *.gch *.dSYM
+	rm -rf *-demo *.o *.a *.gch *.dSYM
