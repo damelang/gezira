@@ -72,7 +72,7 @@ FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
     x     = x0
     local = 0
     run   = 0
-    ∀ (x', y, w, h)
+    ∀ (x', _, w, h)
         n = x' - x
         run' = run + h
         if n = 0
@@ -92,7 +92,7 @@ CreateSamplePoints (start : Point) : Real >> Point
         >> (x, y)
 
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
-    & (x, y, w, h)
+    & (x, y, _, _)
     start = (x, y) + 0.5
     ⇒ FillBetweenEdges (x) →
       Interleave (CreateSamplePoints (start) → s, (→)) →
