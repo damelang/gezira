@@ -5,9 +5,9 @@ GradientColor :: (Real, Color) >> (Real, Color)
 
 FilterBegin : Point >> Point
     ∀ (x, y)
-        >>                  (x, y + 0.5)
-        >> (x - 0.5, y)  >> (x, y      ) >> (x + 0.5, y)
-        >>                  (x, y - 0.5)
+        >>                  (x, y + 0.6)
+        >> (x - 0.6, y)  >> (x, y      ) >> (x + 0.6, y)
+        >>                  (x, y - 0.6)
 
 {- FilterEnd : Color >> Color
     ∀ a, b, c, d, e
