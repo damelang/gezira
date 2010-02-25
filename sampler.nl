@@ -68,7 +68,7 @@ LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
 
 RadialGradientShape (C : Point, r : Real) : GradientShape
     ∀ P
-        >> ‖ P ⇀ C ‖ / r
+        >> ‖ P - C ‖ / r
 
 GradientColorBegin : Real >> (Real, Color)
     ∀ s
