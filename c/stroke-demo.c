@@ -9,7 +9,7 @@
 
 typedef nile_Real_t real;
 
-#define NTHREADS 1
+#define NTHREADS 0
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -51,9 +51,9 @@ main (int argc, char **argv)
         SDL_LockSurface (image);
 
             nile_Kernel_t *stroke =
-                gezira_StrokeBeziers (nl, 1, gezira_StrokeJoinRound (nl),
+                gezira_StrokeBeziers (nl, 5, gezira_StrokeJoinRound (nl),
                                              gezira_StrokeJoinRound (nl));
-            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
+            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 0, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
