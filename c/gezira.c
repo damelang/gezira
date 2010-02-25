@@ -6599,7 +6599,7 @@ static int gezira_FilterBegin_process(nile_t *nl,
     while (in->i < in->n) {
         nile_Real_t v_x = nile_Buffer_shift(in);
         nile_Real_t v_y = nile_Buffer_shift(in);
-        nile_Real_t t_2 = 0.5;
+        nile_Real_t t_2 = 0.6;
         nile_Real_t t_3 = nile_Real_add(v_y, t_2);
         nile_Real_t t_1_1 = v_x;
         nile_Real_t t_1_2 = t_3;
@@ -6608,7 +6608,7 @@ static int gezira_FilterBegin_process(nile_t *nl,
         out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
         nile_Buffer_append(out, t_4_x);
         nile_Buffer_append(out, t_4_y);
-        nile_Real_t t_6 = 0.5;
+        nile_Real_t t_6 = 0.6;
         nile_Real_t t_7 = nile_Real_sub(v_x, t_6);
         nile_Real_t t_5_1 = t_7;
         nile_Real_t t_5_2 = v_y;
@@ -6624,7 +6624,7 @@ static int gezira_FilterBegin_process(nile_t *nl,
         out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
         nile_Buffer_append(out, t_10_x);
         nile_Buffer_append(out, t_10_y);
-        nile_Real_t t_12 = 0.5;
+        nile_Real_t t_12 = 0.6;
         nile_Real_t t_13 = nile_Real_add(v_x, t_12);
         nile_Real_t t_11_1 = t_13;
         nile_Real_t t_11_2 = v_y;
@@ -6633,7 +6633,7 @@ static int gezira_FilterBegin_process(nile_t *nl,
         out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
         nile_Buffer_append(out, t_14_x);
         nile_Buffer_append(out, t_14_y);
-        nile_Real_t t_16 = 0.5;
+        nile_Real_t t_16 = 0.6;
         nile_Real_t t_17 = nile_Real_sub(v_y, t_16);
         nile_Real_t t_15_1 = v_x;
         nile_Real_t t_15_2 = t_17;
@@ -7571,28 +7571,7 @@ static int gezira_RadialGradientShape_process(nile_t *nl,
         nile_Real_t t_6 = nile_Real_mul(t_4_y, t_4_y);
         nile_Real_t t_7 = nile_Real_add(t_5, t_6);
         nile_Real_t t_8 = nile_Real_sqr(t_7);
-        nile_Real_t t_9 = 0;
-        nile_Real_t t_10 = nile_Real_neq(t_8, t_9);
-        nile_Real_t t_11 = nile_Real_mul(t_4_x, t_4_x);
-        nile_Real_t t_12 = nile_Real_mul(t_4_y, t_4_y);
-        nile_Real_t t_13 = nile_Real_add(t_11, t_12);
-        nile_Real_t t_14 = nile_Real_sqr(t_13);
-        nile_Real_t t_15_x = t_14;
-        nile_Real_t t_15_y = t_14;
-        nile_Real_t t_16_x = nile_Real_div(t_4_x, t_15_x);
-        nile_Real_t t_16_y = nile_Real_div(t_4_y, t_15_y);
-        nile_Real_t t_17 = 0;
-        nile_Real_t t_18_x = t_17;
-        nile_Real_t t_18_y = t_17;
-        nile_Real_t t_19_x = t_10;
-        nile_Real_t t_19_y = t_10;
-        nile_Real_t t_20_x = t_19_x ? t_16_x : t_18_x;
-        nile_Real_t t_20_y = t_19_y ? t_16_y : t_18_y;
-        nile_Real_t t_21 = nile_Real_mul(t_20_x, t_20_x);
-        nile_Real_t t_22 = nile_Real_mul(t_20_y, t_20_y);
-        nile_Real_t t_23 = nile_Real_add(t_21, t_22);
-        nile_Real_t t_24 = nile_Real_sqr(t_23);
-        nile_Real_t t_25 = nile_Real_div(t_24, v_r);
+        nile_Real_t t_25 = nile_Real_div(t_8, v_r);
         out = nile_Buffer_prepare_to_append(nl, out, OUT_QUANTUM, k_);
         nile_Buffer_append(out, t_25);
     }
