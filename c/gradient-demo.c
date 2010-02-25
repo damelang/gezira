@@ -9,7 +9,7 @@
 
 typedef nile_Real_t real;
 
-#define NTHREADS 1
+#define NTHREADS 0
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -88,7 +88,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-    char mem[1000000];
+    char mem[2000000];
     real angle = 0;
     real scale;
 
@@ -102,7 +102,7 @@ main (int argc, char **argv)
     nl = nile_new (NTHREADS, mem, sizeof (mem));
 
     for (;;) {
-        angle += 0.01;
+        angle += 0.005;
         scale = fabs (angle - (int) angle - 0.5) * 10;
         SDL_Event event;
         if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
@@ -118,16 +118,30 @@ main (int argc, char **argv)
             M = matrix_translate (M, -250, -250);
             matrix_t I = matrix_inverse (M);
 
+            /*
+            */
+            nile_Kernel_t *colors = nile_Pipeline (nl,
+                gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
+                                              0,   -0.5,   0.6,   0, 0.5),
+                gezira_GradientColorSpan (nl, 1,   0.25,   0.4, 0.3,
+                                              0,   -0.5,  -0.8, 1.4, 0.5),
+                NULL);
+            /*
             nile_Kernel_t *colors =
                 gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
                                               0,   -0.5,   0.6,   0, 1);
+             */
             nile_Kernel_t *sampler = gezira_Gradient (nl,
                     gezira_LinearGradientShape (nl, -7, 0.015, 0.015),
+                    //gezira_RadialGradientShape (nl, 250, 250, 50),
                     gezira_GradientExtendReflect (nl),
                     colors);
+            /*
+             */
             sampler = nile_Pipeline (nl, 
                 gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
                 sampler, NULL);
+            //sampler = gezira_FilterSampler (nl, sampler);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
