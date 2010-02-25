@@ -6794,7 +6794,7 @@ static int gezira_FilterEnd_process(nile_t *nl,
         nile_Real_t v_c_r = nile_Buffer_shift(in);
         nile_Real_t v_c_g = nile_Buffer_shift(in);
         nile_Real_t v_c_b = nile_Buffer_shift(in);
-        nile_Real_t t_7 = 6;
+        nile_Real_t t_7 = 5;
         nile_Real_t t_8 = nile_Real_eq(v_n, t_7);
         if (t_8) {
             nile_Real_t t_9 = 1;
