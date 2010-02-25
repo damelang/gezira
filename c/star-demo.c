@@ -9,7 +9,7 @@
 
 typedef nile_Real_t real;
 
-#define NTHREADS 1
+#define NTHREADS 0
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -90,7 +90,7 @@ main (int argc, char **argv)
     nl = nile_new (NTHREADS, mem, sizeof (mem));
 
     for (;;) {
-        angle += 0.001;
+        angle += 0.005;
         scale = fabs (angle - (int) angle - 0.5) * 10;
         SDL_Event event;
         if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
@@ -105,14 +105,7 @@ main (int argc, char **argv)
             M = matrix_scale (M, scale, scale);
             M = matrix_translate (M, -250, -250);
 
-            //nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
-            nile_Kernel_t *sampler = gezira_CompositeSamplers (nl,
-                gezira_UniformColor (nl, 0.5, 1, 0, 0),
-                gezira_ReadImage_ARGB32 (nl, image->pixels,
-                                         DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                         image->pitch / 4),
-                gezira_CompositeOver (nl));
-
+            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
