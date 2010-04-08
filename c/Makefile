@@ -1,7 +1,9 @@
 NILE_RUNTIME := ../../nile/runtimes/c
 CFLAGS       := -O2 -Wall -Werror -Wno-unused \
-                -mfpmath=sse -ffast-math -fstrict-aliasing -I$(NILE_RUNTIME)
-LIBS         := -L. -lgezira -L$(NILE_RUNTIME) -lnile
+                -mfpmath=sse -ffast-math -fstrict-aliasing -I$(NILE_RUNTIME) \
+                -I/opt/local/include
+
+LIBS         := -L. -lgezira -L$(NILE_RUNTIME) -lnile -lIL -lILU
 
 ifeq ($(findstring exe,$(SHELL)),)
   CFLAGS += $(shell sdl-config --cflags 2>/dev/null || \
