@@ -1,3 +1,15 @@
+- Change Render' to ...
+  RenderRow
+  RenderY
+  RenderScanline
+  SampleAndComposite
+  ExpandRuns
+  ApplyTexture
+  TextureRow
+  ?
+- Change Sampler to Texture?
+- Render is strange in that is takes a stream of EdgeContributions
+  I'd really like DecomposeBezier to be in the Render pipeline
 - make pen stroking comparison demos
 - consider issue with compositors clamping color channels
   to 1 instead of clamping to the opacity (for Porter-Duff ops,
