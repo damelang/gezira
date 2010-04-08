@@ -3,11 +3,11 @@ GradientShape :: Point >> Real
 GradientExtendMode :: Real >> Real
 GradientColor :: (Real, Color) >> (Real, Color)
 
-FilterBegin : Point >> Point
+FilterBegin (w : Real) : Point >> Point
     ∀ (x, y)
-        >>                  (x, y + 0.6)
-        >> (x - 0.6, y)  >> (x, y      ) >> (x + 0.6, y)
-        >>                  (x, y - 0.6)
+        >>                (x, y + w)
+        >> (x - w, y)  >> (x, y    ) >> (x + w, y)
+        >>                (x, y - w)
 
 {- FilterEnd : Color >> Color
     ∀ a, b, c, d, e
@@ -26,8 +26,8 @@ FilterEnd : Color >> Color
             n'   = n + 1
             sum' = {sum + c + c if n = 3, sum + c}
 
-FilterSampler (s : Sampler) : Sampler
-    ⇒ FilterBegin → s → FilterEnd
+FilterSampler (w : Real, s : Sampler) : Sampler
+    ⇒ FilterBegin (w) → s → FilterEnd
 
 TransformPoints (M : Matrix) : Point >> Point
     ∀ P
