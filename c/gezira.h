@@ -1,5 +1,3 @@
-/* THE .H FILE */
-
 #ifndef GEZIRA_H
 #define GEZIRA_H
 
@@ -26,11 +24,11 @@ typedef struct {
 nile_Kernel_t *gezira_Canvas_clone(nile_t *nl, nile_Kernel_t *k_);
 
 nile_Kernel_t *gezira_Canvas(nile_t *nl, 
-                             nile_Kernel_t *k_ /* kargs */ , 
+                             nile_Kernel_t *k_, 
                              nile_Real_t v_start_x, 
                              nile_Real_t v_start_y);
 
-nile_Kernel_t *gezira_CompositeSamplers(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_CompositeSamplers(nile_t *nl, 
                                         nile_Kernel_t *v_s1, 
                                         nile_Kernel_t *v_s2, 
                                         nile_Kernel_t *v_c);
@@ -40,7 +38,7 @@ static int gezira_CompositeSamplers_process(nile_t *nl,
                                             nile_Buffer_t **in_,
                                             nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_UniformColor(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_UniformColor(nile_t *nl, 
                                    nile_Real_t v_c_a, 
                                    nile_Real_t v_c_r, 
                                    nile_Real_t v_c_g, 
@@ -58,7 +56,7 @@ static int gezira_CompositeOver_process(nile_t *nl,
                                         nile_Buffer_t **in_,
                                         nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_FillBetweenEdges(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_FillBetweenEdges(nile_t *nl, 
                                        nile_Real_t v_x0);
 
 static int gezira_FillBetweenEdges_process(nile_t *nl,
@@ -66,7 +64,7 @@ static int gezira_FillBetweenEdges_process(nile_t *nl,
                                            nile_Buffer_t **in_,
                                            nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_CreateSamplePoints(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_CreateSamplePoints(nile_t *nl, 
                                          nile_Real_t v_start_x, 
                                          nile_Real_t v_start_y);
 
@@ -75,7 +73,7 @@ static int gezira_CreateSamplePoints_process(nile_t *nl,
                                              nile_Buffer_t **in_,
                                              nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_Render_(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_Render_(nile_t *nl, 
                               nile_Kernel_t *v_s, 
                               nile_Kernel_t *v_c);
 
@@ -84,7 +82,7 @@ static int gezira_Render__process(nile_t *nl,
                                   nile_Buffer_t **in_,
                                   nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_Render(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_Render(nile_t *nl, 
                              nile_Kernel_t *v_s, 
                              nile_Kernel_t *v_c);
 
@@ -93,7 +91,7 @@ static int gezira_Render_process(nile_t *nl,
                                  nile_Buffer_t **in_,
                                  nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_TransformBeziers(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_TransformBeziers(nile_t *nl, 
                                        nile_Real_t v_M_a, 
                                        nile_Real_t v_M_b, 
                                        nile_Real_t v_M_c, 
@@ -106,7 +104,7 @@ static int gezira_TransformBeziers_process(nile_t *nl,
                                            nile_Buffer_t **in_,
                                            nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_ClipBeziers(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_ClipBeziers(nile_t *nl, 
                                   nile_Real_t v_min_x, 
                                   nile_Real_t v_min_y, 
                                   nile_Real_t v_max_x, 
@@ -307,10 +305,10 @@ typedef struct {
 nile_Kernel_t *gezira_StrokeJoin_clone(nile_t *nl, nile_Kernel_t *k_);
 
 nile_Kernel_t *gezira_StrokeJoin(nile_t *nl, 
-                                 nile_Kernel_t *k_ /* kargs */ , 
+                                 nile_Kernel_t *k_, 
                                  nile_Real_t v_o);
 
-nile_Kernel_t *gezira_StrokeOffset(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_StrokeOffset(nile_t *nl, 
                                    nile_Real_t v_o);
 
 static int gezira_StrokeOffset_process(nile_t *nl,
@@ -318,7 +316,7 @@ static int gezira_StrokeOffset_process(nile_t *nl,
                                        nile_Buffer_t **in_,
                                        nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_StrokeJoinMiter(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_StrokeJoinMiter(nile_t *nl, 
                                       nile_Real_t v_l, 
                                       nile_Real_t v_d);
 
@@ -327,7 +325,7 @@ static int gezira_StrokeJoinMiter_process(nile_t *nl,
                                           nile_Buffer_t **in_,
                                           nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_StrokeJoinRound(nile_t *nl /* kargs */ );
+nile_Kernel_t *gezira_StrokeJoinRound(nile_t *nl);
 
 static int gezira_StrokeJoinRound_process(nile_t *nl,
                                           nile_Kernel_t *k_,
@@ -362,7 +360,7 @@ static int gezira_PrepareBeziersForCap_process(nile_t *nl,
                                                nile_Buffer_t **in_,
                                                nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_StrokeBeziers(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_StrokeBeziers(nile_t *nl, 
                                     nile_Real_t v_o, 
                                     nile_Kernel_t *v_j, 
                                     nile_Kernel_t *v_c);
@@ -381,7 +379,7 @@ typedef struct {
 nile_Kernel_t *gezira_ImageExtendMode_clone(nile_t *nl, nile_Kernel_t *k_);
 
 nile_Kernel_t *gezira_ImageExtendMode(nile_t *nl, 
-                                      nile_Kernel_t *k_ /* kargs */ , 
+                                      nile_Kernel_t *k_, 
                                       nile_Real_t v_w, 
                                       nile_Real_t v_h);
 
@@ -403,7 +401,8 @@ typedef struct {
 
 nile_Kernel_t *gezira_GradientColor_clone(nile_t *nl, nile_Kernel_t *k_);
 
-nile_Kernel_t *gezira_FilterBegin(nile_t *nl);
+nile_Kernel_t *gezira_FilterBegin(nile_t *nl, 
+                                  nile_Real_t v_w);
 
 static int gezira_FilterBegin_process(nile_t *nl,
                                       nile_Kernel_t *k_,
@@ -417,7 +416,8 @@ static int gezira_FilterEnd_process(nile_t *nl,
                                     nile_Buffer_t **in_,
                                     nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_FilterSampler(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_FilterSampler(nile_t *nl, 
+                                    nile_Real_t v_w, 
                                     nile_Kernel_t *v_s);
 
 static int gezira_FilterSampler_process(nile_t *nl,
@@ -425,7 +425,7 @@ static int gezira_FilterSampler_process(nile_t *nl,
                                         nile_Buffer_t **in_,
                                         nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_TransformPoints(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_TransformPoints(nile_t *nl, 
                                       nile_Real_t v_M_a, 
                                       nile_Real_t v_M_b, 
                                       nile_Real_t v_M_c, 
@@ -445,7 +445,7 @@ static int gezira_GradientExtendPad_process(nile_t *nl,
                                             nile_Buffer_t **in_,
                                             nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_ImageExtendPad(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_ImageExtendPad(nile_t *nl, 
                                      nile_Real_t v_w, 
                                      nile_Real_t v_h);
 
@@ -461,7 +461,7 @@ static int gezira_GradientExtendRepeat_process(nile_t *nl,
                                                nile_Buffer_t **in_,
                                                nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_ImageExtendRepeat(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_ImageExtendRepeat(nile_t *nl, 
                                         nile_Real_t v_w, 
                                         nile_Real_t v_h);
 
@@ -477,7 +477,7 @@ static int gezira_GradientExtendReflect_process(nile_t *nl,
                                                 nile_Buffer_t **in_,
                                                 nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_ImageExtendReflect(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_ImageExtendReflect(nile_t *nl, 
                                          nile_Real_t v_w, 
                                          nile_Real_t v_h);
 
@@ -486,7 +486,7 @@ static int gezira_ImageExtendReflect_process(nile_t *nl,
                                              nile_Buffer_t **in_,
                                              nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_LinearGradientShape(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_LinearGradientShape(nile_t *nl, 
                                           nile_Real_t v_s00, 
                                           nile_Real_t v_dsdx, 
                                           nile_Real_t v_dsdy);
@@ -496,7 +496,7 @@ static int gezira_LinearGradientShape_process(nile_t *nl,
                                               nile_Buffer_t **in_,
                                               nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_RadialGradientShape(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_RadialGradientShape(nile_t *nl, 
                                           nile_Real_t v_C_x, 
                                           nile_Real_t v_C_y, 
                                           nile_Real_t v_r);
@@ -513,7 +513,7 @@ static int gezira_GradientColorBegin_process(nile_t *nl,
                                              nile_Buffer_t **in_,
                                              nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_GradientColorSpan(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_GradientColorSpan(nile_t *nl, 
                                         nile_Real_t v_c0_a, 
                                         nile_Real_t v_c0_r, 
                                         nile_Real_t v_c0_g, 
@@ -536,7 +536,7 @@ static int gezira_GradientColorEnd_process(nile_t *nl,
                                            nile_Buffer_t **in_,
                                            nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_Gradient(nile_t *nl /* kargs */ , 
+nile_Kernel_t *gezira_Gradient(nile_t *nl, 
                                nile_Kernel_t *v_s, 
                                nile_Kernel_t *v_e, 
                                nile_Kernel_t *v_c);
@@ -549,3 +549,4 @@ static int gezira_Gradient_process(nile_t *nl,
 
 
 #endif
+
