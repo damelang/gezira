@@ -1,0 +1,220 @@
+<html>
+  <head>
+    <title>Pen Stroke Fitting (using HTML Canvas Tag)</title>
+    <script>
+
+      var Point = function(x, y) { this.x = x; this.y = y; return this; }
+
+      var stroke_width = 10;
+      var path = [null];
+      var trackPoint = null;
+      var points = null;
+      var showHandles = false;
+
+      function fitToBezier(points) {
+        var n = points.length;
+        var i = Math.floor(n / 2);
+        var t = i / (n - 1);
+        var A = points[0];
+        var M = points[i];
+        var C = points[n - 1];
+        var x = (M.x - A.x * (1 - t) * (1 - t) - C.x * t * t) / (2 * t * (1 - t));
+        var y = (M.y - A.y * (1 - t) * (1 - t) - C.y * t * t) / (2 * t * (1 - t));
+        var B = t != 0 ? new Point(x, y) :
+                         new Point((A.x + C.x) / 2, (A.y + C.y) / 2);
+        return [A, B, C];
+      }
+
+      function errorOfFit(points, bezier) {
+        var sum = 0;
+        var n = points.length;
+        var A = bezier[0];
+        var B = bezier[1];
+        var C = bezier[2];
+        for (var i = 0; i < n; i++) {
+          var P = points[i];
+          var t = i / (n - 1);
+          var x = A.x * (1 - t) * (1 - t) + 2 * B.x * t * (1 - t) + C.x * t * t;
+          var y = A.y * (1 - t) * (1 - t) + 2 * B.y * t * (1 - t) + C.y * t * t;
+          var d = Math.sqrt((P.x - x) * (P.x - x) + (P.y - y) * (P.y - y));
+          sum += d * d;
+          //sum += d;
+        }
+        //return sum;
+        return sum / n;
+      }
+
+      /*
+      function errorOfFit(points, bezier) {
+        var max = 0;
+        var n = points.length;
+        var A = bezier[0];
+        var B = bezier[1];
+        var C = bezier[2];
+        for (var i = 0; i < n; i++) {
+          var P = points[i];
+          var t = i / (n - 1);
+          var x = A.x * (1 - t) * (1 - t) + 2 * B.x * t * (1 - t) + C.x * t * t;
+          var y = A.y * (1 - t) * (1 - t) + 2 * B.y * t * (1 - t) + C.y * t * t;
+          var d = Math.sqrt((P.x - x) * (P.x - x) + (P.y - y) * (P.y - y));
+          max = d > max ? d : max;
+        }
+        return max;
+      }
+      */
+
+      function addToPath(bezier, P) {
+        var A = bezier[0];
+        var B = bezier[1];
+        var C = bezier[2];
+        var x = (B.x + (A.x + C.x) / 2) / 2;
+        var y = (B.y + (A.y + C.y) / 2) / 2;
+        if (!P[P.length - 1])
+          P.push(bezier[0]);
+        P.push(new Point(x, y));
+        P.push(bezier[2]);
+      }
+
+      function drawHandles(cxt) {
+        var endPoint;
+        path.forEach(function(p) {
+          if (!p) {
+            endPoint = true;
+            return;
+          }
+          if (endPoint)
+            cxt.fillStyle = "rgba(255, 0, 0, 0.5)";
+          else
+            cxt.fillStyle = "rgba(0, 255, 0, 0.5)";
+          endPoint = !endPoint;
+          cxt.beginPath();
+          cxt.arc(p.x, p.y, 3, 0, 2*Math.PI, true);
+          cxt.closePath();
+          cxt.fill();
+        });
+      }
+
+      function render() {
+        var canvas = document.getElementsByTagName('canvas')[0];
+        var cxt = canvas.getContext('2d');
+        cxt.clearRect(0, 0, canvas.width, canvas.height);
+        cxt.fillStyle = "black";
+        cxt.lineWidth = stroke_width;
+        //cxt.lineJoin = "bevel";
+        cxt.lineJoin = "round";
+        //cxt.lineCap = "butt";
+        cxt.lineCap = "round";
+
+        var path_ = path.slice(0);
+        if (points && points.length > 1) {
+          var B = fitToBezier(points);
+          addToPath(B, path_);
+        }
+        if (path_.length < 3)
+          return;
+
+        var _p, p;
+        var endPoint;
+        cxt.beginPath();
+        path_.forEach(function(p_) {
+          if (!p_) {
+            cxt.stroke();
+            cxt.beginPath();
+          }
+          if (!p && p_) {
+            cxt.moveTo(p_.x, p_.y);
+            endPoint = true;
+          }
+          if (p && p_ && endPoint) {
+            var x = 2 * p.x - (_p.x + p_.x) / 2;
+            var y = 2 * p.y - (_p.y + p_.y) / 2;
+            cxt.quadraticCurveTo(x, y, p_.x, p_.y);
+          }
+          _p = p;
+          p = p_;
+          endPoint = !endPoint;
+        });
+        cxt.stroke();
+
+        if (showHandles)
+          drawHandles(cxt);
+      }
+
+      function newStrokeWidth(e) {
+        var w = parseFloat(e.value);
+        if (!isNaN(w)) {
+          stroke_width = w;
+          render();
+        }
+      };
+
+      function main() {
+      };
+
+      function mouseMove(e, c) {
+        var x = e.offsetX || (e.pageX - c.offsetLeft);
+        var y = e.offsetY || (e.pageY - c.offsetTop);
+        if (trackPoint) {
+          trackPoint.x = x;
+          trackPoint.y = y;
+          render();
+        }
+        else if (points) {
+          points.push(new Point(x, y));
+          var B = fitToBezier(points);
+          if (errorOfFit(points, B) > 5) {
+            var p = points.pop();
+            B = fitToBezier(points);
+            addToPath(B, path);
+            points = [B[2], p];
+          }
+          render();
+        }
+      };
+
+      function mouseUp(e) {
+        if (points && points.length > 1) {
+          var B = fitToBezier(points);
+          addToPath(B, path);
+          path.push(null);
+        }
+        trackPoint = null;
+        points = null;
+        render();
+      };
+
+      function mouseDown(e, c) {
+        var x = e.offsetX || (e.pageX - c.offsetLeft);
+        var y = e.offsetY || (e.pageY - c.offsetTop);
+        path.forEach(function(p) {
+          if (!p)
+            return;
+          var d = Math.sqrt((x - p.x) * (x - p.x) + (y - p.y) * (y - p.y));
+          if (d < 5)
+            trackPoint = p;
+        });
+        if (!showHandles)
+          trackPoint = null;
+        if (!trackPoint)
+          points = [new Point(x, y)];
+      };
+
+      function keyPress(e, c) {
+        showHandles = !showHandles;
+        render();
+      };
+
+    </script>
+  </head>
+  <body onload="main();"
+        onkeypress="keyPress(event, this);">
+    <canvas width=600 height=600
+      onmousedown="mouseDown(event, this);"
+      onmouseup="mouseUp(event);"
+      onmousemove="mouseMove(event, this);">
+    </canvas>
+      <p />
+      Stroke width: <input type="text" size="2" value="10"
+                     onchange="newStrokeWidth(this);">
+  </body>
+</html>
