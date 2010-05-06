@@ -24,9 +24,9 @@ StrokeJoinMiter (l, d : Real) : StrokeJoin
         w = ^(x + y) ?? u
         G = C + o × u
         J = C + o × v
-        if u ∙ w < 0
+        if u ∙ w < -0.01
             >> (G, G ~ J, J)
-        else if u ∙ w < l
+        else if u ∙ w ≤ l
             p = d × (x ∙ w)
             H = G + p × x
             I = J + p × y
@@ -45,7 +45,7 @@ StrokeJoinRound () : StrokeJoin
         w = ^(x + y) ?? u
         G = C + o × u
         J = C + o × v
-        if u ∙ w < 0
+        if u ∙ w < -0.01
             >> (G, G ~ J, J)
         else if u ∙ w < 0.9
             z = (w.y, -w.x)
