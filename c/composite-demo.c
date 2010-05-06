@@ -197,7 +197,7 @@ main (int argc, char **argv)
                                               image->pitch / 4)),
                 NULL);
 
-            nile_feed (nl, pipeline, path, path_n, 1);
+            nile_feed (nl, pipeline, path, 6, path_n, 1);
             nile_sync (nl);
 
         SDL_UnlockSurface (image);

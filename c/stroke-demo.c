@@ -47,7 +47,7 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
                                           DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                           image->pitch / 4)),
         NULL);
-        nile_feed (nl, pipeline, dot, 6, 1);
+        nile_feed (nl, pipeline, dot, 6, 6, 1);
     }
     nile_sync (nl);
 }
@@ -142,7 +142,7 @@ main (int argc, char **argv)
                 nile_path[j++] = C_y;
             }
 
-            nile_feed (nl, pipeline, nile_path, nile_path_n, 1);
+            nile_feed (nl, pipeline, nile_path, 6 nile_path_n, 1);
             nile_sync (nl);
 
             draw_handles (nl, path, path_n, image);
