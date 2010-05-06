@@ -88,7 +88,8 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-    char mem[2000000];
+#define MEM_N 2000000
+    char *mem = malloc (MEM_N);
     real angle = 0;
     real scale;
 
@@ -99,7 +100,7 @@ main (int argc, char **argv)
         DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
     image = SDL_GetVideoSurface ();
 
-    nl = nile_new (NTHREADS, mem, sizeof (mem));
+    nl = nile_new (NTHREADS, mem, MEM_N);
 
     for (;;) {
         angle += 0.005;
@@ -160,6 +161,7 @@ main (int argc, char **argv)
     }
 
     nile_free (nl);
+    free (mem);
     printf ("done\n");
 
     return 0;
