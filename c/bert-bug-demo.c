@@ -84,6 +84,7 @@ real path[] =
      293,  943,  293,  943,  336,  943,
      336,  943,  336,  943,  336,  748
 };
+//real path[0] = {};
 int path_n = sizeof (path) / sizeof (path[0]);
 
 int
