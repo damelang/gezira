@@ -47,7 +47,7 @@ CompositeXor : Compositor
 
 CompositePlus : Compositor
     ∀ (a, b)
-        >> (a + b) ⋖ 1
+        >> (a + b) ◁ 1
 
 CompositeMultiply : Compositor
     ∀ (a, b)
@@ -65,16 +65,16 @@ CompositeOverlay : Compositor
 
 CompositeDarken : Compositor
     ∀ (a, b)
-        >> (a × b.a) ⋖ (b × a.a) + (a ⊕ b)
+        >> (a × b.a) ◁ (b × a.a) + (a ⊕ b)
 
 CompositeLighten : Compositor
     ∀ (a, b)
-        >> (a × b.a) ⋗ (b × a.a) + (a ⊕ b)
+        >> (a × b.a) ▷ (b × a.a) + (a ⊕ b)
 
 CompositeColorDodge : Compositor
     ∀ (a, b)
         c = a.a × b.a + (a ⊕ b)
-        d = (b × a.a / (1 - a / a.a) + (a ⊕ b)) ⋖ 1
+        d = (b × a.a / (1 - a / a.a) + (a ⊕ b)) ◁ 1
         >> {c if a × b.a + b × a.a ≥ a.a × b.a, d}
 
 CompositeColorBurn : Compositor
@@ -98,7 +98,7 @@ CompositeSoftLight : Compositor
 
 CompositeDifference : Compositor
     ∀ (a, b)
-        c = a + b - 2 × ((a × b.a) ⋖ (b × a.a))
+        c = a + b - 2 × ((a × b.a) ◁ (b × a.a))
         >> (c.a + a.a × b.a, c.r, c.g, c.b)
 
 CompositeExclusion : Compositor
@@ -108,7 +108,7 @@ CompositeExclusion : Compositor
 
 CompositeSubtract : Compositor
     ∀ (a, b)
-        >> (a + b - 1) ⋗ 0
+        >> (a + b - 1) ▷ 0
 
 CompositeInvert : Compositor
     ∀ (a, b)

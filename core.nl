@@ -21,10 +21,10 @@ Canvas :: (start : Point) : (Color, Real) >>|
 (a : Real) % (n : Real) : Real
     a - ⌊ a / (n ? 1) ⌋ × n
 
-(a : Real) ⋖ (b : Real) : Real
+(a : Real) ◁ (b : Real) : Real
     {a if a < b, b}
 
-(a : Real) ⋗ (b : Real) : Real
+(a : Real) ▷ (b : Real) : Real
     {a if a > b, b}
 
 (a : Real) ~ (b : Real) : Real
@@ -79,10 +79,10 @@ FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
             local' = local + w × h
         else
             local' = run + w × h
-            >>        | local | ⋖ 1
-            >(n - 1)> | run   | ⋖ 1
+            >>        | local | ◁ 1
+            >(n - 1)> | run   | ◁ 1
     if local ≠ 0
-        >> | local | ⋖ 1
+        >> | local | ◁ 1
 
 CreateSamplePoints (start : Point) : Real >> Point
     x = start.x

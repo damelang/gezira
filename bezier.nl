@@ -4,15 +4,15 @@ TransformBeziers (M : Matrix) : Bezier >> Bezier
 
 ClipBeziers (min, max : Point) : Bezier >> Bezier
     ∀ (A, B, C)
-        bmin    = A ⋖ B ⋖ C
-        bmax    = A ⋗ B ⋗ C
+        bmin    = A ◁ B ◁ C
+        bmax    = A ▷ B ▷ C
         inside  = min  ≤ bmin ∧ bmax ≤ max
         outside = bmax ≤ min  ∨ max  ≤ bmin
         if inside.x ∧ inside.y
             >> (A, B, C)
         else if outside.x ∨ outside.y
-            cA = min ⋗ A ⋖ max
-            cC = min ⋗ C ⋖ max
+            cA = min ▷ A ◁ max
+            cC = min ▷ C ◁ max
             >> (cA, cA ~ cC, cC)
         else
             ABBC    = (A ~ B) ~ (B ~ C)
@@ -25,7 +25,7 @@ DecomposeBeziers : Bezier >> EdgeContribution
     ∀ (A, B, C)
         inside = (⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉)
         if inside.x ∧ inside.y
-            P = ⌊ A ⌋ ⋖ ⌊ C ⌋
+            P = ⌊ A ⌋ ◁ ⌊ C ⌋
             w = P.x + 1 - (C.x ~ A.x)
             h = C.y - A.y
             >> (P.x, P.y, w, h)
