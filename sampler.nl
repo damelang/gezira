@@ -35,12 +35,12 @@ TransformPoints (M : Matrix) : Point >> Point
 
 GradientExtendPad : GradientExtendMode
     ∀ s
-        >> 0 ⋗ s ⋖ 1
+        >> 0 ▷ s ◁ 1
 
 ImageExtendPad : ImageExtendMode
     D = (w, h)
     ∀ P
-        >> 0 ⋗ P ⋖ D
+        >> 0 ▷ P ◁ D
 
 GradientExtendRepeat : GradientExtendMode
     ∀ s
