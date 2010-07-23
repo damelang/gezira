@@ -77,7 +77,7 @@ FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
     local = 0
     run   = 0
     ∀ (x', _, w, h)
-        n = x' - x
+        n    = x' - x
         run' = run + h
         if n = 0
             local' = local + w × h
@@ -91,9 +91,9 @@ FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
 CreateSamplePoints (start : Point) : Real >> Point
     x = start.x
     y = start.y
-    ∀ c
-        x' = x + 1
+    ∀ _
         >> (x, y)
+        x' = x + 1
 
 Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
     & (x, y, _, _)
