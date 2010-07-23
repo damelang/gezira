@@ -57,8 +57,9 @@ Canvas :: (start : Point) : (Color, Real) >>|
 (M : Matrix) ⊗ (A : Point) : Point
     (M.a × A.x + M.c × A.y + M.e, M.b × A.x + M.d × A.y + M.f)
 
-CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-    ⇒ Interleave (s1, s2) → c
+TransformPoints (M : Matrix) : Point >> Point
+    ∀ P
+        >> M ⊗ P
 
 UniformColor (c : Color) : Sampler
     ∀ P
@@ -67,6 +68,9 @@ UniformColor (c : Color) : Sampler
 CompositeOver : Compositor
     ∀ (a, b)
         >> a + b × (1 - a.a)
+
+CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
+    ⇒ Interleave (s1, s2) → c
 
 FillBetweenEdges (x0 : Real) : EdgeContribution >> Real
     x     = x0
