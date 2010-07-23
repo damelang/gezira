@@ -5,6 +5,9 @@ Matrix <: (a, b, c, d, e, f : Real)
 Bezier <: (a, b, c : Point)
 EdgeContribution <: (x, y, w, h : Real)
 
+Sampler    :: Point >> Color
+Compositor :: (Color, Color) >> Color
+
 ¬(a : Real) : Real
     a = 0
 
@@ -52,9 +55,6 @@ EdgeContribution <: (x, y, w, h : Real)
 
 (M : Matrix) ⊗ (A : Point) : Point
     (M.a × A.x + M.c × A.y + M.e, M.b × A.x + M.d × A.y + M.f)
-
-Sampler    :: Point >> Color
-Compositor :: (Color, Color) >> Color
 
 TransformPoints (M : Matrix) : Point >> Point
     ∀ P
