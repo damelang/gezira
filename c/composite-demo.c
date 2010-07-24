@@ -181,7 +181,6 @@ main (int argc, char **argv)
                 //gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e - 150, I.f - 125),
                 gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
                 sampler, NULL);
-            //sampler = gezira_FilterSampler (nl, sampler);
             sampler = gezira_CompositeSamplers (nl,
                     sampler,
                     gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
