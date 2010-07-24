@@ -115,7 +115,6 @@ main (int argc, char **argv)
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                     gezira_TransformBeziers (nl, 0.00625, 0, 0, -0.00625, 334.3, 163.75),
                     gezira_ClipBeziers (nl, 0, 0, 540, 260),
-                    gezira_DecomposeBeziers (nl),
                     gezira_Render (nl,
                             gezira_CompositeSamplers (nl,
                                     gezira_UniformColor (nl, 1, 0, 0, 0),
