@@ -142,7 +142,6 @@ main (int argc, char **argv)
             sampler = nile_Pipeline (nl, 
                 gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
                 sampler, NULL);
-            //sampler = gezira_FilterSampler (nl, sampler);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
