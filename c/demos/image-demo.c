@@ -91,7 +91,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-#define MEM_N 2000000
+#define MEM_N 20000000
     char *mem = malloc (MEM_N);
     uint32_t texture_pixels[TEXTURE_WIDTH * TEXTURE_HEIGHT] = {0};
     real angle = 0;
@@ -140,6 +140,7 @@ main (int argc, char **argv)
             sampler = nile_Pipeline (nl,
                     gezira_ImageExtendReflect (nl, TEXTURE_WIDTH, TEXTURE_HEIGHT),
                     sampler, NULL);
+            sampler = gezira_BilinearFilter (nl, sampler);
             /*
              */
             sampler = nile_Pipeline (nl, 
