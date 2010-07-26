@@ -116,7 +116,6 @@ main (int argc, char **argv)
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_DecomposeBeziers (nl),
                 gezira_Render (nl, sampler,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
