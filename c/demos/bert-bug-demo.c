@@ -92,8 +92,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-#define MEM_N 2000000
-    char *mem = malloc (MEM_N);
+    char mem[100000];
 
     if (SDL_Init (SDL_INIT_VIDEO) == -1)
         DIE ("SDL_Init failed: %s", SDL_GetError ());
@@ -102,7 +101,7 @@ main (int argc, char **argv)
         DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
     image = SDL_GetVideoSurface ();
 
-    nl = nile_new (NTHREADS, mem, MEM_N);
+    nl = nile_new (NTHREADS, mem, sizeof (mem));
 
     for (;;) {
         SDL_Event event;
@@ -135,7 +134,6 @@ main (int argc, char **argv)
     }
 
     nile_free (nl);
-    free (mem);
     printf ("done\n");
 
     return 0;

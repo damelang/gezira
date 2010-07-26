@@ -91,8 +91,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-#define MEM_N 2000000
-    char *mem = malloc (MEM_N);
+    char mem[200000];
     uint32_t texture_pixels[TEXTURE_WIDTH * TEXTURE_HEIGHT] = {0};
     uint32_t background_pixels[DEFAULT_WIDTH * DEFAULT_HEIGHT] = {0};
     real angle = 0;
@@ -105,7 +104,7 @@ main (int argc, char **argv)
         DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
     image = SDL_GetVideoSurface ();
 
-    nl = nile_new (NTHREADS, mem, MEM_N);
+    nl = nile_new (NTHREADS, mem, sizeof (mem));
 
     ilInit ();
     if (argc < 3)
@@ -203,7 +202,6 @@ main (int argc, char **argv)
     }
 
     nile_free (nl);
-    free (mem);
     printf ("done\n");
 
     return 0;
