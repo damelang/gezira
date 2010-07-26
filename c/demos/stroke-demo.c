@@ -139,7 +139,7 @@ main (int argc, char **argv)
                 nile_path[j++] = C_y;
             }
 
-            nile_feed (nl, pipeline, nile_path, 6 nile_path_n, 1);
+            nile_feed (nl, pipeline, nile_path, 6, nile_path_n, 1);
             nile_sync (nl);
 
             draw_handles (nl, path, path_n, image);
