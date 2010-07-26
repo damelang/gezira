@@ -145,29 +145,28 @@ main (int argc, char **argv)
             matrix_t I = matrix_inverse (M);
 
             /*
-            */
             nile_Kernel_t *colors = nile_Pipeline (nl,
                 gezira_GradientColorSpan (nl,   1,    0.5,   0.1, 0.3,
                                                -1,   -0.5,   0.6,   0, 0.5),
                 gezira_GradientColorSpan (nl, 0.5,   0.25,   0.4, 0.3,
                                               0.5,   -0.5,  -0.8, 1.4, 0.5),
                 NULL);
+            */
             /*
             nile_Kernel_t *colors =
                 gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
                                               0,   -0.5,   0.6,   0, 1);
-             */
             nile_Kernel_t *sampler = gezira_Gradient (nl,
                     //gezira_LinearGradientShape (nl, -7, 0.015, 0.015),
                     gezira_RadialGradientShape (nl, 250, 250, 50),
                     gezira_GradientExtendReflect (nl),
                     colors);
-
+             */
             /*
+            */
             nile_Kernel_t *sampler =
                 gezira_ReadImage_ARGB32 (nl, texture_pixels, TEXTURE_WIDTH,
                                          TEXTURE_HEIGHT, TEXTURE_WIDTH);
-            */
             /*
             sampler = nile_Pipeline (nl,
                     gezira_ImageExtendPad (nl, TEXTURE_WIDTH, TEXTURE_HEIGHT),
@@ -177,14 +176,14 @@ main (int argc, char **argv)
             /*
              */
             sampler = nile_Pipeline (nl, 
-                //gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e - 150, I.f - 125),
-                gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
+                gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e - 150, I.f - 125),
+                //gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
                 sampler, NULL);
             sampler = gezira_CompositeSamplers (nl,
                     sampler,
                     gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                                  image->pitch / 4),
-                    gezira_CompositeOver (nl));
+                    gezira_CompositePlus (nl));
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
