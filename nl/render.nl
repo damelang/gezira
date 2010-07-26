@@ -47,5 +47,5 @@ Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
       Interleave (CreateSamplePoints (start) → s, (→)) →
       c (start)
 
-Render (s : Sampler, c : Canvas) : Bezier >>|
+Render (s : Sampler, c : Canvas) : EdgeContribution >>|
     ⇒ DecomposeBeziers → GroupBy (@y) → SortBy (@x) → Render' (s, c)
