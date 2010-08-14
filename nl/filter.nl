@@ -1,3 +1,15 @@
+SumWeightedColors (n : Real) : (Color, Real) >> Color
+    sum = 0 : Color
+    i   = 1
+    ∀ (c, w)
+        if i = n
+            >> 0 ▷ (sum + c × w) ◁ 1
+            sum' = 0
+            i'   = 1
+        else
+            sum' = sum + c × w
+            i'   = i + 1
+
 BilinearFilterPoints : Point >> Point
     ∀ P
         S = ⌊ P - 0.5 ⌋ + 0.5
@@ -14,24 +26,38 @@ BilinearFilterWeights : Point >> Real
         >> (1 - u) × (1 - v) >> u × (1 - v)
         >> (1 - u) × (    v) >> u × (    v)
 
-{-
-BilinearFilterEnd : (Color, Real) >> Color
-    ∀ (c1, w1), (c2, w2), (c3, w3), (c4, w4)
-        >> c1 × w1 + c2 × w2 + c3 × w3 + c4 × w4
--}
-
-BilinearFilterCombine : (Color, Real) >> Color
-    n   = 1
-    sum = 0 : Color
-    ∀ (c, w)
-        if n = 4
-            >> sum + c × w
-            n'   = 1
-            sum' = 0
-        else
-            n'   = n + 1
-            sum' = sum + c × w
-
 BilinearFilter (s : Sampler) : Sampler
     ⇒ Interleave (BilinearFilterPoints → s,
-                  BilinearFilterWeights    ) → BilinearFilterCombine
+                  BilinearFilterWeights    ) → SumWeightedColors (4)
+
+KeysWeights : Point >> Real
+    ∀ D
+        T = |D|
+        S = {  1.5 × T × T × T - 2.5 × T × T + 1           if T < 1,
+              -0.5 × T × T × T + 2.5 × T × T - 4 × T + 2   if T < 2,
+                 0                                                  }
+        >> S.x × S.y
+
+BicubicFilterPoints : Point >> Point
+    ∀ P
+        S = ⌊ P - 0.5 ⌋ + 0.5
+        x = S.x
+        y = S.y
+        >> (x-1, y-1) >> (x, y-1) >> (x+1, y-1) >> (x+2, y-1)
+        >> (x-1, y  ) >> (x, y  ) >> (x+1, y  ) >> (x+2, y  )
+        >> (x-1, y+1) >> (x, y+1) >> (x+1, y+1) >> (x+2, y+1)
+        >> (x-1, y+2) >> (x, y+2) >> (x+1, y+2) >> (x+2, y+2)
+
+BicubicFilterDeltas : Point >> Point
+    ∀ P 
+        S = ⌊ P - 0.5 ⌋ + 0.5
+        x = S.x
+        y = S.y
+        >> (x-1, y-1) - P >> (x, y-1) - P >> (x+1, y-1) - P >> (x+2, y-1) - P
+        >> (x-1, y  ) - P >> (x, y  ) - P >> (x+1, y  ) - P >> (x+2, y  ) - P
+        >> (x-1, y+1) - P >> (x, y+1) - P >> (x+1, y+1) - P >> (x+2, y+1) - P
+        >> (x-1, y+2) - P >> (x, y+2) - P >> (x+1, y+2) - P >> (x+2, y+2) - P
+
+BicubicFilter (s : Sampler) : Sampler
+    ⇒ Interleave (BicubicFilterPoints → s,
+                  BicubicFilterDeltas → KeysWeights) → SumWeightedColors (16)

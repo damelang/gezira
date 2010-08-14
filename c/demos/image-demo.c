@@ -91,7 +91,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-    char mem[300000];
+    char mem[400000];
     uint32_t texture_pixels[TEXTURE_WIDTH * TEXTURE_HEIGHT] = {0};
     real angle = 0;
     real scale;
@@ -107,12 +107,13 @@ main (int argc, char **argv)
 
     ilInit ();
     ilBindImage (iluGenImage ());
-    if (argc < 1)
+    if (argc < 3)
         return -1;
     printf ("loading: %s\n", argv[1]);
     ilLoadImage (argv[1]);
     ilCopyPixels (0, 0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT, 1, IL_BGRA,
                   IL_UNSIGNED_BYTE, &texture_pixels);
+    int filter = atoi (argv[2]);
 
     for (;;) {
         angle += 0.001;
@@ -139,7 +140,10 @@ main (int argc, char **argv)
             sampler = nile_Pipeline (nl,
                     gezira_ImageExtendReflect (nl, TEXTURE_WIDTH, TEXTURE_HEIGHT),
                     sampler, NULL);
-            sampler = gezira_BilinearFilter (nl, sampler);
+            if (filter == 2)
+                sampler = gezira_BilinearFilter (nl, sampler);
+            if (filter == 3)
+                sampler = gezira_BicubicFilter (nl, sampler);
             /*
              */
             sampler = nile_Pipeline (nl, 
