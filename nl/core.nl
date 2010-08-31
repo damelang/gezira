@@ -70,3 +70,12 @@ UniformColor (c : Color) : Sampler
 
 CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
     ⇒ Interleave (s1, s2) → c
+
+CalculateBounds : Bezier >> (Point, Point)
+    & (M, _, _)
+    min = M
+    max = M
+    ∀ (A, B, C)
+        min' = min ◁ A ◁ B ◁ C
+        max' = max ▷ A ▷ B ▷ C
+    >> (min, max)
