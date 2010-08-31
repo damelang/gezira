@@ -62,6 +62,13 @@ static int gezira_CompositeSamplers_process(nile_t *nl,
                                             nile_Buffer_t **in_,
                                             nile_Buffer_t **out_);
 
+nile_Kernel_t *gezira_CalculateBounds(nile_t *nl);
+
+static int gezira_CalculateBounds_process(nile_t *nl,
+                                          nile_Kernel_t *k_,
+                                          nile_Buffer_t **in_,
+                                          nile_Buffer_t **out_);
+
 nile_Kernel_t *gezira_ClipBeziers(nile_t *nl, 
                                   nile_Real_t v_min_x, 
                                   nile_Real_t v_min_y, 
