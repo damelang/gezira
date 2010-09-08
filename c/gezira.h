@@ -262,6 +262,14 @@ static int gezira_CompositeInvert_process(nile_t *nl,
                                           nile_Buffer_t **in_,
                                           nile_Buffer_t **out_);
 
+nile_Kernel_t *gezira_InverseOver(nile_t *nl, 
+                                  nile_Real_t v_a);
+
+static int gezira_InverseOver_process(nile_t *nl,
+                                      nile_Kernel_t *k_,
+                                      nile_Buffer_t **in_,
+                                      nile_Buffer_t **out_);
+
 nile_Kernel_t *gezira_SumWeightedColors(nile_t *nl, 
                                         nile_Real_t v_n);
 

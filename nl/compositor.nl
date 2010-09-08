@@ -117,3 +117,9 @@ CompositeSubtract : Compositor
 CompositeInvert : Compositor
     ∀ (a, b)
         >> (b.a, 1 - b.r, 1 - b.g, 1 - b.b)
+
+InverseOver (a : Real) : Color >> Color
+    ∀ C
+        D = C / (C.a ? 1)
+        E = a × (1 - D) + (1 - a) × D
+        >> (C.a, C.a × E.r, C.a × E.g, C.a × E.b)
