@@ -15,4 +15,4 @@ ClipBeziers (min, max : Point) : Bezier >> Bezier
             nearmin = | ABBC - min | < 0.1
             nearmax = | ABBC - max | < 0.1
             M       = {min if nearmin, max if nearmax, ABBC}
-            << (A, A ~ B, M) << (M, B ~ C, C)
+            << (M, B ~ C, C) << (A, A ~ B, M) 
