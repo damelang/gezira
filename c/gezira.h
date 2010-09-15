@@ -300,12 +300,12 @@ static int gezira_BilinearFilter_process(nile_t *nl,
                                          nile_Buffer_t **in_,
                                          nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_KeysWeights(nile_t *nl);
+nile_Kernel_t *gezira_BicubicFilterWeights(nile_t *nl);
 
-static int gezira_KeysWeights_process(nile_t *nl,
-                                      nile_Kernel_t *k_,
-                                      nile_Buffer_t **in_,
-                                      nile_Buffer_t **out_);
+static int gezira_BicubicFilterWeights_process(nile_t *nl,
+                                               nile_Kernel_t *k_,
+                                               nile_Buffer_t **in_,
+                                               nile_Buffer_t **out_);
 
 nile_Kernel_t *gezira_BicubicFilterPoints(nile_t *nl);
 
@@ -328,6 +328,46 @@ static int gezira_BicubicFilter_process(nile_t *nl,
                                         nile_Kernel_t *k_,
                                         nile_Buffer_t **in_,
                                         nile_Buffer_t **out_);
+
+nile_Kernel_t *gezira_GaussianBlur21x1Points(nile_t *nl);
+
+static int gezira_GaussianBlur21x1Points_process(nile_t *nl,
+                                                 nile_Kernel_t *k_,
+                                                 nile_Buffer_t **in_,
+                                                 nile_Buffer_t **out_);
+
+nile_Kernel_t *gezira_GaussianBlur1x21Points(nile_t *nl);
+
+static int gezira_GaussianBlur1x21Points_process(nile_t *nl,
+                                                 nile_Kernel_t *k_,
+                                                 nile_Buffer_t **in_,
+                                                 nile_Buffer_t **out_);
+
+nile_Kernel_t *gezira_GaussianBlur21x1Weights(nile_t *nl, 
+                                              nile_Real_t v_f);
+
+static int gezira_GaussianBlur21x1Weights_process(nile_t *nl,
+                                                  nile_Kernel_t *k_,
+                                                  nile_Buffer_t **in_,
+                                                  nile_Buffer_t **out_);
+
+nile_Kernel_t *gezira_GaussianBlur21x1(nile_t *nl, 
+                                       nile_Real_t v_a, 
+                                       nile_Kernel_t *v_s);
+
+static int gezira_GaussianBlur21x1_process(nile_t *nl,
+                                           nile_Kernel_t *k_,
+                                           nile_Buffer_t **in_,
+                                           nile_Buffer_t **out_);
+
+nile_Kernel_t *gezira_GaussianBlur1x21(nile_t *nl, 
+                                       nile_Real_t v_a, 
+                                       nile_Kernel_t *v_s);
+
+static int gezira_GaussianBlur1x21_process(nile_t *nl,
+                                           nile_Kernel_t *k_,
+                                           nile_Buffer_t **in_,
+                                           nile_Buffer_t **out_);
 
 typedef struct {
     nile_Kernel_t base;
