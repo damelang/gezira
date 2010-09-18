@@ -17,8 +17,8 @@ typedef nile_Real_t real;
 #define SHADOW_ALPHA     0.8
 #define SHADOW_OFFSET_X  2.0
 #define SHADOW_OFFSET_Y  5.0
-#define BLUR_WIDTH      21
-#define BLUR_FLATTEN_FACTOR  0.01
+#define BLUR_WIDTH         5
+#define BLUR_FLATTEN_FACTOR  0.5
 
 #define DIE(s, ...) \
 do { \
@@ -168,7 +168,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
     // blur in x dimension
 
     sampler =
-        gezira_GaussianBlur21x1 (nl, BLUR_FLATTEN_FACTOR,
+        gezira_GaussianBlur5x1 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
                 gezira_ReadImage_ARGB32 (nl, shadow_pixels[0],
@@ -189,7 +189,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
     // blur in y dimension
 
     sampler =
-        gezira_GaussianBlur1x21 (nl, BLUR_FLATTEN_FACTOR,
+        gezira_GaussianBlur1x5 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
                 gezira_ReadImage_ARGB32 (nl, shadow_pixels[1],
@@ -240,6 +240,7 @@ main (int argc, char **argv)
     real angle = 0;
     real scale;
     uint32_t background_pixels[DEFAULT_WIDTH * DEFAULT_HEIGHT] = {0};
+    int frames = 0;
 
     real stroke_path[] = {100, 100, 350, 200, 300, 100, 400, 200, 100, 400};
     int stroke_path_n = sizeof (stroke_path) / sizeof (stroke_path[0]);
@@ -385,10 +386,11 @@ main (int argc, char **argv)
 
         SDL_UnlockSurface (image);
         SDL_Flip (image);
+        frames++;
     }
 
     nile_free (nl);
-    printf ("done\n");
+    printf ("frames: %d\n", frames);
 
     return 0;
 }

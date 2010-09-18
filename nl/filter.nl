@@ -32,14 +32,6 @@ BilinearFilter (s : Sampler) : Sampler
     ⇒ Interleave (BilinearFilterPoints → s,
                   BilinearFilterWeights    ) → SumWeightedColors (4)
 
-BicubicFilterWeights : Point >> Real
-    ∀ D
-        T = |D|
-        S = {  1.5 × T × T × T - 2.5 × T × T + 1           if T < 1,
-              -0.5 × T × T × T + 2.5 × T × T - 4 × T + 2   if T < 2,
-                 0                                                  }
-        >> S.x × S.y
-
 BicubicFilterPoints : Point >> Point
     ∀ P
         S = ⌊ P - 0.5 ⌋ + 0.5
@@ -60,9 +52,69 @@ BicubicFilterDeltas : Point >> Point
         >> (x-1, y+1) - P >> (x, y+1) - P >> (x+1, y+1) - P >> (x+2, y+1) - P
         >> (x-1, y+2) - P >> (x, y+2) - P >> (x+1, y+2) - P >> (x+2, y+2) - P
 
+BicubicFilterWeights : Point >> Real
+    ∀ D
+        T = |D|
+        S = {  1.5 × T × T × T - 2.5 × T × T + 1           if T < 1,
+              -0.5 × T × T × T + 2.5 × T × T - 4 × T + 2   if T < 2,
+                 0                                                  }
+        >> S.x × S.y
+
 BicubicFilter (s : Sampler) : Sampler
     ⇒ Interleave (BicubicFilterPoints → s,
                   BicubicFilterDeltas → BicubicFilterWeights) → SumWeightedColors (16)
+
+GaussianBlur5x1Points : Point >> Point
+    ∀ (x, y)
+        >> (x-2, y) >> (x-1, y) >> (x, y) >> (x+1, y) >> (x+2, y)
+
+GaussianBlur1x5Points : Point >> Point
+    ∀ (x, y)
+        >> (x, y-2) >> (x, y-1) >> (x, y) >> (x, y+1) >> (x, y+2)
+
+GaussianBlur5x1Weights (f : Real) : Point >> Real
+    a = 16 × f
+    s = 16 + 5 × a
+    ∀ _
+        >> ((a + 1) / s) >> ((a + 4) / s) >> ((a + 6) / s)
+        >> ((a + 4) / s) >> ((a + 1) / s)
+
+GaussianBlur5x1 (f : Real, s : Sampler) : Sampler
+    ⇒ Interleave (GaussianBlur5x1Points → s,
+                  GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
+
+GaussianBlur1x5 (f : Real, s : Sampler) : Sampler
+    ⇒ Interleave (GaussianBlur1x5Points → s,
+                  GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
+
+GaussianBlur11x1Points : Point >> Point
+    ∀ (x, y)
+        >> (x-5, y) >> (x-4, y) >> (x-3, y) >> (x-2, y) >> (x-1, y)
+        >> (x  , y)
+        >> (x+1, y) >> (x+2, y) >> (x+3, y) >> (x+4, y) >> (x+5, y)
+
+GaussianBlur1x11Points : Point >> Point
+    ∀ (x, y)
+        >> (x, y-5) >> (x, y-4) >> (x, y-3) >> (x, y-2) >> (x, y-1)
+        >> (x, y  )
+        >> (x, y+1) >> (x, y+2) >> (x, y+3) >> (x, y+4) >> (x, y+5)
+
+GaussianBlur11x1Weights (f : Real) : Point >> Real
+    a = 1024 × f
+    s = 1024 + 11 × a
+    ∀ _
+        >> ((a +   1) / s) >> ((a +  10) / s) >> ((a +  45) / s)
+        >> ((a + 120) / s) >> ((a + 210) / s) >> ((a + 252) / s)
+        >> ((a + 210) / s) >> ((a + 120) / s) >> ((a +  45) / s)
+        >> ((a +  10) / s) >> ((a +   1) / s)
+
+GaussianBlur11x1 (f : Real, s : Sampler) : Sampler
+    ⇒ Interleave (GaussianBlur11x1Points → s,
+                  GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
+
+GaussianBlur1x11 (f : Real, s : Sampler) : Sampler
+    ⇒ Interleave (GaussianBlur1x11Points → s,
+                  GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
 
 GaussianBlur21x1Points : Point >> Point
     ∀ (x, y)
@@ -92,10 +144,10 @@ GaussianBlur21x1Weights (f : Real) : Point >> Real
         >> ((a +  15504) / s) >> ((a +   4845) / s) >> ((a +   1140) / s)
         >> ((a +    190) / s) >> ((a +     20) / s) >> ((a +      1) / s)
 
-GaussianBlur21x1 (a : Real, s : Sampler) : Sampler
+GaussianBlur21x1 (f : Real, s : Sampler) : Sampler
     ⇒ Interleave (GaussianBlur21x1Points → s,
-                  GaussianBlur21x1Weights (a)) → SumWeightedColors (21)
+                  GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
 
-GaussianBlur1x21 (a : Real, s : Sampler) : Sampler
+GaussianBlur1x21 (f : Real, s : Sampler) : Sampler
     ⇒ Interleave (GaussianBlur1x21Points → s,
-                  GaussianBlur21x1Weights (a)) → SumWeightedColors (21)
+                  GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
