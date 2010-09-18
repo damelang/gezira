@@ -123,3 +123,12 @@ InverseOver (a : Real) : Color >> Color
         D = C / (C.a ? 1)
         E = a × (1 - D) + (1 - a) × D
         >> (C.a, C.a × E.r, C.a × E.g, C.a × E.b)
+
+ContrastiveOver (a : Real) : Color >> Color
+    ∀ C
+        D = C / (C.a ? 1)
+        E = (1, {0.5 if D.r < 0.25, 0},
+                 0.5,
+                {1   if D.b < 0.75, 0.5}) : Color
+        F = (1 - a) × D + a × E
+        >> (C.a, C.a × F.r, C.a × F.g, C.a × F.b)
