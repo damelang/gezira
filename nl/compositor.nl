@@ -127,8 +127,8 @@ InverseOver (a : Real) : Color >> Color
 ContrastiveOver (a : Real) : Color >> Color
     ∀ C
         D = C / (C.a ? 1)
-        E = (1, {0.5 if D.r < 0.25, 0},
-                 0.5,
-                {1   if D.b < 0.75, 0.5}) : Color
+        E = (1, {1/2 if D.r < 1/4, 0  },
+                {5/8 if D.g < 1/2, 3/8},
+                {1   if D.b < 3/4, 1/2}) : Color
         F = (1 - a) × D + a × E
         >> (C.a, C.a × F.r, C.a × F.g, C.a × F.b)
