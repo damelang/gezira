@@ -126,7 +126,7 @@ main (int argc, char **argv)
         if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
             break;
 
-        SDL_FillRect (image, NULL, 0xffffffff);
+        SDL_FillRect (image, NULL, 0xff407FBF);
         SDL_BlitSurface (background, NULL, image, NULL);
         SDL_LockSurface (image);
 
