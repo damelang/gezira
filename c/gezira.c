@@ -434,7 +434,7 @@ static int gezira_CalculateBounds_process(nile_t *nl,
     nile_Real_t v_max_y = k->v_max_y;
     nile_Real_t v_max__y;
     
-    if (!k_->initialized) {
+    if (!k_->initialized && in->i < in->n) {
         k_->initialized = 1;
         nile_Real_t t_1_x;
         nile_Real_t t_1_y;
@@ -10183,7 +10183,7 @@ static int gezira_PrepareBeziersForJoin_process(nile_t *nl,
     nile_Real_t v_F_y = k->v_F_y;
     nile_Real_t v_F__y;
     
-    if (!k_->initialized) {
+    if (!k_->initialized && in->i < in->n) {
         k_->initialized = 1;
         v_A_x = in->data[in->i++];
         v_A_y = in->data[in->i++];
@@ -10544,7 +10544,7 @@ static int gezira_PrepareBeziersForCap_process(nile_t *nl,
     nile_Real_t v_F_y = k->v_F_y;
     nile_Real_t v_F__y;
     
-    if (!k_->initialized) {
+    if (!k_->initialized && in->i < in->n) {
         k_->initialized = 1;
         v_A_x = in->data[in->i++];
         v_A_y = in->data[in->i++];
