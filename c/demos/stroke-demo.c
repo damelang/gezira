@@ -33,7 +33,7 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
         nile_Kernel_t *stroke =
             gezira_StrokeBeziers (nl, 3, gezira_StrokeJoinRound (nl),
                                          gezira_StrokeJoinRound (nl));
-        nile_Kernel_t *sampler = gezira_CompositeSamplers (nl,
+        nile_Kernel_t *texture = gezira_CompositeTextures (nl,
                 gezira_UniformColor (nl, 0.5, 1, 0, 0),
                 gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                          image->pitch / 4),
@@ -41,7 +41,7 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
         nile_Kernel_t *pipeline = nile_Pipeline (nl,
             stroke,
             gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-            gezira_Render (nl, sampler,
+            gezira_Render (nl, texture,
                 gezira_WriteImage_ARGB32 (nl, image->pixels,
                                           DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                           image->pitch / 4)),
@@ -112,11 +112,11 @@ main (int argc, char **argv)
                                       //gezira_StrokeJoinRound (nl));
                                       //gezira_StrokeJoinMiter (nl, 1, 100));
                                       gezira_StrokeJoinMiter (nl, 1, 0));
-            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 0, 0, 0);
+            nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 0, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),

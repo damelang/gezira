@@ -40,12 +40,12 @@ CreateSamplePoints (start : Point) : Real >> Point
         >> (x, y)
         x' = x + 1
 
-Render' (s : Sampler, c : Canvas) : EdgeContribution >>|
+Render' (t : Texture, c : Canvas) : EdgeContribution >>|
     & (x, y, _, _)
     start = (x, y) + 0.5
     ⇒ FillBetweenEdges (x) →
-      Interleave (CreateSamplePoints (start) → s, (→)) →
+      Interleave (CreateSamplePoints (start) → t, (→)) →
       c (start)
 
-Render (s : Sampler, c : Canvas) : Bezier >>|
-    ⇒ DecomposeBeziers → GroupBy (@y) → SortBy (@x) → Render' (s, c)
+Render (t : Texture, c : Canvas) : Bezier >>|
+    ⇒ DecomposeBeziers → GroupBy (@y) → SortBy (@x) → Render' (t, c)

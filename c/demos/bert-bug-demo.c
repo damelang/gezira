@@ -115,7 +115,7 @@ main (int argc, char **argv)
                     gezira_TransformBeziers (nl, 0.00625, 0, 0, -0.00625, 334.3, 163.75),
                     gezira_ClipBeziers (nl, 0, 0, 540, 260),
                     gezira_Render (nl,
-                            gezira_CompositeSamplers (nl,
+                            gezira_CompositeTextures (nl,
                                     gezira_UniformColor (nl, 1, 0, 0, 0),
                                     gezira_ReadImage_ARGB32 (nl, image->pixels,
                                                       DEFAULT_WIDTH, DEFAULT_HEIGHT,

@@ -156,7 +156,7 @@ main (int argc, char **argv)
             nile_Kernel_t *colors =
                 gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
                                               0,   -0.5,   0.6,   0, 1);
-            nile_Kernel_t *sampler = gezira_Gradient (nl,
+            nile_Kernel_t *texture = gezira_Gradient (nl,
                     //gezira_LinearGradientShape (nl, -7, 0.015, 0.015),
                     gezira_RadialGradientShape (nl, 250, 250, 50),
                     gezira_GradientExtendReflect (nl),
@@ -164,30 +164,30 @@ main (int argc, char **argv)
              */
             /*
             */
-            nile_Kernel_t *sampler =
+            nile_Kernel_t *texture =
                 gezira_ReadImage_ARGB32 (nl, texture_pixels, TEXTURE_WIDTH,
                                          TEXTURE_HEIGHT, TEXTURE_WIDTH);
             /*
-            sampler = nile_Pipeline (nl,
+            texture = nile_Pipeline (nl,
                     gezira_ImageExtendPad (nl, TEXTURE_WIDTH, TEXTURE_HEIGHT),
-                    sampler, NULL);
+                    texture, NULL);
              */
 
             /*
              */
-            sampler = nile_Pipeline (nl, 
+            texture = nile_Pipeline (nl, 
                 gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e - 150, I.f - 125),
                 //gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
-                sampler, NULL);
-            sampler = gezira_CompositeSamplers (nl,
-                    sampler,
+                texture, NULL);
+            texture = gezira_CompositeTextures (nl,
+                    texture,
                     gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                                  image->pitch / 4),
                     gezira_CompositePlus (nl));
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),
