@@ -132,27 +132,27 @@ main (int argc, char **argv)
             M = matrix_translate (M, -250, -250);
             matrix_t I = matrix_inverse (M);
 
-            nile_Kernel_t *sampler =
+            nile_Kernel_t *texture =
                 gezira_ReadImage_ARGB32 (nl, texture_pixels, TEXTURE_WIDTH,
                                          TEXTURE_HEIGHT, TEXTURE_WIDTH);
             /*
              */
-            sampler = nile_Pipeline (nl,
+            texture = nile_Pipeline (nl,
                     gezira_ImageExtendReflect (nl, TEXTURE_WIDTH, TEXTURE_HEIGHT),
-                    sampler, NULL);
+                    texture, NULL);
             if (filter == 2)
-                sampler = gezira_BilinearFilter (nl, sampler);
+                texture = gezira_BilinearFilter (nl, texture);
             if (filter == 3)
-                sampler = gezira_BicubicFilter (nl, sampler);
+                texture = gezira_BicubicFilter (nl, texture);
             /*
              */
-            sampler = nile_Pipeline (nl, 
+            texture = nile_Pipeline (nl, 
                 gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e - 150, I.f - 125),
-                sampler, NULL);
+                texture, NULL);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),

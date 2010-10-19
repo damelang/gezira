@@ -109,11 +109,11 @@ main (int argc, char **argv)
             M = matrix_translate (M, -250, -250);
 
             // render star
-            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
+            nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 1, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),
@@ -152,13 +152,13 @@ main (int argc, char **argv)
             bounds_path[20] = bounds[0]; bounds_path[21] = (bounds[3] + bounds[1]) / 2;
             bounds_path[22] = bounds[0]; bounds_path[23] = bounds[1];
 
-            sampler = gezira_UniformColor (nl, 1, 0, 0, 1);
+            texture = gezira_UniformColor (nl, 1, 0, 0, 1);
             pipeline = nile_Pipeline (nl,
                 gezira_StrokeBeziers (nl, 1,
                     gezira_StrokeJoinMiter (nl, 0, 0),
                     gezira_StrokeJoinMiter (nl, 0, 0)),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),

@@ -91,7 +91,7 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
         nile_Kernel_t *stroke =
             gezira_StrokeBeziers (nl, 3, gezira_StrokeJoinRound (nl),
                                          gezira_StrokeJoinRound (nl));
-        nile_Kernel_t *sampler = gezira_CompositeSamplers (nl,
+        nile_Kernel_t *texture = gezira_CompositeTextures (nl,
                 gezira_UniformColor (nl, 0.5, 1, 0, 0),
                 gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                          image->pitch / 4),
@@ -99,7 +99,7 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
         nile_Kernel_t *pipeline = nile_Pipeline (nl,
             stroke,
             gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-            gezira_Render (nl, sampler,
+            gezira_Render (nl, texture,
                 gezira_WriteImage_ARGB32 (nl, image->pixels,
                                           DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                           image->pitch / 4)),
@@ -113,7 +113,7 @@ void
 draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *image)
 {
     uint32_t shadow_pixels[2][DEFAULT_WIDTH * DEFAULT_HEIGHT] = {{0},{0}};
-    nile_Kernel_t *pipeline, *sampler;
+    nile_Kernel_t *pipeline, *texture;
     real bbox[4];
     int bbox_path_n = 4*6;
     real bbox_path[bbox_path_n];
@@ -167,7 +167,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
 
     // blur in x dimension
 
-    sampler =
+    texture =
         gezira_GaussianBlur5x1 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
@@ -177,7 +177,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
                 NULL));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, sampler,
+        gezira_Render (nl, texture,
             gezira_WriteImage_ARGB32 (nl, shadow_pixels[1],
                                       DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                       DEFAULT_WIDTH)),
@@ -188,7 +188,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
 
     // blur in y dimension
 
-    sampler =
+    texture =
         gezira_GaussianBlur1x5 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
@@ -198,7 +198,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
                 NULL));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, sampler,
+        gezira_Render (nl, texture,
             gezira_WriteImage_ARGB32 (nl, shadow_pixels[0],
                                       DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                       DEFAULT_WIDTH)),
@@ -209,7 +209,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
 
     // composite
 
-    sampler = gezira_CompositeSamplers (nl,
+    texture = gezira_CompositeTextures (nl,
             gezira_ReadImage_ARGB32 (nl, shadow_pixels[0],
                                       DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                       DEFAULT_WIDTH),
@@ -219,7 +219,7 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
             gezira_CompositeOver (nl));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, sampler,
+        gezira_Render (nl, texture,
             gezira_WriteImage_ARGB32 (nl, image->pixels,
                                       DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                       image->pitch / 4)),
@@ -245,7 +245,7 @@ main (int argc, char **argv)
     real stroke_path[] = {100, 100, 350, 200, 300, 100, 400, 200, 100, 400};
     int stroke_path_n = sizeof (stroke_path) / sizeof (stroke_path[0]);
 
-    nile_Kernel_t *stroke, *sampler, *pipeline;
+    nile_Kernel_t *stroke, *texture, *pipeline;
     real gezira_stroke_path[stroke_path_n / 4 * 6];
     int gezira_stroke_path_n = sizeof (gezira_stroke_path) /
                                sizeof (gezira_stroke_path[0]);
@@ -345,11 +345,11 @@ main (int argc, char **argv)
                 gezira_StrokeBeziers (nl, STROKE_WIDTH / 2,
                                       gezira_StrokeJoinRound (nl),
                                       gezira_StrokeJoinRound (nl));
-            sampler = gezira_UniformColor (nl, 1, 0, 0, 0);
+            texture = gezira_UniformColor (nl, 1, 0, 0, 0);
             pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),
@@ -371,11 +371,11 @@ main (int argc, char **argv)
 
             // star
 
-            sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
+            texture = gezira_UniformColor (nl, 1, 1, 0, 0);
             pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),

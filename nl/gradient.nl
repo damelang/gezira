@@ -35,5 +35,5 @@ GradientColorEnd : (Real, Color) >> Color
     ∀ (_, c)
         >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
 
-Gradient (s : GradientShape, m : GradientExtendMode, c : GradientColor) : Sampler
+Gradient (s : GradientShape, m : GradientExtendMode, c : GradientColor) : Texture
     ⇒ s → m → GradientColorBegin → c → GradientColorEnd

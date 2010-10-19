@@ -5,7 +5,7 @@ Matrix <: (a, b, c, d, e, f : Real)
 Bezier <: (a, b, c : Point)
 EdgeContribution <: (x, y, w, h : Real)
 
-Sampler    :: Point >> Color
+Texture    :: Point >> Color
 Compositor :: (Color, Color) >> Color
 
 ¬(a : Real) : Real
@@ -64,12 +64,12 @@ TransformBeziers (M : Matrix) : Bezier >> Bezier
     ∀ (A, B, C)
         >> (M ⊗ A, M ⊗ B, M ⊗ C)
 
-UniformColor (c : Color) : Sampler
+UniformColor (c : Color) : Texture
     ∀ P
         >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
 
-CompositeSamplers (s1 : Sampler, s2 : Sampler, c : Compositor) : Sampler
-    ⇒ Interleave (s1, s2) → c
+CompositeTextures (t1 : Texture, t2 : Texture, c : Compositor) : Texture
+    ⇒ Interleave (t1, t2) → c
 
 CalculateBounds : Bezier >> (Point, Point)
     & (M, _, _)

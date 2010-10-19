@@ -5,9 +5,9 @@
 
 typedef struct {
     nile_Kernel_t base;
-} gezira_Sampler_t;
+} gezira_Texture_t;
 
-nile_Kernel_t *gezira_Sampler_clone(nile_t *nl, nile_Kernel_t *k_);
+nile_Kernel_t *gezira_Texture_clone(nile_t *nl, nile_Kernel_t *k_);
 
 typedef struct {
     nile_Kernel_t base;
@@ -52,12 +52,12 @@ static int gezira_UniformColor_process(nile_t *nl,
                                        nile_Buffer_t **in_,
                                        nile_Buffer_t **out_);
 
-nile_Kernel_t *gezira_CompositeSamplers(nile_t *nl, 
-                                        nile_Kernel_t *v_s1, 
-                                        nile_Kernel_t *v_s2, 
+nile_Kernel_t *gezira_CompositeTextures(nile_t *nl, 
+                                        nile_Kernel_t *v_t1, 
+                                        nile_Kernel_t *v_t2, 
                                         nile_Kernel_t *v_c);
 
-static int gezira_CompositeSamplers_process(nile_t *nl,
+static int gezira_CompositeTextures_process(nile_t *nl,
                                             nile_Kernel_t *k_,
                                             nile_Buffer_t **in_,
                                             nile_Buffer_t **out_);
@@ -301,7 +301,7 @@ static int gezira_BilinearFilterWeights_process(nile_t *nl,
                                                 nile_Buffer_t **out_);
 
 nile_Kernel_t *gezira_BilinearFilter(nile_t *nl, 
-                                     nile_Kernel_t *v_s);
+                                     nile_Kernel_t *v_t);
 
 static int gezira_BilinearFilter_process(nile_t *nl,
                                          nile_Kernel_t *k_,
@@ -330,7 +330,7 @@ static int gezira_BicubicFilterWeights_process(nile_t *nl,
                                                nile_Buffer_t **out_);
 
 nile_Kernel_t *gezira_BicubicFilter(nile_t *nl, 
-                                    nile_Kernel_t *v_s);
+                                    nile_Kernel_t *v_t);
 
 static int gezira_BicubicFilter_process(nile_t *nl,
                                         nile_Kernel_t *k_,
@@ -361,7 +361,7 @@ static int gezira_GaussianBlur5x1Weights_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur5x1(nile_t *nl, 
                                       nile_Real_t v_f, 
-                                      nile_Kernel_t *v_s);
+                                      nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur5x1_process(nile_t *nl,
                                           nile_Kernel_t *k_,
@@ -370,7 +370,7 @@ static int gezira_GaussianBlur5x1_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur1x5(nile_t *nl, 
                                       nile_Real_t v_f, 
-                                      nile_Kernel_t *v_s);
+                                      nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur1x5_process(nile_t *nl,
                                           nile_Kernel_t *k_,
@@ -401,7 +401,7 @@ static int gezira_GaussianBlur11x1Weights_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur11x1(nile_t *nl, 
                                        nile_Real_t v_f, 
-                                       nile_Kernel_t *v_s);
+                                       nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur11x1_process(nile_t *nl,
                                            nile_Kernel_t *k_,
@@ -410,7 +410,7 @@ static int gezira_GaussianBlur11x1_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur1x11(nile_t *nl, 
                                        nile_Real_t v_f, 
-                                       nile_Kernel_t *v_s);
+                                       nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur1x11_process(nile_t *nl,
                                            nile_Kernel_t *k_,
@@ -441,7 +441,7 @@ static int gezira_GaussianBlur21x1Weights_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur21x1(nile_t *nl, 
                                        nile_Real_t v_f, 
-                                       nile_Kernel_t *v_s);
+                                       nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur21x1_process(nile_t *nl,
                                            nile_Kernel_t *k_,
@@ -450,7 +450,7 @@ static int gezira_GaussianBlur21x1_process(nile_t *nl,
 
 nile_Kernel_t *gezira_GaussianBlur1x21(nile_t *nl, 
                                        nile_Real_t v_f, 
-                                       nile_Kernel_t *v_s);
+                                       nile_Kernel_t *v_t);
 
 static int gezira_GaussianBlur1x21_process(nile_t *nl,
                                            nile_Kernel_t *k_,
@@ -634,7 +634,7 @@ static int gezira_CreateSamplePoints_process(nile_t *nl,
                                              nile_Buffer_t **out_);
 
 nile_Kernel_t *gezira_Render_(nile_t *nl, 
-                              nile_Kernel_t *v_s, 
+                              nile_Kernel_t *v_t, 
                               nile_Kernel_t *v_c);
 
 static int gezira_Render__process(nile_t *nl,
@@ -643,7 +643,7 @@ static int gezira_Render__process(nile_t *nl,
                                   nile_Buffer_t **out_);
 
 nile_Kernel_t *gezira_Render(nile_t *nl, 
-                             nile_Kernel_t *v_s, 
+                             nile_Kernel_t *v_t, 
                              nile_Kernel_t *v_c);
 
 static int gezira_Render_process(nile_t *nl,

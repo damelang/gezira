@@ -105,11 +105,11 @@ main (int argc, char **argv)
             M = matrix_scale (M, scale, scale);
             M = matrix_translate (M, -250, -250);
 
-            nile_Kernel_t *sampler = gezira_UniformColor (nl, 1, 1, 0, 0);
+            nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 1, 0, 0);
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, sampler,
+                gezira_Render (nl, texture,
                     gezira_WriteImage_ARGB32 (nl, image->pixels,
                                               DEFAULT_WIDTH, DEFAULT_HEIGHT,
                                               image->pitch / 4)),
