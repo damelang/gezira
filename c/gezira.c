@@ -409,6 +409,7 @@ static nile_Kernel_t *gezira_CalculateBounds_clone(nile_t *nl, nile_Kernel_t *k_
 
 nile_Kernel_t *gezira_CalculateBounds(nile_t *nl) {
     gezira_CalculateBounds_t *k = NILE_KERNEL_NEW(nl, gezira_CalculateBounds);
+    k->v_M_x = k->v_M_y = k->v_min_x = k->v_min_y = k->v_max_x = k->v_max_y = 0;
     return (nile_Kernel_t *) k;
 }
 
@@ -8239,6 +8240,7 @@ nile_Kernel_t *gezira_Render_(nile_t *nl,
     gezira_Render__t *k = NILE_KERNEL_NEW(nl, gezira_Render_);
     k->v_s = v_s;
     k->v_c = v_c;
+    k->v_x = k->v_y = k->v_start_1 = k->v_start_2 = 0;
     return (nile_Kernel_t *) k;
 }
 
@@ -10144,6 +10146,9 @@ static nile_Kernel_t *gezira_PrepareBeziersForJoin_clone(nile_t *nl, nile_Kernel
 
 nile_Kernel_t *gezira_PrepareBeziersForJoin(nile_t *nl) {
     gezira_PrepareBeziersForJoin_t *k = NILE_KERNEL_NEW(nl, gezira_PrepareBeziersForJoin);
+    k->v_A_x = k->v_A_y = k->v_B_x = k->v_B_y = k->v_C_x = k->v_C_y = k->v_first = 
+        k->v_D_x = k->v_D_y = k->v_E_x = k->v_E_y = k->v_F_x = k->v_F_y = 0;
+    k->v_first = 1;
     return (nile_Kernel_t *) k;
 }
 
@@ -10507,6 +10512,8 @@ static nile_Kernel_t *gezira_PrepareBeziersForCap_clone(nile_t *nl, nile_Kernel_
 
 nile_Kernel_t *gezira_PrepareBeziersForCap(nile_t *nl) {
     gezira_PrepareBeziersForCap_t *k = NILE_KERNEL_NEW(nl, gezira_PrepareBeziersForCap);
+    k->v_A_x = k->v_A_y = k->v_B_x = k->v_B_y = k->v_C_x = k->v_C_y =
+        k->v_D_x = k->v_D_y = k->v_E_x = k->v_E_y = k->v_F_x = k->v_F_y = 0;
     return (nile_Kernel_t *) k;
 }
 
