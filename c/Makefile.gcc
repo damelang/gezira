@@ -1,0 +1,9 @@
+NILE_RUNTIME := ../../nile/runtimes/c
+CFLAGS       := -I$(NILE_RUNTIME) -pipe -Wall -Werror -Wno-unused \
+                -march=nocona -msse2 -mfpmath=sse -ffast-math -O0 -g # -m64
+
+libgezira.a: gezira.o
+	ar rcs $@ $^
+
+clean:
+	$(RM) *.o *.a
