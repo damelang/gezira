@@ -1,11 +1,9 @@
 SumWeightedColors (n : Real) : (Color, Real) >> Color
     sum = 0 : Color
     i   = 1
-    ∀ ((a, r, g, b), w)
-        C = (a, r / (a ? 1), g / (a ? 1), b / (a ? 1)) : Color
+    ∀ (C, w)
         if i = n
-            S = 0 ▷ (sum + C × w) ◁ 1
-            >> (S.a, S.a × S.r, S.a × S.g, S.a × S.b)
+            >> 0 ▷ (sum + C × w) ◁ 1
             sum' = 0
             i'   = 1
         else
@@ -29,8 +27,8 @@ BilinearFilterWeights : Point >> Real
         >> (1 - u) × (    v) >> u × (    v)
 
 BilinearFilter (t : Texture) : Texture
-    ⇒ Interleave (BilinearFilterPoints → t,
-                  BilinearFilterWeights    ) → SumWeightedColors (4)
+    ⇒ DupZip (BilinearFilterPoints → t,
+              BilinearFilterWeights    ) → SumWeightedColors (4)
 
 BicubicFilterPoints : Point >> Point
     ∀ P
@@ -61,8 +59,8 @@ BicubicFilterWeights : Point >> Real
         >> S.x × S.y
 
 BicubicFilter (t : Texture) : Texture
-    ⇒ Interleave (BicubicFilterPoints → t,
-                  BicubicFilterDeltas → BicubicFilterWeights) → SumWeightedColors (16)
+    ⇒ DupZip (BicubicFilterPoints → t,
+              BicubicFilterDeltas → BicubicFilterWeights) → SumWeightedColors (16)
 
 GaussianBlur5x1Points : Point >> Point
     ∀ (x, y)
@@ -80,12 +78,12 @@ GaussianBlur5x1Weights (f : Real) : Point >> Real
         >> ((a + 4) / s) >> ((a + 1) / s)
 
 GaussianBlur5x1 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur5x1Points → t,
-                  GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
+    ⇒ DupZip (GaussianBlur5x1Points → t,
+              GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
 
 GaussianBlur1x5 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur1x5Points → t,
-                  GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
+    ⇒ DupZip (GaussianBlur1x5Points → t,
+              GaussianBlur5x1Weights (f)) → SumWeightedColors (5)
 
 GaussianBlur11x1Points : Point >> Point
     ∀ (x, y)
@@ -109,12 +107,12 @@ GaussianBlur11x1Weights (f : Real) : Point >> Real
         >> ((a +  10) / s) >> ((a +   1) / s)
 
 GaussianBlur11x1 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur11x1Points → t,
-                  GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
+    ⇒ DupZip (GaussianBlur11x1Points → t,
+              GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
 
 GaussianBlur1x11 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur1x11Points → t,
-                  GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
+    ⇒ DupZip (GaussianBlur1x11Points → t,
+              GaussianBlur11x1Weights (f)) → SumWeightedColors (11)
 
 GaussianBlur21x1Points : Point >> Point
     ∀ (x, y)
@@ -145,9 +143,9 @@ GaussianBlur21x1Weights (f : Real) : Point >> Real
         >> ((a +    190) / s) >> ((a +     20) / s) >> ((a +      1) / s)
 
 GaussianBlur21x1 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur21x1Points → t,
-                  GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
+    ⇒ DupZip (GaussianBlur21x1Points → t,
+              GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
 
 GaussianBlur1x21 (f : Real, t : Texture) : Texture
-    ⇒ Interleave (GaussianBlur1x21Points → t,
-                  GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
+    ⇒ DupZip (GaussianBlur1x21Points → t,
+              GaussianBlur21x1Weights (f)) → SumWeightedColors (21)
