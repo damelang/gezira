@@ -1,15 +1,15 @@
-ImageExtendMode :: (D : Point) : Point >> Point
+ImageExtendMode :: Point >> Point
 
-ImageExtendPad : ImageExtendMode
+ImageExtendPad (D : Point) : ImageExtendMode
     ∀ P
         >> 0 ▷ P ◁ D
 
-ImageExtendRepeat : ImageExtendMode
+ImageExtendRepeat (D : Point) : ImageExtendMode
     ∀ P
         Q = P / D
         >> (Q - ⌊ Q ⌋) × D
 
-ImageExtendReflect : ImageExtendMode
+ImageExtendReflect (D : Point) : ImageExtendMode
     ∀ P
         Q = P / D
         >> | (| Q - 1 | % 2 - 1) | × D

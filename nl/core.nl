@@ -1,14 +1,12 @@
-Color  <: (a, r, g, b : Real)
-Point  <: (x, y : Real)
-Vector <: (x, y : Real)
-Matrix <: (a, b, c, d, e, f : Real)
-Bezier <: (A, B, C : Point)
-Span   <: (P : Point, l, c : Real)
+Color    <: (a, r, g, b : Real)
+Point    <: (x, y : Real)
+Vector   <: (x, y : Real)
+Matrix   <: (a, b, c, d, e, f : Real)
+Bezier   <: (A, B, C : Point)
+EdgeSpan <: (x, y, c, l : Real)
 
-{-
 Texture    :: Point >> Color
 Compositor :: (Color, Color) >> Color
--}
 
 ¬(a : Real) : Real
     a = 0
@@ -66,14 +64,12 @@ TransformBeziers (M : Matrix) : Bezier >> Bezier
     ∀ (A, B, C)
         >> (M ⊗ A, M ⊗ B, M ⊗ C)
 
-{-
 UniformColor (C : Color) : Texture
     ∀ _
         >> (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
 
 CompositeTextures (t1 : Texture, t2 : Texture, c : Compositor) : Texture
-    ⇒ Interleave (t1, t2) → c
--}
+    ⇒ DupZip (t1, t2) → c
 
 CalculateBounds : Bezier >> (Point, Point)
     min =  999999 : Point
