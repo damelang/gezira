@@ -1,8 +1,11 @@
 NILE_RUNTIME := ../../nile/runtimes/c
-CFLAGS       := -I$(NILE_RUNTIME) -pipe -Wall -Werror -Wno-unused \
-                -march=nocona -msse2 -mfpmath=sse -ffast-math -O0 -g # -m64
+CFLAGS       := -I$(NILE_RUNTIME) -pipe \
+                -Wall -Werror -Wno-unused -Wno-uninitialized \
+                -march=native -msse2 -mfpmath=sse -m64 -fstrict-aliasing -ffast-math \
+                -O3 \
+                #-ftree-vectorizer-verbose=10
 
-libgezira.a: gezira.o
+libgezira.a: gezira.o gezira-image.o
 	ar rcs $@ $^
 
 clean:
