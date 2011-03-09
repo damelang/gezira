@@ -18,7 +18,7 @@ typedef struct {
 } gezira_Image_ARGB32_t;
 
 static nile_Buffer_t *
-gezira_ReadFromImage_ARG32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
+gezira_ReadFromImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
 {
     gezira_Image_ARGB32_t image = *(gezira_Image_ARGB32_t *) nile_Process_vars (p);
     Real width = nile_Real (image.width);
@@ -59,11 +59,11 @@ gezira_ReadFromImage_ARG32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buff
 }
 
 nile_Process_t *
-gezira_ReadFromImage_ARG32 (nile_Process_t *p, uint32_t *pixels,
+gezira_ReadFromImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
                             int width, int height, int stride)
 {
     gezira_Image_ARGB32_t *image;
-    p = nile_Process (p, 2, sizeof (*image), 0, gezira_ReadFromImage_ARG32_body, 0);
+    p = nile_Process (p, 2, sizeof (*image), 0, gezira_ReadFromImage_ARGB32_body, 0);
     if (p) {
         image = nile_Process_vars (p);
         image->pixels = pixels;
@@ -75,7 +75,7 @@ gezira_ReadFromImage_ARG32 (nile_Process_t *p, uint32_t *pixels,
 }
 
 static nile_Buffer_t *
-gezira_WriteToImage_ARG32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
+gezira_WriteToImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
 {
     gezira_Image_ARGB32_t image = *(gezira_Image_ARGB32_t *) nile_Process_vars (p);
     Real width = nile_Real (image.width);
@@ -124,11 +124,11 @@ gezira_WriteToImage_ARG32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffe
 }
 
 nile_Process_t *
-gezira_WriteToImage_ARG32 (nile_Process_t *p, uint32_t *pixels,
+gezira_WriteToImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
                            int width, int height, int stride)
 {
     gezira_Image_ARGB32_t *image;
-    p = nile_Process (p, 2, sizeof (*image), 0, gezira_WriteToImage_ARG32_body, 0);
+    p = nile_Process (p, 2, sizeof (*image), 0, gezira_WriteToImage_ARGB32_body, 0);
     if (p) {
         image = nile_Process_vars (p);
         image->pixels = pixels;
@@ -145,13 +145,13 @@ typedef struct {
     uint16_t              a16, r16, g16, b16;
     uint32_t                        a8r8g8b8; 
     uint8_t                              ia8;
-} gezira_WriteToImage_ARG32_UniformColor_vars_t;
+} gezira_WriteToImage_ARGB32_UniformColor_vars_t;
 
 static nile_Buffer_t *
-gezira_WriteToImage_ARG32_UniformColor_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
+gezira_WriteToImage_ARGB32_UniformColor_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
 {
-    gezira_WriteToImage_ARG32_UniformColor_vars_t v =
-        *(gezira_WriteToImage_ARG32_UniformColor_vars_t *) nile_Process_vars (p);
+    gezira_WriteToImage_ARGB32_UniformColor_vars_t v =
+        *(gezira_WriteToImage_ARGB32_UniformColor_vars_t *) nile_Process_vars (p);
 
     while (!nile_Buffer_is_empty (in)) {
         int  x = nile_Real_toi (nile_Buffer_pop_head (in));
@@ -231,12 +231,12 @@ gezira_WriteToImage_ARG32_UniformColor_body (nile_Process_t *p, nile_Buffer_t *i
 }
 
 nile_Process_t *
-gezira_WriteToImage_ARG32_UniformColor (nile_Process_t *p, uint32_t *pixels,
+gezira_WriteToImage_ARGB32_UniformColor (nile_Process_t *p, uint32_t *pixels,
                                         int width, int height, int stride,
                                         float a, float r, float g, float b)
 {
-    gezira_WriteToImage_ARG32_UniformColor_vars_t *vars;
-    p = nile_Process (p, 4, sizeof (*vars), 0, gezira_WriteToImage_ARG32_UniformColor_body, 0);
+    gezira_WriteToImage_ARGB32_UniformColor_vars_t *vars;
+    p = nile_Process (p, 4, sizeof (*vars), 0, gezira_WriteToImage_ARGB32_UniformColor_body, 0);
     if (p) {
         vars = nile_Process_vars (p);
         vars->image.pixels = pixels;

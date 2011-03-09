@@ -158,11 +158,11 @@ main (int argc, char **argv)
         for (i = 0; i < DEFAULT_HEIGHT * DEFAULT_WIDTH; i++)
             pixels[i] = 0xffffffff;
 
-        nile_Process_t *WTI = gezira_WriteToImage_ARG32_UniformColor (init,
+        nile_Process_t *WTI = gezira_WriteToImage_ARGB32_UniformColor (init,
                 pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH,
                 stars[0].alpha, stars[0].red, stars[0].green, stars[0].blue);
         for (i = 0; i < NSTARS - 1; i++) {
-            nile_Process_t *WTI_ = gezira_WriteToImage_ARG32_UniformColor (init,
+            nile_Process_t *WTI_ = gezira_WriteToImage_ARGB32_UniformColor (init,
                     pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH,
                     stars[i+1].alpha, stars[i+1].red, stars[i+1].green, stars[i+1].blue);
             WTI = nile_Process_gate (WTI, WTI_);
