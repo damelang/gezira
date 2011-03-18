@@ -73,7 +73,7 @@ typedef struct {
 } gezira_star_t;
 
 static void
-render_star (gezira_star_t *star, nile_Process_t *init, nile_Process_t *WTI)
+render_star (gezira_star_t *star, nile_Process_t *init, nile_Process_t *COI)
 {
     matrix_t M = matrix_new ();
     M = matrix_translate (M, star->x, star->y);
@@ -86,7 +86,7 @@ render_star (gezira_star_t *star, nile_Process_t *init, nile_Process_t *WTI)
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
         gezira_ClipBeziers (init, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
         gezira_Rasterize (init),
-        WTI,
+        COI,
         NILE_NULL);
     nile_Funnel_pour (p, star_path, star_path_n, 1);
 }
@@ -94,7 +94,7 @@ render_star (gezira_star_t *star, nile_Process_t *init, nile_Process_t *WTI)
 int
 main (int argc, char **argv)
 {
-    uint32_t *pixels = calloc (DEFAULT_WIDTH * DEFAULT_HEIGHT, sizeof (uint32_t));
+    uint32_t *pixels = malloc (DEFAULT_WIDTH * DEFAULT_HEIGHT * sizeof (uint32_t));
     nile_Process_t *init;
     char *mem = malloc (MEM_SIZE);
     gezira_star_t stars[NSTARS];
@@ -158,20 +158,20 @@ main (int argc, char **argv)
         for (i = 0; i < DEFAULT_HEIGHT * DEFAULT_WIDTH; i++)
             pixels[i] = 0xffffffff;
 
-        nile_Process_t *WTI = gezira_WriteToImage_ARGB32_UniformColor (init,
-                pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH,
-                stars[0].alpha, stars[0].red, stars[0].green, stars[0].blue);
+        nile_Process_t *COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+                stars[0].alpha, stars[0].red, stars[0].green, stars[0].blue,
+                pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH);
         for (i = 0; i < NSTARS - 1; i++) {
-            nile_Process_t *WTI_ = gezira_WriteToImage_ARGB32_UniformColor (init,
-                    pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH,
-                    stars[i+1].alpha, stars[i+1].red, stars[i+1].green, stars[i+1].blue);
-            WTI = nile_Process_gate (WTI, WTI_);
-            render_star (&stars[i], init, WTI);
-            WTI = WTI_;
+            nile_Process_t *COI_ = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+                    stars[i+1].alpha, stars[i+1].red, stars[i+1].green, stars[i+1].blue,
+                    pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_WIDTH);
+            COI = nile_Process_gate (COI, COI_);
+            render_star (&stars[i], init, COI);
+            COI = COI_;
             stars[i].angle += stars[i].rotation;
         }
-        render_star (&stars[NSTARS - 1], init, WTI);
-        stars[NSTARS - 1].angle += stars[NSTARS - 1].rotation;
+        render_star (&stars[i], init, COI);
+        stars[i].angle += stars[i].rotation;
 
         if (nile_sync (init)) {
             fprintf (stderr, "sync failed\n");

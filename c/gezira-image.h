@@ -13,8 +13,9 @@ gezira_WriteToImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
                             int width, int height, int stride);
 
 nile_Process_t *
-gezira_WriteToImage_ARGB32_UniformColor (nile_Process_t *p, uint32_t *pixels,
-                                         int width, int height, int stride,
-                                         float a, float r, float g, float b);
+gezira_CompositeUniformColorOverImage_ARGB32 (nile_Process_t *p,
+                                              float a, float r, float g, float b,
+                                              uint32_t *pixels,
+                                              int width, int height, int stride);
 
 #endif

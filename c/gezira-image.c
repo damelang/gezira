@@ -141,24 +141,24 @@ gezira_WriteToImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
 }
 
 typedef struct {
-    gezira_Image_ARGB32_t              image;
     uint8_t                a8,  r8,  g8,  b8;
     uint16_t              a16, r16, g16, b16;
     uint32_t                        a8r8g8b8; 
     uint8_t                              ia8;
-} gezira_WriteToImage_ARGB32_UniformColor_vars_t;
+    gezira_Image_ARGB32_t              image;
+} gezira_CompositeUniformColorOverImage_ARGB32_vars_t;
 
 static nile_Buffer_t *
-gezira_WriteToImage_ARGB32_UniformColor_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
+gezira_CompositeUniformColorOverImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buffer_t *out)
 {
-    gezira_WriteToImage_ARGB32_UniformColor_vars_t v =
-        *(gezira_WriteToImage_ARGB32_UniformColor_vars_t *) nile_Process_vars (p);
+    gezira_CompositeUniformColorOverImage_ARGB32_vars_t v =
+        *(gezira_CompositeUniformColorOverImage_ARGB32_vars_t *) nile_Process_vars (p);
 
     while (!nile_Buffer_is_empty (in)) {
-        int  x = nile_Real_toi (nile_Buffer_pop_head (in));
-        int  y = nile_Real_toi (nile_Buffer_pop_head (in));
+        int     x = nile_Real_toi (nile_Buffer_pop_head (in));
+        int     y = nile_Real_toi (nile_Buffer_pop_head (in));
         uint8_t c = Real_to_uint8_t (nile_Buffer_pop_head (in));
-        int  l = nile_Real_toi (nile_Buffer_pop_head (in));
+        int     l = nile_Real_toi (nile_Buffer_pop_head (in));
         uint32_t *px = &v.image.pixels[x + y * v.image.stride];
 
         if (c) { // required, not just an optimization!
@@ -232,18 +232,15 @@ gezira_WriteToImage_ARGB32_UniformColor_body (nile_Process_t *p, nile_Buffer_t *
 }
 
 nile_Process_t *
-gezira_WriteToImage_ARGB32_UniformColor (nile_Process_t *p, uint32_t *pixels,
-                                        int width, int height, int stride,
-                                        float a, float r, float g, float b)
+gezira_CompositeUniformColorOverImage_ARGB32 (nile_Process_t *p,
+                                              float a, float r, float g, float b,
+                                              uint32_t *pixels,
+                                              int width, int height, int stride)
 {
-    gezira_WriteToImage_ARGB32_UniformColor_vars_t *vars;
-    p = nile_Process (p, 4, sizeof (*vars), 0, gezira_WriteToImage_ARGB32_UniformColor_body, 0);
+    gezira_CompositeUniformColorOverImage_ARGB32_vars_t *vars;
+    p = nile_Process (p, 4, sizeof (*vars), NULL, gezira_CompositeUniformColorOverImage_ARGB32_body, NULL);
     if (p) {
         vars = nile_Process_vars (p);
-        vars->image.pixels = pixels;
-        vars->image.width  = width;
-        vars->image.height = height;
-        vars->image.stride = stride;
         vars->a8 =     a * 255.0f + 0.5f;
         vars->r8 = a * r * 255.0f + 0.5f;
         vars->g8 = a * g * 255.0f + 0.5f;
@@ -258,6 +255,10 @@ gezira_WriteToImage_ARGB32_UniformColor (nile_Process_t *p, uint32_t *pixels,
         vars->b16 += 128;
         vars->a8r8g8b8 = (vars->a8 << 24) | (vars->r8 << 16) | (vars->g8 << 8) | (vars->b8 << 0);
         vars->ia8 = 255 - vars->a8;
+        vars->image.pixels = pixels;
+        vars->image.width  = width;
+        vars->image.height = height;
+        vars->image.stride = stride;
     }
     return p;
 }
