@@ -40,12 +40,12 @@ gezira_ReadFromImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buf
                       nile_Real_nz (nile_Real_gt (y, height));
             x = OOB ? nile_Real (0) : x;
             y = OOB ? nile_Real (0) : y;
-            uint32_t p = image.pixels[nile_Real_toi (x) + nile_Real_toi (y) * image.stride];
-            p = OOB ? 0 : p; 
-            uint8_t a = p >> 24;
-            uint8_t r = p >> 16;
-            uint8_t g = p >>  8;
-            uint8_t b = p >>  0;
+            uint32_t C = image.pixels[nile_Real_toi (x) + nile_Real_toi (y) * image.stride];
+            C = OOB ? 0 : C;
+            uint8_t a = C >> 24;
+            uint8_t r = C >> 16;
+            uint8_t g = C >>  8;
+            uint8_t b = C >>  0;
             Real a_ = nile_Real_div (nile_Real (a), nile_Real (255));
             Real r_ = nile_Real_div (nile_Real (r), nile_Real (255));
             Real g_ = nile_Real_div (nile_Real (g), nile_Real (255));
