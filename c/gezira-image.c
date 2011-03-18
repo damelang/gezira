@@ -1,6 +1,7 @@
 #define NILE_INCLUDE_PROCESS_API
 #include "nile.h"
 #include "gezira-image.h"
+#include "stddef.h"
 
 #define Real nile_Real_t
 
@@ -63,7 +64,7 @@ gezira_ReadFromImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
                             int width, int height, int stride)
 {
     gezira_Image_ARGB32_t *image;
-    p = nile_Process (p, 2, sizeof (*image), 0, gezira_ReadFromImage_ARGB32_body, 0);
+    p = nile_Process (p, 2, sizeof (*image), NULL, gezira_ReadFromImage_ARGB32_body, NULL);
     if (p) {
         image = nile_Process_vars (p);
         image->pixels = pixels;
@@ -128,7 +129,7 @@ gezira_WriteToImage_ARGB32 (nile_Process_t *p, uint32_t *pixels,
                            int width, int height, int stride)
 {
     gezira_Image_ARGB32_t *image;
-    p = nile_Process (p, 2, sizeof (*image), 0, gezira_WriteToImage_ARGB32_body, 0);
+    p = nile_Process (p, 8, sizeof (*image), NULL, gezira_WriteToImage_ARGB32_body, NULL);
     if (p) {
         image = nile_Process_vars (p);
         image->pixels = pixels;
