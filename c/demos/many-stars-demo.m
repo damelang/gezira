@@ -82,7 +82,7 @@ render_star (gezira_star_t *star, nile_Process_t *init, nile_Process_t *COI)
     M = matrix_translate (M, -250, -250);
 
     nile_Process_t *p = nile_Process_pipe (
-        nile_Funnel (init, 6),
+        nile_Funnel (init),
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
         gezira_ClipBeziers (init, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
         gezira_Rasterize (init),
