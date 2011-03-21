@@ -2,9 +2,12 @@ NILE_RUNTIME := ../../../nile/runtimes/c
 CFLAGS       := -I.. -I$(NILE_RUNTIME) \
                 -pipe -Wall -Wno-unused \
                 -march=nocona -msse2 -mfpmath=sse -m64 -fstrict-aliasing -ffast-math -O3
-LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile -framework Cocoa
+LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
 
 %-demo: %-demo.m
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -framework Cocoa -o $@
+
+%-demo: %-demo.c
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 clean:
