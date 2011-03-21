@@ -1,15 +1,15 @@
+#include <stdlib.h>
 #include <stdio.h>
+#define NILE_INCLUDE_PROCESS_API
+#include "nile.h"
 #include "gezira.h"
 #include "gezira-image.h"
+//#include "test/nile-print.h"
+#include "gezira-matrix.h"
+#include "gezira-star-path.h"
 
-#include "SDL.h"
-#ifdef main
-#undef main
-#endif 
-
-typedef nile_Real_t real;
-
-#define NTHREADS 0
+#define MEM_SIZE 1000000
+#define NTHREADS 1
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
 
@@ -19,88 +19,22 @@ do { \
     exit (1); \
 } while (0)
 
-typedef struct {
-    real a, b, c, d, e, f;
-} matrix_t;
-
-matrix_t
-matrix_new () {
-    matrix_t M = { 1, 0, 0, 1, 0, 0 };
-    return M;
-}
-
-matrix_t
-matrix_translate (matrix_t M, real x, real y)
-{
-    matrix_t N = { M.a, M.b, M.c, M.d,
-                   M.a * x + M.c * y + M.e,
-                   M.b * x + M.d * y + M.f};
-    return N;
-}
-
-matrix_t
-matrix_rotate (matrix_t M, real t)
-{
-    matrix_t N = { M.a *  cos (t) + M.c * sin (t),
-                   M.b *  cos (t) + M.d * sin (t),
-                   M.a * -sin (t) + M.c * cos (t),
-                   M.b * -sin (t) + M.d * cos (t),
-                   M.e, M.f};
-    return N;
-}
-
-matrix_t
-matrix_scale (matrix_t M, real sx, real sy)
-{
-    matrix_t N = { M.a * sx, M.b * sx, M.c * sy, M.d * sy, M.e, M.f};
-    return N;
-}
-
-real path[] =
-{
-    250.00000, 150.00000, 237.65650, 183.01064, 225.31301, 216.02128,
-    225.31301, 216.02128, 190.10368, 217.55979, 154.89434, 219.09830,
-    154.89434, 219.09830, 182.47498, 241.03850, 210.05562, 262.97871,
-    210.05562, 262.97871, 200.63855, 296.94020, 191.22147, 330.90169,
-    191.22147, 330.90169, 220.61073, 311.45084, 250.00000, 292.00000,
-    250.00000, 292.00000, 279.38926, 311.45084, 308.77852, 330.90169,
-    308.77852, 330.90169, 299.36144, 296.94020, 289.94437, 262.97871,
-    289.94437, 262.97871, 317.52501, 241.03850, 345.10565, 219.09830,
-    345.10565, 219.09830, 309.89631, 217.55979, 274.68698, 216.02128,
-    274.68698, 216.02128, 262.34349, 183.01064, 250.00000, 150.00000
-};
-int path_n = sizeof (path) / sizeof (path[0]);
-
 int
 main (int argc, char **argv)
 {
-    SDL_Surface *image;
-    nile_t *nl;
-    char mem[400000];
-    real angle = 0;
-    real scale;
-    int n;
-    nile_Real_t bounds[4];
-    nile_Real_t bounds_path[24];
+    nile_Process_t *init;
+    char *mem = malloc (MEM_SIZE);
+    float angle = 0;
+    float scale;
+    int frames = 0;
 
-    if (SDL_Init (SDL_INIT_VIDEO) == -1)
-        DIE ("SDL_Init failed: %s", SDL_GetError ());
-    if (!SDL_SetVideoMode (DEFAULT_WIDTH, DEFAULT_HEIGHT, 0,
-                           SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF))
-        DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
-    image = SDL_GetVideoSurface ();
+    init = nile_startup (mem, MEM_SIZE, NTHREADS);
+    if (!init)
+        DIE ("nile_startup failed");
 
-    nl = nile_new (NTHREADS, mem, sizeof (mem));
-
-    for (;;) {
+    while (frames < 100) {
         angle += 0.005;
         scale = fabs (angle - (int) angle - 0.5) * 10;
-        SDL_Event event;
-        if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
-            break;
-
-        SDL_FillRect (image, NULL, 0xffffffff);
-        SDL_LockSurface (image);
 
             matrix_t M = matrix_new ();
             M = matrix_translate (M, 250, 250);
@@ -108,70 +42,40 @@ main (int argc, char **argv)
             M = matrix_scale (M, scale, scale);
             M = matrix_translate (M, -250, -250);
 
-            // render star
-            nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 1, 0, 0);
-            nile_Kernel_t *pipeline = nile_Pipeline (nl,
-                gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
-                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
-                NULL);
-            nile_feed (nl, pipeline, path, 6, path_n, 1);
-            nile_sync (nl);
+            nile_Process_t *tap = nile_Tap (init, 4);
 
-            // get bounds
-            n = 0;
-            pipeline = nile_Pipeline (nl,
-                gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
-                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_CalculateBounds (nl),
-                nile_Capture (nl, bounds, 4, &n),
-                NULL);
-            nile_feed (nl, pipeline, path, 6, path_n, 1);
-            nile_sync (nl);
+            nile_Process_t *p = nile_Process_pipe (
+                nile_Funnel (init),
+                gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
+                gezira_ClipBeziers (init, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
+                gezira_CalculateBounds (init),
+                tap,
+                //nile_PrintToFile (init, stdout),
+                NILE_NULL);
+            nile_Funnel_pour (p, star_path, star_path_n, 1);
 
-            if (n != 4)
-                DIE ("n != 4 ?? What happened to the bounds?\n");
+            for (;;) {
+                int i;
+                int n = 0;
+#define DATA_CAPACITY 4
+                float data[DATA_CAPACITY];
+                int EOS = nile_Tap_open (tap, data, &n, DATA_CAPACITY);
+                for (i = 0; i < n; i++)
+                    printf ("%.2f\n", data[i]);
+                if (EOS)
+                    break;
+                if (nile_sync (init)) {
+                    DIE ("sync failed");
+                    break;
+                }
+            }
+            //printf ("\n----------------------------------------------\n");
 
-            // render bounds
-            bounds_path[0] = bounds[0]; bounds_path[1] = bounds[1];
-            bounds_path[2] = (bounds[0] + bounds[2]) / 2; bounds_path[3] = bounds[1];
-            bounds_path[4] = bounds[2]; bounds_path[5] = bounds[1];
-
-            bounds_path[ 6] = bounds[2]; bounds_path[ 7] = bounds[1];
-            bounds_path[ 8] = bounds[2]; bounds_path[ 9] = (bounds[1] + bounds[3]) / 2;
-            bounds_path[10] = bounds[2]; bounds_path[11] = bounds[3];
-
-            bounds_path[12] = bounds[2]; bounds_path[13] = bounds[3];
-            bounds_path[14] = (bounds[2] + bounds[0]) / 2; bounds_path[15] = bounds[3];
-            bounds_path[16] = bounds[0]; bounds_path[17] = bounds[3];
-
-            bounds_path[18] = bounds[0]; bounds_path[19] = bounds[3];
-            bounds_path[20] = bounds[0]; bounds_path[21] = (bounds[3] + bounds[1]) / 2;
-            bounds_path[22] = bounds[0]; bounds_path[23] = bounds[1];
-
-            texture = gezira_UniformColor (nl, 1, 0, 0, 1);
-            pipeline = nile_Pipeline (nl,
-                gezira_StrokeBeziers (nl, 1,
-                    gezira_StrokeJoinMiter (nl, 0, 0),
-                    gezira_StrokeJoinMiter (nl, 0, 0)),
-                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
-                NULL);
-            nile_feed (nl, pipeline, bounds_path, 6, 24, 1);
-            nile_sync (nl);
-
-        SDL_UnlockSurface (image);
-        SDL_Flip (image);
+        frames++;
     }
 
-    nile_free (nl);
-    printf ("done\n");
+    free (nile_shutdown (init));
+    printf ("frames: %d\n", frames);
 
     return 0;
 }
