@@ -1,0 +1,11 @@
+NILE_RUNTIME := ../../../nile/runtimes/c
+CFLAGS       := -I.. -I$(NILE_RUNTIME) \
+                -pipe -Wall -Wno-unused \
+                -march=native -msse2 -mfpmath=sse -m64 -fstrict-aliasing -ffast-math -O3
+LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
+
+%-demo: %-demo.c
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
+
+clean:
+	$(RM) -rf *-demo
