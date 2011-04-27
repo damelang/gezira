@@ -1,12 +1,14 @@
 NILE_RUNTIME := ../../nile/runtimes/c
 CFLAGS       := -I$(NILE_RUNTIME) -pipe \
                 -Wall -Werror -Wno-unused -Wno-uninitialized \
-                -march=native -msse2 -mfpmath=sse -m64 -fstrict-aliasing -ffast-math \
-                -O3 \
-                #-ftree-vectorizer-verbose=10
+                -m64 -march=nocona -mfpmath=sse -mssse3 \
+                -fstrict-aliasing -ffast-math -O3
+
+%.o: %.c %.h Makefile.gcc
+	$(CC) $< -c $(CFLAGS)
 
 libgezira.a: gezira.o gezira-image.o
-	ar rcs $@ $^
+	$(AR) rcs $@ $^
 
 clean:
 	$(RM) *.o *.a
