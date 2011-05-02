@@ -78,3 +78,12 @@ CalculateBounds : Bezier >> (Point, Point)
         min' = min ◁ A ◁ B ◁ C
         max' = max ▷ A ▷ B ▷ C
     >> (min, max)
+
+RectangleSpans (min, max : Point) : Real >> EdgeSpan
+    l = max.x - min.x - 1
+    x = min.x + 0.5
+    << min.y + 0.5
+    ∀ y
+        if y < max.y
+            >> (x, y, 1, l)
+            << y + 1
