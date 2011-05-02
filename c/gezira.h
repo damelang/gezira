@@ -38,6 +38,13 @@ nile_Process_t *
 gezira_CalculateBounds (nile_Process_t *p);
 
 nile_Process_t *
+gezira_RectangleSpans (nile_Process_t *p, 
+                       float v_min_x, 
+                       float v_min_y, 
+                       float v_max_x, 
+                       float v_max_y);
+
+nile_Process_t *
 gezira_ClipBeziers (nile_Process_t *p, 
                     float v_min_x, 
                     float v_min_y, 

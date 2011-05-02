@@ -523,6 +523,117 @@ gezira_CalculateBounds (nile_Process_t *p)
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 
+#define IN_QUANTUM 1
+#define OUT_QUANTUM 4
+
+typedef struct {
+    nile_Real_t v_min_x;
+    nile_Real_t v_min_y;
+    nile_Real_t v_max_x;
+    nile_Real_t v_max_y;
+    nile_Real_t v_l;
+    nile_Real_t v_x;
+} gezira_RectangleSpans_vars_t;
+
+static nile_Buffer_t *
+gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
+    gezira_RectangleSpans_vars_t v = *vars;
+    nile_Real_t t_6 = nile_Real_sub(v.v_max_x, v.v_min_x);
+    nile_Real_t t_7 = nile_Real (1);
+    nile_Real_t t_8 = nile_Real_sub(t_6, t_7);
+    v.v_l = t_8;
+    nile_Real_t t_9 = nile_Real (0.5);
+    nile_Real_t t_10 = nile_Real_add(v.v_min_x, t_9);
+    v.v_x = t_10;
+    nile_Real_t t_11 = nile_Real (0.5);
+    nile_Real_t t_12 = nile_Real_add(v.v_min_y, t_11);
+
+    nile_Buffer_t *in = nile_Process_prefix_input (p, NULL);
+    if (in)
+        nile_Buffer_push_head(in, t_12);
+
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_RectangleSpans_body (nile_Process_t *p,
+                            nile_Buffer_t *in,
+                            nile_Buffer_t *out)
+{
+    gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
+    gezira_RectangleSpans_vars_t v = *vars;
+    
+    while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
+        gezira_RectangleSpans_vars_t v_ = v;
+        nile_Real_t v_y = nile_Buffer_pop_head(in);
+        nile_Real_t t_13 = nile_Real_lt(v_y, v.v_max_y);
+        if (nile_Real_nz (t_13)) {
+            nile_Real_t t_15 = nile_Real (1);
+            nile_Real_t t_14_1 = v.v_x;
+            nile_Real_t t_14_2 = v_y;
+            nile_Real_t t_14_3 = t_15;
+            nile_Real_t t_14_4 = v.v_l;
+            nile_Real_t t_16_x = t_14_1;
+            nile_Real_t t_16_y = t_14_2;
+            nile_Real_t t_16_c = t_14_3;
+            nile_Real_t t_16_l = t_14_4;
+            if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+                out = nile_Process_append_output (p, out);
+            nile_Buffer_push_tail(out, t_16_x);
+            nile_Buffer_push_tail(out, t_16_y);
+            nile_Buffer_push_tail(out, t_16_c);
+            nile_Buffer_push_tail(out, t_16_l);
+            nile_Real_t t_17 = nile_Real (1);
+            nile_Real_t t_18 = nile_Real_add(v_y, t_17);
+            if (nile_Buffer_headroom (in) < IN_QUANTUM)
+                in = nile_Process_prefix_input (p, in);
+            nile_Buffer_push_head(in, t_18);
+        }
+        else {
+            ; /* no-op */
+        }
+        v = v_;
+    }
+    
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_RectangleSpans_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
+    gezira_RectangleSpans_vars_t v = *vars;
+    return out;
+}
+
+nile_Process_t *
+gezira_RectangleSpans (nile_Process_t *p, 
+                       float v_min_x, 
+                       float v_min_y, 
+                       float v_max_x, 
+                       float v_max_y)
+{
+    gezira_RectangleSpans_vars_t *vars;
+    gezira_RectangleSpans_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_RectangleSpans_prologue, gezira_RectangleSpans_body, gezira_RectangleSpans_epilogue);
+    if (p) {
+        vars = nile_Process_vars (p);
+        v.v_min_x = nile_Real (v_min_x);
+        v.v_min_y = nile_Real (v_min_y);
+        v.v_max_x = nile_Real (v_max_x);
+        v.v_max_y = nile_Real (v_max_y);
+        *vars = v;
+    }
+    return p;
+}
+
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+
 #define IN_QUANTUM 6
 #define OUT_QUANTUM 6
 
