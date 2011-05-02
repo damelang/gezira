@@ -1,2 +1,23 @@
-- more demos
-    - snowflakes
+- ssse3 gcc bug! Not on gcc 4.2 though
+  only for functionality used in the snowflake demo,
+  and only in gezira.c. Do a diff on
+  the generated assembly w/ and w/out -mssse3?
+
+- hack to fix prologue input prefixing
+
+    nile_Buffer_t *in = nile_Process_prefix_input (p, NULL);
+    if (in)
+        nile_Buffer_push_head(in, t_12);
+
+- over formulas notes
+
+  r = (v.r * v.a + r * (1 - v.a)) * c + r * (1 - c);
+
+  r = (v.r * v.a + r - r * v.a) * c + r * (1 - c);
+  r = (v.r * v.a + r - r * v.a) * c + r - r * c;
+  r = v.r * v.a * c + r * c - r * v.a * c + r - r * c;
+
+  r = v.r * v.a * c - r * v.a * c + r;
+  r = v.r * v.a * c + r - r * v.a * c;
+  r = v.r * v.a * c + r * (1 - v.a * c);
+  r = (v.r * v.a) * c + r * (1 - v.a * c);
