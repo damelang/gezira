@@ -36,6 +36,8 @@
     - do any operators expect us to multiply the alpha in at the end?
     - add a "premultiply" and "unpremultiply" operator?
 
+- Make general Gaussian blur
+
 - Decimation filter
 
 - Fix usage of '='. In bezier we want pairwise '=', in other
