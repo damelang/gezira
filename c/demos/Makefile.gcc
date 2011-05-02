@@ -1,0 +1,27 @@
+NILE_RUNTIME := ../../../nile/runtimes/c
+TARGET       := $(shell $(CC) -dumpmachine)
+LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
+CFLAGS       := -pipe -Wall -Werror \
+                -I.. -I$(NILE_RUNTIME) \
+                -O3 -ffast-math \
+                #-march=corei7 -mfpmath=sse -msse4.2 -mno-ssse3 \
+
+ifneq (,$(findstring darwin,$(TARGET)))
+  LDFLAGS += -framework Cocoa
+else ifneq (,$(findstring mingw,$(TARGET))$(findstring cygwin,$(TARGET)))
+  LDFLAGS += # TODO windows
+else
+  LDFLAGS += # TODO X11, etc.
+endif
+
+%-demo: %-demo.c FORCE
+	$(MAKE) -C $(NILE_RUNTIME) -f Makefile.gcc
+	$(MAKE) -C .. -f Makefile.gcc
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $<
+
+snow-demo:
+
+clean:
+	$(RM) -r *-demo *.dSYM
+
+FORCE:

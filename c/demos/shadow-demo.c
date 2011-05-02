@@ -93,16 +93,17 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
                                          gezira_StrokeJoinRound (nl));
         nile_Kernel_t *texture = gezira_CompositeTextures (nl,
                 gezira_UniformColor (nl, 0.5, 1, 0, 0),
-                gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                         image->pitch / 4),
+                gezira_ReadFromImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                             image->pitch / 4),
                 gezira_CompositeOver (nl));
         nile_Kernel_t *pipeline = nile_Pipeline (nl,
             stroke,
             gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-            gezira_Render (nl, texture,
-                gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                          image->pitch / 4)),
+            gezira_Rasterize (nl),
+            gezira_ApplyTexture (nl, texture),
+            gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                        DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                        image->pitch / 4),
         NULL);
         nile_feed (nl, pipeline, dot, 6, 6, 1);
     }
@@ -123,10 +124,11 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
 
     pipeline = nile_Pipeline (nl, k->clone (nl, k),
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, gezira_UniformColor (nl, SHADOW_ALPHA, 0, 0, 0),
-            gezira_WriteImage_ARGB32 (nl, shadow_pixels[0],
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      DEFAULT_WIDTH)),
+        gezira_Rasterize (nl),
+        gezira_ApplyTexture (nl, gezira_UniformColor (nl, SHADOW_ALPHA, 0, 0, 0)),
+        gezira_WriteToImage_ARGB32 (nl, shadow_pixels[0],
+                                    DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                    DEFAULT_WIDTH),
         NULL);
 
     nile_feed (nl, pipeline, path, 6, path_n, 1);
@@ -171,16 +173,17 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
         gezira_GaussianBlur5x1 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_ReadImage_ARGB32 (nl, shadow_pixels[0],
-                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                          DEFAULT_WIDTH),
+                gezira_ReadFromImage_ARGB32 (nl, shadow_pixels[0],
+                                             DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                             DEFAULT_WIDTH),
                 NULL));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, texture,
-            gezira_WriteImage_ARGB32 (nl, shadow_pixels[1],
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      DEFAULT_WIDTH)),
+        gezira_Rasterize (nl),
+        gezira_ApplyTexture (nl, texture),
+        gezira_WriteToImage_ARGB32 (nl, shadow_pixels[1],
+                                    DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                    DEFAULT_WIDTH),
         NULL);
 
     nile_feed (nl, pipeline, bbox_path, 6, bbox_path_n, 1);
@@ -192,16 +195,17 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
         gezira_GaussianBlur1x5 (nl, BLUR_FLATTEN_FACTOR,
             nile_Pipeline (nl,
                 gezira_ImageExtendPad (nl, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_ReadImage_ARGB32 (nl, shadow_pixels[1],
-                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                          DEFAULT_WIDTH),
+                gezira_ReadFromImage_ARGB32 (nl, shadow_pixels[1],
+                                             DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                             DEFAULT_WIDTH),
                 NULL));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, texture,
-            gezira_WriteImage_ARGB32 (nl, shadow_pixels[0],
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      DEFAULT_WIDTH)),
+        gezira_Rasterize (nl),
+        gezira_ApplyTexture (nl, texture),
+        gezira_WriteToImage_ARGB32 (nl, shadow_pixels[0],
+                                    DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                    DEFAULT_WIDTH),
         NULL);
 
     nile_feed (nl, pipeline, bbox_path, 6, bbox_path_n, 1);
@@ -210,19 +214,20 @@ draw_shadow (nile_t *nl, real *path, int path_n, nile_Kernel_t *k, SDL_Surface *
     // composite
 
     texture = gezira_CompositeTextures (nl,
-            gezira_ReadImage_ARGB32 (nl, shadow_pixels[0],
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      DEFAULT_WIDTH),
-            gezira_ReadImage_ARGB32 (nl, image->pixels,
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      image->pitch / 4),
+            gezira_ReadFromImage_ARGB32 (nl, shadow_pixels[0],
+                                         DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                         DEFAULT_WIDTH),
+            gezira_ReadFromImage_ARGB32 (nl, image->pixels,
+                                         DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                         image->pitch / 4),
             gezira_CompositeOver (nl));
     pipeline = nile_Pipeline (nl,
         gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, texture,
-            gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      image->pitch / 4)),
+        gezira_Rasterize (nl),
+        gezira_ApplyTexture (nl, texture),
+        gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                    DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                    image->pitch / 4),
         NULL);
 
     nile_feed (nl, pipeline, bbox_path, 6, bbox_path_n, 1);
@@ -235,7 +240,7 @@ main (int argc, char **argv)
     int i, j;
     SDL_Surface *image;
     nile_t *nl;
-    char mem[1000000];
+    char mem[500000];
     int vertex_index = -1;
     real angle = 0;
     real scale;
@@ -349,10 +354,11 @@ main (int argc, char **argv)
             pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
+                gezira_Rasterize (nl),
+                gezira_ApplyTexture (nl, texture),
+                gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                            DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                            image->pitch / 4),
                 NULL);
 
             nile_feed (nl, pipeline, gezira_stroke_path, 6, gezira_stroke_path_n, 1);
@@ -375,10 +381,11 @@ main (int argc, char **argv)
             pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
+                gezira_Rasterize (nl),
+                gezira_ApplyTexture (nl, texture),
+                gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                            DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                            image->pitch / 4),
                 NULL);
 
             nile_feed (nl, pipeline, star_path, 6, star_path_n, 1);
