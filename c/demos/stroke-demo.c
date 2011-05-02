@@ -12,7 +12,7 @@ typedef nile_Real_t real;
 #define NTHREADS 0
 #define DEFAULT_WIDTH  500
 #define DEFAULT_HEIGHT 500
-#define STROKE_WIDTH   30.0
+#define STROKE_WIDTH   0.25
 
 #define DIE(s, ...) \
 do { \
@@ -35,17 +35,18 @@ draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
                                          gezira_StrokeJoinRound (nl));
         nile_Kernel_t *texture = gezira_CompositeTextures (nl,
                 gezira_UniformColor (nl, 0.5, 1, 0, 0),
-                gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                         image->pitch / 4),
+                gezira_ReadFromImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                             image->pitch / 4),
                 gezira_CompositeOver (nl));
         nile_Kernel_t *pipeline = nile_Pipeline (nl,
             stroke,
             gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-            gezira_Render (nl, texture,
-                gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                          image->pitch / 4)),
-        NULL);
+            gezira_Rasterize (nl),
+            gezira_ApplyTexture (nl, texture),
+            gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                        DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                        image->pitch / 4),
+            NULL);
         nile_feed (nl, pipeline, dot, 6, 6, 1);
     }
     nile_sync (nl);
@@ -57,7 +58,7 @@ main (int argc, char **argv)
     int i, j;
     SDL_Surface *image;
     nile_t *nl;
-    char mem[300000];
+    char mem[500000];
     int vertex_index = -1;
 
     real path[] = {100, 100, 350, 200, 300, 100, 400, 200, 100, 400};
@@ -116,10 +117,11 @@ main (int argc, char **argv)
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 stroke,
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
+                gezira_Rasterize (nl),
+                gezira_ApplyTexture (nl, texture),
+                gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                            DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                            image->pitch / 4),
                 NULL);
 
             real nile_path[path_n / 4 * 6];

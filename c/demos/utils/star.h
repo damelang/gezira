@@ -1,4 +1,7 @@
-float star_path[] =
+#ifndef GEZIRA_STAR_H
+#define GEZIRA_STAR_H
+
+static float star_path[] =
 {
     250.00000, 150.00000, 237.65650, 183.01064, 225.31301, 216.02128,
     225.31301, 216.02128, 190.10368, 217.55979, 154.89434, 219.09830,
@@ -11,4 +14,7 @@ float star_path[] =
     345.10565, 219.09830, 309.89631, 217.55979, 274.68698, 216.02128,
     274.68698, 216.02128, 262.34349, 183.01064, 250.00000, 150.00000
 };
-int star_path_n = sizeof (star_path) / sizeof (star_path[0]);
+
+static int star_path_n = sizeof (star_path) / sizeof (star_path[0]);
+
+#endif

@@ -88,7 +88,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-    char mem[200000];
+    char mem[500000];
     real angle = 0;
     real scale;
 
@@ -144,10 +144,11 @@ main (int argc, char **argv)
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
+                gezira_Rasterize (nl),
+                gezira_ApplyTexture (nl, texture),
+                gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                          image->pitch / 4),
                 NULL);
 
             nile_feed (nl, pipeline, path, 6, path_n, 1);

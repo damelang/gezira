@@ -91,7 +91,7 @@ main (int argc, char **argv)
 {
     SDL_Surface *image;
     nile_t *nl;
-    char mem[200000];
+    char mem[500000];
     uint32_t texture_pixels[TEXTURE_WIDTH * TEXTURE_HEIGHT] = {0};
     uint32_t background_pixels[DEFAULT_WIDTH * DEFAULT_HEIGHT] = {0};
     real angle = 0;
@@ -165,7 +165,7 @@ main (int argc, char **argv)
             /*
             */
             nile_Kernel_t *texture =
-                gezira_ReadImage_ARGB32 (nl, texture_pixels, TEXTURE_WIDTH,
+                gezira_ReadFromImage_ARGB32 (nl, texture_pixels, TEXTURE_WIDTH,
                                          TEXTURE_HEIGHT, TEXTURE_WIDTH);
             /*
             texture = nile_Pipeline (nl,
@@ -181,16 +181,17 @@ main (int argc, char **argv)
                 texture, NULL);
             texture = gezira_CompositeTextures (nl,
                     texture,
-                    gezira_ReadImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                                 image->pitch / 4),
+                    gezira_ReadFromImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                                     image->pitch / 4),
                     gezira_CompositePlus (nl));
             nile_Kernel_t *pipeline = nile_Pipeline (nl,
                 gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
                 gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Render (nl, texture,
-                    gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                              DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                              image->pitch / 4)),
+                gezira_Rasterize (nl),
+                gezira_ApplyTexture (nl, texture),
+                gezira_WriteToImage_ARGB32 (nl, image->pixels,
+                                            DEFAULT_WIDTH, DEFAULT_HEIGHT,
+                                            image->pitch / 4),
                 NULL);
 
             nile_feed (nl, pipeline, path, 6, path_n, 1);
