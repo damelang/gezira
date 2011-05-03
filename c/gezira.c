@@ -550,7 +550,7 @@ gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
     nile_Real_t t_11 = nile_Real (0.5);
     nile_Real_t t_12 = nile_Real_add(v.v_min_y, t_11);
 
-    nile_Buffer_t *in = nile_Process_prefix_input (p, NULL);
+    nile_Buffer_t *in = nile_Process_prefix_input (p, 0);
     if (in)
         nile_Buffer_push_head(in, t_12);
 
