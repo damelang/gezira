@@ -12,7 +12,8 @@
 #define NTHREADS 1
 #define DEFAULT_WIDTH  600
 #define DEFAULT_HEIGHT 600
-#define NFLAKES 500
+//#define NFLAKES 500
+#define NFLAKES 1000
 #define NFRAMES_PER_FPS_UPDATE 50
 
 #include <unistd.h>
@@ -132,6 +133,7 @@ main (int argc, char **argv)
         flakes[i].y = rand_upto (window.height);
         flakes[i].dy = 0.5 + rand_upto (2.5);
         flakes[i].scale = 0.2 + rand_upto (0.5);
+        //flakes[i].scale = 0.1 + rand_upto (0.4);
         flakes[i].rotation = 0.1 - rand_upto (0.2);
         flakes[i].angle = rand_upto (3);
         flakes[i].alpha = 0.7;
@@ -142,15 +144,15 @@ main (int argc, char **argv)
 
     before = gettimeofday_d ();
 
-    clear = nile_Process_pipe (gezira_RectangleSpans (init, 0, 0, window.width, window.height),
-                               gezira_CompositeUniformColorOverImage_ARGB32 (init,
-                               1, 0, 0, 0, window.pixels, window.width, window.height, window.width),
-                               NILE_NULL);
+    clear = gezira_CompositeUniformColorOverImage_ARGB32 (init, 1, 0, 0, 0,
+                window.pixels, window.width, window.height, window.width);
     COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
             flakes[0].alpha, flakes[0].red, flakes[0].green, flakes[0].blue,
             window.pixels, window.width, window.height, window.width);
     nile_Process_gate (clear, COI);
-    nile_pour (init, clear, NULL, 0);
+    nile_pour (init, nile_Process_pipe (
+        gezira_RectangleSpans (init, 0, 0, window.width, window.height), clear, NILE_NULL),
+        NULL, 0);
 
     for (;;) {
         char c = inputChar ();
@@ -175,10 +177,14 @@ main (int argc, char **argv)
             if (nthreads < 0 || nthreads > 50)
                 printf ("invalid thread count\n");
             else {
-                printf ("%d threads\n", nthreads);
-                fflush (stdout);
+                printf ("%d threads\n", nthreads); fflush (stdout);
+                nile_pour (init, COI, NULL, 0);
+                nile_sync (init);
                 nile_shutdown (init);
                 init = nile_startup (mem, MEM_SIZE, nthreads);
+                COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+                        flakes[0].alpha, flakes[0].red, flakes[0].green, flakes[0].blue,
+                        window.pixels, window.width, window.height, window.width);
             }
         }
 
@@ -188,27 +194,23 @@ main (int argc, char **argv)
                 flakes[j].alpha, flakes[j].red, flakes[j].green, flakes[j].blue,
                 window.pixels, window.width, window.height, window.width);
             if (j != 0) {
-                COI = nile_Process_gate (COI, COI_);
+                nile_Process_gate (COI, COI_);
                 render_flake (&flakes[i], init, COI);
             }
             else {
-                clear = nile_Process_pipe (gezira_RectangleSpans (init, 0, 0, window.width, window.height),
-                                           gezira_CompositeUniformColorOverImage_ARGB32 (init,
-                                           1, 0, 0, 0, window.pixels, window.width, window.height, window.width),
-                                           NILE_NULL);
-                clear = nile_Process_gate (clear, COI_);
-                render_flake (&flakes[i], init,
-                    nile_Process_pipe (COI, gezira_WindowUpdate (init, &window), clear, NILE_NULL));
+                clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+                       1, 0, 0, 0, window.pixels, window.width, window.height, window.width);
+                nile_Process_gate (clear, COI_);
+                render_flake (&flakes[i], init, nile_Process_pipe (
+                    COI,
+                    gezira_WindowUpdate (init, &window),
+                    gezira_RectangleSpans (init, 0, 0, window.width, window.height),
+                    clear,
+                    NILE_NULL));
             }
             COI = COI_;
             update_flake (&flakes[i]);
         }
-
-        if (nile_error (init)) {
-            fprintf (stderr, "nile_error!\n");
-            break;
-        }
-        //nile_print_leaks (init, stdout);
 
         if (zoom) {
             zoomX += zoomD;
@@ -218,17 +220,28 @@ main (int argc, char **argv)
         }
         frames++;
         if (!(frames % NFRAMES_PER_FPS_UPDATE)) {
+            /*
+            nile_sync (init);
+            if (nile_error (init)) {
+                fprintf (stderr, "nile_error!\n");
+                nile_print_leaks (init);
+                break;
+            }
+            nile_print_leaks (init);
+            */
             double now = gettimeofday_d ();
             printf ("fps: %.1lf\n", NFRAMES_PER_FPS_UPDATE / (now - before));
             before = now;
         }
     }
-    nile_pour (init, COI, NULL, 0);
 
-    printf ("frames: %d\n", frames);
-    free (nile_shutdown (init));
+    nile_pour (init, COI, NULL, 0);
+    nile_sync (init);
+    nile_shutdown (init);
+    free (mem);
     gezira_Window_fini (&window);
     echo (1); // todo use atexit
+    printf ("frames: %d\n", frames);
 
     return 0;
 }
