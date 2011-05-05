@@ -81,7 +81,77 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 
 #elif defined (__unix__)
 
-#error TODO move code over here
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/extensions/XShm.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+struct gezira_Window_ {
+    int              width;
+    int              height;
+    uint32_t        *pixels;
+    XShmSegmentInfo *segment;
+    Display         *display;
+    GC               gc;
+    XImage          *image;
+    Window           x11window;
+};
+
+static void
+gezira_Window_init (gezira_Window_t *window, int width, int height)
+{
+    int depth;
+    Atom atom;
+    window->width = width;
+    window->height = height;
+    window->segment = (XShmSegmentInfo *) malloc (sizeof (XShmSegmentInfo));
+    window->display = XOpenDisplay (0);
+    window->gc = DefaultGC (window->display, DefaultScreen (window->display));
+    depth = XDefaultDepth (window->display, DefaultScreen (window->display));
+    if (!(depth == 24 || depth == 32)) {
+        fprintf (stderr, "Unsupported display depth: %d\n", depth);
+        exit (1);
+    }
+    window->image = XShmCreateImage (window->display, CopyFromParent, depth, ZPixmap,
+                                     NULL, window->segment, width, height);
+    window->x11window = XCreateWindow (window->display, DefaultRootWindow (window->display),
+                                       50, 50, width, height, 0, depth, InputOutput,
+                                       CopyFromParent, 0, NULL);
+    window->segment->shmid = shmget (IPC_PRIVATE, window->image->bytes_per_line * height,
+                                     IPC_CREAT | 0777);
+    window->segment->shmaddr = window->image->data =
+        (char *) shmat (window->segment->shmid, 0, 0);
+    window->pixels = (uint32_t *) window->image->data;
+    window->segment->readOnly = True;
+    XShmAttach (window->display, window->segment);
+    shmctl (window->segment->shmid, IPC_RMID, NULL);
+    atom = XInternAtom (window->display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols (window->display, window->x11window, &atom, 1);
+    XMapWindow (window->display, window->x11window);
+    XSync (window->display, True);
+}
+
+static void
+gezira_Window_fini (gezira_Window_t *window)
+{
+    XShmDetach (window->display, window->segment);
+    XDestroyImage (window->image);
+    shmdt (window->segment->shmaddr);
+    free (window->segment);
+    XDestroyWindow (window->display, window->x11window);
+    XCloseDisplay (window->display);
+}
+
+static nile_Buffer_t *
+gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_Window_t *window = *((gezira_Window_t **) nile_Process_vars (p));
+    XShmPutImage (window->display, window->x11window, window->gc, window->image, 0, 0, 0, 0,
+                  window->image->width, window->image->height, False);
+    XSync (window->display, False);
+    return out;
+}
 
 #else
 #error Unsupported platform!

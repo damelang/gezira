@@ -10,7 +10,7 @@ ifneq (,$(findstring darwin,$(TARGET)))
 else ifneq (,$(findstring mingw,$(TARGET))$(findstring cygwin,$(TARGET)))
   LDFLAGS += # TODO windows
 else
-  LDFLAGS += # TODO X11, etc.
+  LDFLAGS += -lXext -lm -pthread
 endif
 
 %-demo: %-demo.c FORCE
