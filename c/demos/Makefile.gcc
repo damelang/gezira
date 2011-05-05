@@ -3,8 +3,7 @@ TARGET       := $(shell $(CC) -dumpmachine)
 LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
 CFLAGS       := -pipe -Wall -Werror \
                 -I.. -I$(NILE_RUNTIME) \
-                -O3 -ffast-math \
-                #-march=corei7 -mfpmath=sse -msse4.2 -mno-ssse3 \
+                -O3 -ffast-math
 
 ifneq (,$(findstring darwin,$(TARGET)))
   LDFLAGS += -framework Cocoa
