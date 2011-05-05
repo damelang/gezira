@@ -1,7 +1,7 @@
 NILE_RUNTIME := ../../../nile/runtimes/c
 TARGET       := $(shell $(CC) -dumpmachine)
 LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
-CFLAGS       := -pipe -Wall -Werror \
+CFLAGS       := -pipe -Wall -Werror -Wno-unused \
                 -I.. -I$(NILE_RUNTIME) \
                 -O3 -ffast-math
 
