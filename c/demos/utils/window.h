@@ -9,7 +9,6 @@ typedef struct {
 
 #ifdef __APPLE__
 
-#include <stdlib.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <objc/objc-runtime.h>
 #define NSTitledWindowMask     1
