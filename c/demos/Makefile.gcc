@@ -17,7 +17,7 @@ endif
 %-demo: %-demo.c FORCE
 	$(MAKE) -C $(NILE_RUNTIME) -f Makefile.gcc
 	$(MAKE) -C .. -f Makefile.gcc
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $<
+	$(CC) $< -o $@ $(CFLAGS) $(LDFLAGS)
 
 snow-demo:
 
