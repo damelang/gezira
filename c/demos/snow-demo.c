@@ -18,7 +18,7 @@
 
 #include <unistd.h>
 #include <termios.h>
-void echo(bool on) {
+void echo(int on) {
   struct termios t;
   tcgetattr(STDIN_FILENO, &t);
   if (on)
@@ -28,7 +28,7 @@ void echo(bool on) {
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
-bool kbhit(void) {
+int kbhit(void) {
   struct timeval tv;
   fd_set fds;
   tv.tv_sec = 0;
