@@ -1,165 +1,108 @@
-#include <stdlib.h>
 #include <stdio.h>
 #define NILE_INCLUDE_PROCESS_API
 #include "nile.h"
 #include "gezira.h"
 #include "gezira-image.h"
-#include "utils/snowflake.h"
-#include "utils/matrix.h"
-#include "utils/window.h"
+#include "utils/all.h"
 
-#define MEM_SIZE 20000000
-#define NTHREADS 1
-#define DEFAULT_WIDTH  600
-#define DEFAULT_HEIGHT 600
-//#define NFLAKES 500
+#define NBYTES_PER_THREAD 1000000
 #define NFLAKES 1000
-#define NFRAMES_PER_FPS_UPDATE 50
+#define FLAKE_ALPHA 0.7
+#define FLAKE_RED   0.8
+#define FLAKE_GREEN 0.9
+#define FLAKE_BLUE  1.0
 
-#include <unistd.h>
-#include <termios.h>
-void echo(int on) {
-  struct termios t;
-  tcgetattr(STDIN_FILENO, &t);
-  if (on)
-    t.c_lflag |= ECHO;
-  else
-    t.c_lflag &= !ECHO;
-  tcsetattr(STDIN_FILENO, TCSANOW, &t);
-}
+static int   window_width  = 600;
+static int   window_height = 600;
+static int   is_zooming    =   0;
+static float zoom          =   1.00;
+static float dzoom         =   0.01;
 
-int kbhit(void) {
-  struct timeval tv;
-  fd_set fds;
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
-  FD_ZERO(&fds);
-  FD_SET(STDIN_FILENO, &fds);
-  select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
-  return FD_ISSET(0, &fds);
-}
-
-int inputChar(void) {
-  struct termios oldt, newt;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-  newt.c_lflag &= ~(ICANON | ECHO);
-  newt.c_cc[VMIN] = 1;
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  int c = kbhit() ? getchar() : 0;
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  return c;
-}
-
-#include <sys/time.h>
-static
-double gettimeofday_d ()
-{
-    struct timeval tv;
-    gettimeofday (&tv, NULL);
-    return tv.tv_sec + tv.tv_usec / 1000000.0;
-}
-
-static float rand_upto (float max) { return rand () / (float) RAND_MAX * max; }
+static gezira_Window_t window;
+static nile_Process_t *init;
+static nile_Process_t *gate;
 
 typedef struct {
-    float x, y, dy, scale, rotation, angle, alpha, red, green, blue;
+    float x, y, dy, scale, angle, dangle;
 } gezira_snowflake_t;
 
 static void
-update_flake (gezira_snowflake_t *flake)
+gezira_snowflake_update (gezira_snowflake_t *flake)
 {
     flake->y += flake->dy;
-    flake->angle += flake->rotation;
-    if (flake->y > DEFAULT_HEIGHT + 10)
+    flake->angle += flake->dangle;
+    if (flake->y > window_height + 10)
         flake->y = -10;
 }
 
-static float zoomX = 1;
-static float zoomY = 1;
-static float zoomD = 0.01;
+static int
+gezira_snowflake_offscreen (gezira_snowflake_t *flake)
+{
+    float dx = window_width / fabs (flake->x - window_width/2);
+    float dy = window_height / fabs (flake->y - window_height/2);
+    return zoom > dx || zoom > dy;
+}
 
 static void
-render_flake (gezira_snowflake_t *flake, nile_Process_t *init, nile_Process_t *COI)
+gezira_snowflake_render (gezira_snowflake_t *flake)
 {
+    nile_Process_t *pipeline, *gate_, *COI;
     Matrix_t M = Matrix ();
-    M = Matrix_translate (M, DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2);
-    M = Matrix_scale (M, zoomX, zoomY);
-    M = Matrix_translate (M, -DEFAULT_WIDTH / 2, -DEFAULT_HEIGHT / 2);
+    if (gezira_snowflake_offscreen (flake))
+        return;
+    M = Matrix_translate (M, window_width / 2, window_height / 2);
+    M = Matrix_scale (M, zoom, zoom);
+    M = Matrix_translate (M, -window_width / 2, -window_height / 2);
     M = Matrix_translate (M, flake->x, flake->y);
     M = Matrix_rotate (M, flake->angle);
     M = Matrix_scale (M, flake->scale, flake->scale);
-
-    nile_Process_t *p = nile_Process_pipe (
-        nile_Funnel (init),
+    COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+        FLAKE_ALPHA, FLAKE_RED, FLAKE_GREEN, FLAKE_BLUE,
+        window.pixels, window.width, window.height, window.width);
+    gate_ = nile_Identity (init);
+    nile_Process_gate (COI, gate_);
+    pipeline = nile_Process_pipe (
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
-        gezira_ClipBeziers (init, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
+        gezira_ClipBeziers (init, 0, 0, window_width, window_height),
         gezira_Rasterize (init),
+        gate,
         COI,
         NILE_NULL);
-    nile_Funnel_pour (p, snowflake_path, snowflake_path_n, 1);
-}
-
-void 
-nile_pour (nile_Process_t *init, nile_Process_t *p, float *data, int n)
-{
-    nile_Funnel_pour (nile_Process_pipe (nile_Funnel (init), p, NILE_NULL), data, n, 1);
+    nile_Process_feed (pipeline, snowflake_path, snowflake_path_n);
+    gate = gate_;
 }
 
 int
 main (int argc, char **argv)
 {
     int i;
-    double before;
-    int frames = 0;
-    nile_Process_t *init, *COI, *clear;
     gezira_snowflake_t flakes[NFLAKES];
-    int zoom = 0;
-    gezira_Window_t window;
-    char *mem = malloc (MEM_SIZE);
+    int nthreads = 1;
+    int mem_size;
 
-    init = nile_startup (mem, MEM_SIZE, NTHREADS);
+    gezira_Window_init (&window, window_width, window_height);
+
+    for (i = 0; i < NFLAKES; i++) {
+        flakes[i].x      = gezira_random (0, window.width);
+        flakes[i].y      = gezira_random (0, window.height);
+        flakes[i].dy     = gezira_random (0.5, 3.0);
+        flakes[i].scale  = gezira_random (0.2, 0.7);
+        flakes[i].angle  = gezira_random (0, 4);
+        flakes[i].dangle = gezira_random (-0.1, 0.1);
+    }
+
+    mem_size = nthreads * NBYTES_PER_THREAD;
+    init = nile_startup (malloc (mem_size), mem_size, nthreads);
     if (!init) {
         fprintf (stderr, "nile_startup failed\n");
         exit (1);
     }
 
-    gezira_Window_init (&window, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-    echo (0);
-
-    srand (17837643);
-    for (i = 0; i < NFLAKES; i++) {
-        flakes[i].x = rand_upto (window.width);
-        flakes[i].y = rand_upto (window.height);
-        flakes[i].dy = 0.5 + rand_upto (2.5);
-        flakes[i].scale = 0.2 + rand_upto (0.5);
-        //flakes[i].scale = 0.1 + rand_upto (0.4);
-        flakes[i].rotation = 0.1 - rand_upto (0.2);
-        flakes[i].angle = rand_upto (3);
-        flakes[i].alpha = 0.7;
-        flakes[i].red = 0.8;
-        flakes[i].green = 0.9;
-        flakes[i].blue = 1.0;
-    }
-
-    before = gettimeofday_d ();
-
-    clear = gezira_CompositeUniformColorOverImage_ARGB32 (init, 1, 0, 0, 0,
-                window.pixels, window.width, window.height, window.width);
-    COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
-            flakes[0].alpha, flakes[0].red, flakes[0].green, flakes[0].blue,
-            window.pixels, window.width, window.height, window.width);
-    nile_Process_gate (clear, COI);
-    nile_pour (init, nile_Process_pipe (
-        gezira_RectangleSpans (init, 0, 0, window.width, window.height), clear, NILE_NULL),
-        NULL, 0);
+    gate = nile_Identity (init);
 
     for (;;) {
-        char c = inputChar ();
-        if (c) {
-            int nthreads = c - '0';
-            if (!nthreads)
-                break;
+        char c = gezira_Window_key_pressed (&window);
+        while (c != -1) {
             switch (c) {
                 case ')': nthreads = 10; break;
                 case '!': nthreads = 11; break;
@@ -171,77 +114,55 @@ main (int argc, char **argv)
                 case '&': nthreads = 17; break;
                 case '*': nthreads = 18; break;
                 case '(': nthreads = 19; break;
-                case 'z': zoom = !zoom;  break;
-                default: break;
+                case 'z': is_zooming = !is_zooming;  break;
+                default: nthreads = c - '0'; break;
             }
-            if (nthreads < 0 || nthreads > 50)
-                printf ("invalid thread count\n");
-            else {
-                printf ("%d threads\n", nthreads); fflush (stdout);
-                nile_pour (init, COI, NULL, 0);
-                nile_sync (init);
-                nile_shutdown (init);
-                init = nile_startup (mem, MEM_SIZE, nthreads);
-                COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
-                        flakes[0].alpha, flakes[0].red, flakes[0].green, flakes[0].blue,
-                        window.pixels, window.width, window.height, window.width);
-            }
-        }
-
-        for (i = 0; i < NFLAKES; i++) {
-            int j = (i + 1) % NFLAKES;
-            nile_Process_t *COI_ = gezira_CompositeUniformColorOverImage_ARGB32 (init,
-                flakes[j].alpha, flakes[j].red, flakes[j].green, flakes[j].blue,
-                window.pixels, window.width, window.height, window.width);
-            if (j != 0) {
-                nile_Process_gate (COI, COI_);
-                render_flake (&flakes[i], init, COI);
-            }
-            else {
-                clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
-                       1, 0, 0, 0, window.pixels, window.width, window.height, window.width);
-                nile_Process_gate (clear, COI_);
-                render_flake (&flakes[i], init, nile_Process_pipe (
-                    COI,
-                    gezira_WindowUpdate (init, &window),
-                    gezira_RectangleSpans (init, 0, 0, window.width, window.height),
-                    clear,
-                    NILE_NULL));
-            }
-            COI = COI_;
-            update_flake (&flakes[i]);
-        }
-
-        if (zoom) {
-            zoomX += zoomD;
-            zoomY += zoomD;
-            if (zoomX > 3 || zoomX < 1 - zoomD)
-                zoomD = -zoomD;
-        }
-        frames++;
-        if (!(frames % NFRAMES_PER_FPS_UPDATE)) {
-            /*
-            nile_sync (init);
-            if (nile_error (init)) {
-                fprintf (stderr, "nile_error!\n");
-                nile_print_leaks (init);
+            if (!nthreads)
                 break;
+            if (c == 'z')
+                break;
+            printf ("Requesting %d threads\n", nthreads); fflush (stdout);
+            if (nthreads < 0 || nthreads > 50)
+                printf ("Invalid thread count\n");
+            else {
+                nile_Process_feed (gate, NULL, 0);
+                nile_sync (init);
+                free (nile_shutdown (init));
+                mem_size = nthreads * NBYTES_PER_THREAD;
+                init = nile_startup (malloc (mem_size), mem_size, nthreads);
+                gate = nile_Identity (init);
             }
-            nile_print_leaks (init);
-            */
-            double now = gettimeofday_d ();
-            printf ("fps: %.1lf\n", NFRAMES_PER_FPS_UPDATE / (now - before));
-            before = now;
+            c = gezira_Window_key_pressed (&window);
+        }
+        if (!nthreads)
+            break;
+
+        gate = gezira_Window_update_and_clear (&window, init, gate, 1, 0, 0, 0);
+        for (i = 0; i < NFLAKES; i++) {
+            gezira_snowflake_render (&flakes[i]);
+            gezira_snowflake_update (&flakes[i]);
+        }
+
+        if (nile_error (init)) {
+            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
+            break;
+        }
+
+        gezira_update_fps (init);
+
+        if (is_zooming) {
+            zoom += dzoom;
+            if (zoom > 8 || zoom < 1 - dzoom)
+                dzoom = -dzoom;
         }
     }
 
-    nile_pour (init, COI, NULL, 0);
+    nile_Process_feed (gate, NULL, 0);
     nile_sync (init);
-    nile_shutdown (init);
-    free (mem);
-    gezira_Window_fini (&window);
-    echo (1); // todo use atexit
-    printf ("frames: %d\n", frames);
+    free (nile_shutdown (init));
+    //printf ("Just Window_fini left\n"); fflush (stdout);
+    // TODO why does the line below cause a segfault every now and then?
+    //gezira_Window_fini (&window);
 
     return 0;
 }
