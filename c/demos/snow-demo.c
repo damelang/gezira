@@ -80,7 +80,7 @@ main (int argc, char **argv)
     int nthreads = 1;
     int mem_size;
 
-    gezira_Window_init (&window, window_width, window_height);
+    gezira_Window_init (&window, 0, 0, window_width, window_height, 1);
 
     for (i = 0; i < NFLAKES; i++) {
         flakes[i].x      = gezira_random (0, window.width);
