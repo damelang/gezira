@@ -1,90 +1,56 @@
 #include <stdio.h>
+#define NILE_INCLUDE_PROCESS_API
+#include "nile.h"
 #include "gezira.h"
 #include "gezira-image.h"
+#include "utils/all.h"
+
+#define NBYTES_PER_THREAD 1000000
+#define NFALLING_GLYPHS   5000
+
+static int   window_width  = 600;
+static int   window_height = 600;
+static int   is_zooming    =   0;
+static float zoom          =   1.00;
+static float dzoom         =   0.01;
+
+static gezira_Window_t window;
+static nile_Process_t *init;
+static nile_Process_t *gate;
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#include "SDL.h"
-#ifdef main
-#undef main
-#endif 
-
-typedef nile_Real_t real;
-
-#define FT_FIXED_TO_REAL(fixed) nile_Real (fixed / 64.0)
-
-#define NTHREADS 0
-#define DEFAULT_WIDTH  1300
-#define DEFAULT_HEIGHT  800
-
+#define FT_FIXED_TO_FLOAT(fixed) (fixed / 64.0f)
 #define FONT_FILE "/Library/Fonts/Times New Roman.ttf"
 
-#define DIE(s, ...) \
-do { \
-    fprintf (stderr, "(%s:%4d) " s "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-    exit (1); \
-} while (0)
-
 typedef struct {
-    real a, b, c, d, e, f;
-} matrix_t;
-
-matrix_t
-matrix_new () {
-    matrix_t M = { 1, 0, 0, 1, 0, 0 };
-    return M;
-}
-
-matrix_t
-matrix_translate (matrix_t M, real x, real y)
-{
-    matrix_t N = { M.a, M.b, M.c, M.d,
-                   M.a * x + M.c * y + M.e,
-                   M.b * x + M.d * y + M.f};
-    return N;
-}
-
-matrix_t
-matrix_rotate (matrix_t M, real t)
-{
-    matrix_t N = { M.a *  cos (t) + M.c * sin (t),
-                   M.b *  cos (t) + M.d * sin (t),
-                   M.a * -sin (t) + M.c * cos (t),
-                   M.b * -sin (t) + M.d * cos (t),
-                   M.e, M.f};
-    return N;
-}
-
-matrix_t
-matrix_scale (matrix_t M, real sx, real sy)
-{
-    matrix_t N = { M.a * sx, M.b * sx, M.c * sy, M.d * sy, M.e, M.f};
-    return N;
-}
+    char  c;
+    float path[512];
+    int   path_n;
+} glyph_t;
 
 #define PRODUCE_LINE(x0, y0, x1, y1) \
 do { \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (x0); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (y0); \
-    path[(*path_n)++] = (FT_FIXED_TO_REAL (x0) + FT_FIXED_TO_REAL (x1)) / 2; \
-    path[(*path_n)++] = (FT_FIXED_TO_REAL (y0) + FT_FIXED_TO_REAL (y1)) / 2; \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (x1); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (y1); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (x0); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (y0); \
+    path[(*path_n)++] = (FT_FIXED_TO_FLOAT (x0) + FT_FIXED_TO_FLOAT (x1)) / 2; \
+    path[(*path_n)++] = (FT_FIXED_TO_FLOAT (y0) + FT_FIXED_TO_FLOAT (y1)) / 2; \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (x1); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (y1); \
 } while (0)
 
 #define PRODUCE_BEZIER(x0, y0, x1, y1, x2, y2) \
 do { \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (x0); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (y0); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (x1); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (y1); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (x2); \
-    path[(*path_n)++] = FT_FIXED_TO_REAL (y2); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (x0); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (y0); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (x1); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (y1); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (x2); \
+    path[(*path_n)++] = FT_FIXED_TO_FLOAT (y2); \
 } while (0)
 
 static void
-convert_glyph_outline (nile_Real_t *path, int *path_n, FT_Outline *outline)
+convert_glyph_outline (float *path, int *path_n, FT_Outline *outline)
 {
     int i, first, contour_i;
     FT_Vector *points = outline->points;
@@ -94,8 +60,10 @@ convert_glyph_outline (nile_Real_t *path, int *path_n, FT_Outline *outline)
     for (contour_i = 0; contour_i < outline->n_contours; contour_i++) {
         int n = outline->contours[contour_i] + 1;
 
-        if (FT_CURVE_TAG (outline->tags[first]) != FT_CURVE_TAG_ON)
-            DIE ("I don't handle this");
+        if (FT_CURVE_TAG (outline->tags[first]) != FT_CURVE_TAG_ON) {
+            fprintf (stderr, "I don't handle this\n");
+            exit (1);
+        }
 
         for (i = first + 1; i < n;) {
             switch (FT_CURVE_TAG (outline->tags[i])) {
@@ -125,7 +93,8 @@ convert_glyph_outline (nile_Real_t *path, int *path_n, FT_Outline *outline)
                     PRODUCE_BEZIER (p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
                     break;
                 default:
-                    DIE ("I don't handle this");
+                    fprintf (stderr, "I don't handle this\n");
+                    exit (1);
             }
         }
         if (i == n)
@@ -136,89 +105,201 @@ convert_glyph_outline (nile_Real_t *path, int *path_n, FT_Outline *outline)
 }
 
 static void
-render_glyph (nile_t *nl, FT_Face ft_face, char c, matrix_t M,
-              SDL_Surface *image)
+load_glyph_path (glyph_t *glyph, FT_Face ft_face)
 {
-    nile_Real_t path[512];
-    int path_n = 0;
     FT_Error error;
+    error = FT_Load_Char (ft_face, glyph->c, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP);
+    if (error) {
+        fprintf (stderr, "Freetype failed!\n");
+        exit (1);
+    }
+    convert_glyph_outline (glyph->path, &glyph->path_n, &ft_face->glyph->outline);
+}
 
-    error = FT_Load_Char (ft_face, c, FT_LOAD_NO_HINTING | FT_LOAD_NO_BITMAP);
-    if (error)
-        DIE ("Freetype failed!");
-    convert_glyph_outline (path, &path_n, &ft_face->glyph->outline);
+typedef struct {
+    float  x, y, dy, scale, angle, dangle, alpha, red, green, blue;
+    glyph_t *glyph;
+} gezira_falling_glyph_t;
 
-    nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 0, 0, 0);
-    nile_Kernel_t *pipeline = nile_Pipeline (nl,
-        gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
-        gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-        gezira_Render (nl, texture,
-            gezira_WriteImage_ARGB32 (nl, image->pixels,
-                                      DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                      image->pitch / 4)),
-        NULL);
-    nile_feed (nl, pipeline, path, 6, path_n, 1);
-    nile_sync (nl);
+static void
+gezira_falling_glyph_update (gezira_falling_glyph_t *fglyph)
+{
+    fglyph->y += fglyph->dy;
+    fglyph->angle += fglyph->dangle;
+    if (fglyph->y > window_height + 20)
+        fglyph->y = -20;
+}
+
+static int
+gezira_falling_glyph_offscreen (gezira_falling_glyph_t *fglyph)
+{
+    float dx = window_width / fabs (fglyph->x - window_width/2);
+    float dy = window_height / fabs (fglyph->y - window_height/2);
+    return zoom > dx || zoom > dy;
+}
+
+static void
+gezira_falling_glyph_render (gezira_falling_glyph_t *fglyph)
+{
+    nile_Process_t *pipeline, *gate_, *COI;
+    Matrix_t M = Matrix ();
+    if (gezira_falling_glyph_offscreen (fglyph))
+        return;
+
+    M = Matrix_translate (M, window_width / 2, window_height / 2);
+    M = Matrix_scale (M, zoom, zoom);
+    M = Matrix_translate (M, -window_width / 2, -window_height / 2);
+    //M = Matrix_translate (M, 0, window_height);
+    M = Matrix_scale (M, 1, -1);
+    M = Matrix_translate (M, fglyph->x, -fglyph->y);
+    M = Matrix_scale (M, fglyph->scale, fglyph->scale);
+    M = Matrix_rotate (M, fglyph->angle);
+    M = Matrix_translate (M, -20, -20);
+
+    COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+        fglyph->alpha, fglyph->red, fglyph->green, fglyph->blue,
+        window.pixels, window.width, window.height, window.width);
+    gate_ = nile_Identity (init);
+    nile_Process_gate (COI, gate_);
+
+    pipeline = nile_Process_pipe (
+        gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
+        gezira_ClipBeziers (init, 0, 0, window_width, window_height),
+        gezira_Rasterize (init),
+        gate,
+        COI,
+        NILE_NULL);
+    nile_Process_feed (pipeline, fglyph->glyph->path, fglyph->glyph->path_n);
+    gate = gate_;
 }
 
 int
 main (int argc, char **argv)
 {
-    SDL_Surface *image;
-
-    nile_t *nl;
-    char mem[500000];
-
+    int i;
+    gezira_falling_glyph_t fglyphs[NFALLING_GLYPHS];
+    int nthreads = 1;
+    int mem_size;
     FT_Library ft;
     FT_Face ft_face;
     FT_Error ft_error;
+    static glyph_t glyphs[] = {
+        {'a'}, {'b'}, {'c'}, {'d'},
+        {'e'}, {'f'}, {'g'}, {'h'},
+        {'i'}, {'j'}, {'k'}, {'l'},
+        {'m'}, {'n'}, {'o'}, {'p'},
+        {'q'}, {'r'}, {'s'}, {'t'},
+        {'u'}, {'v'}, {'w'}, {'x'},
+        {'y'}, {'z'},
+        /*
+        {'G'}, {'e'}, {'z'}, {'i'}, {'r'}, {'a'},
+        */
+    };
+    int nglyphs = (sizeof (glyphs) / sizeof (glyphs[0]));
+
+    gezira_Window_init (&window, window_width, window_height);
 
     ft_error = FT_Init_FreeType (&ft);
     ft_error = FT_New_Face (ft, FONT_FILE, 0, &ft_face);
     ft_error = FT_Set_Pixel_Sizes (ft_face, 100, 0);
-    if (ft_error != 0)
-        DIE ("Freetype failed!");
+    if (ft_error != 0) {
+        fprintf (stderr, "freetype failed\n");
+        exit (1);
+    }
+    for (i = 0; i < nglyphs; i++)
+        load_glyph_path (&glyphs[i], ft_face);
 
-    if (SDL_Init (SDL_INIT_VIDEO) == -1)
-        DIE ("SDL_Init failed: %s", SDL_GetError ());
-    if (!SDL_SetVideoMode (DEFAULT_WIDTH, DEFAULT_HEIGHT, 0,
-                           SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF))
-        DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
-    image = SDL_GetVideoSurface ();
-
-    nl = nile_new (NTHREADS, mem, sizeof (mem));
-
-    for (;;) {
-        SDL_Event event;
-        if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
-            break;
-
-        SDL_FillRect (image, NULL, 0xffffffff);
-        SDL_LockSurface (image);
-
-            matrix_t M = matrix_new ();
-            M = matrix_translate (M, 0, DEFAULT_HEIGHT);
-            M = matrix_scale (M, 1, -1);
-
-            render_glyph (nl, ft_face, 'G', matrix_translate (M, 100, 100), image);
-            render_glyph (nl, ft_face, 'e', matrix_translate (M, 200, 100), image);
-            render_glyph (nl, ft_face, 'z', matrix_translate (M, 300, 100), image);
-            render_glyph (nl, ft_face, 'i', matrix_translate (M, 400, 100), image);
-            render_glyph (nl, ft_face, 'r', matrix_translate (M, 500, 100), image);
-            render_glyph (nl, ft_face, 'a', matrix_translate (M, 600, 100), image);
-
-            render_glyph (nl, ft_face, '@', matrix_translate (M, 100, 300), image);
-            render_glyph (nl, ft_face, '&', matrix_translate (M, 200, 300), image);
-            render_glyph (nl, ft_face, 'Q', matrix_translate (M, 300, 300), image);
-            render_glyph (nl, ft_face, '?', matrix_translate (M, 400, 300), image);
-            render_glyph (nl, ft_face, '%', matrix_translate (M, 500, 300), image);
-
-        SDL_UnlockSurface (image);
-        SDL_Flip (image);
+    for (i = 0; i < NFALLING_GLYPHS; i++) {
+        fglyphs[i].x      = gezira_random (0, window.width);
+        fglyphs[i].y      = gezira_random (0, window.height);
+        fglyphs[i].dy     = gezira_random (0.5, 2.5);
+        fglyphs[i].scale  = 0.17;
+        //fglyphs[i].scale  = gezira_random (0.1, 0.3);
+        fglyphs[i].angle  = gezira_random (0, 4);
+        fglyphs[i].dangle = gezira_random (-0.1, 0.1);
+        /*
+        fglyphs[i].alpha  = 1;
+        fglyphs[i].red    = 0;
+        fglyphs[i].green  = 0;
+        fglyphs[i].blue   = 0;
+        */
+        fglyphs[i].alpha  = gezira_random (0.7, 0.9);
+        fglyphs[i].red    = gezira_random (0, 1);
+        fglyphs[i].green  = gezira_random (0, 1);
+        fglyphs[i].blue   = gezira_random (0, 1);
+        fglyphs[i].glyph  = &glyphs[i % nglyphs];
     }
 
-    nile_free (nl);
-    printf ("done\n");
+    mem_size = nthreads * NBYTES_PER_THREAD;
+    init = nile_startup (malloc (mem_size), mem_size, nthreads);
+    if (!init) {
+        fprintf (stderr, "nile_startup failed\n");
+        exit (1);
+    }
+
+    gate = nile_Identity (init);
+
+    for (;;) {
+        char c = gezira_Window_key_pressed (&window);
+        while (c != -1) {
+            switch (c) {
+                case ')': nthreads = 10; break;
+                case '!': nthreads = 11; break;
+                case '@': nthreads = 12; break;
+                case '#': nthreads = 13; break;
+                case '$': nthreads = 14; break;
+                case '%': nthreads = 15; break;
+                case '^': nthreads = 16; break;
+                case '&': nthreads = 17; break;
+                case '*': nthreads = 18; break;
+                case '(': nthreads = 19; break;
+                case 'z': is_zooming = !is_zooming;  break;
+                default: nthreads = c - '0'; break;
+            }
+            if (!nthreads)
+                break;
+            if (c == 'z')
+                break;
+            printf ("Requesting %d threads\n", nthreads); fflush (stdout);
+            if (nthreads < 0 || nthreads > 50)
+                printf ("Invalid thread count\n");
+            else {
+                nile_Process_feed (gate, NULL, 0);
+                nile_sync (init);
+                free (nile_shutdown (init));
+                mem_size = nthreads * NBYTES_PER_THREAD;
+                init = nile_startup (malloc (mem_size), mem_size, nthreads);
+                gate = nile_Identity (init);
+            }
+            c = gezira_Window_key_pressed (&window);
+        }
+        if (!nthreads)
+            break;
+
+        gate = gezira_Window_update_and_clear (&window, init, gate, 1, 1, 1, 1);
+        for (i = 0; i < NFALLING_GLYPHS; i++) {
+            gezira_falling_glyph_render (&fglyphs[i]);
+            gezira_falling_glyph_update (&fglyphs[i]);
+        }
+
+        if (nile_error (init)) {
+            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
+            break;
+        }
+
+        gezira_update_fps (init);
+
+        if (is_zooming) {
+            zoom += dzoom;
+            if (zoom > 8 || zoom < 1 - dzoom)
+                dzoom = -dzoom;
+        }
+    }
+
+    nile_Process_feed (gate, NULL, 0);
+    nile_sync (init);
+    free (nile_shutdown (init));
+    //gezira_Window_fini (&window);
 
     return 0;
 }
