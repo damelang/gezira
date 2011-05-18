@@ -10,6 +10,8 @@
 
 static int   window_width  = 600;
 static int   window_height = 600;
+static int   window_x      =   0;
+static int   window_y      =   0;
 static int   is_zooming    =   0;
 static float zoom          =   1.00;
 static float dzoom         =   0.01;
@@ -191,13 +193,21 @@ main (int argc, char **argv)
         {'q'}, {'r'}, {'s'}, {'t'},
         {'u'}, {'v'}, {'w'}, {'x'},
         {'y'}, {'z'},
-        /*
-        {'G'}, {'e'}, {'z'}, {'i'}, {'r'}, {'a'},
-        */
     };
     int nglyphs = (sizeof (glyphs) / sizeof (glyphs[0]));
 
-    gezira_Window_init (&window, window_width, window_height);
+    if (argc == 5) {
+        window_x = atoi (argv[1]);
+        window_y = atoi (argv[2]);
+        window_width = atoi (argv[3]);
+        window_height = atoi (argv[4]);
+        if (window_width <= 0 || window_height <= 0) {
+            fprintf (stderr, "Bad window dimensions\n");
+            exit (1);
+        }
+    }
+
+    gezira_Window_init (&window, window_x, window_y, window_width, window_height, 0);
 
     ft_error = FT_Init_FreeType (&ft);
     ft_error = FT_New_Face (ft, FONT_FILE, 0, &ft_face);
