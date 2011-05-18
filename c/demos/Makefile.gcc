@@ -1,8 +1,9 @@
 NILE_RUNTIME := ../../../nile/runtimes/c
 TARGET       := $(shell $(CC) -dumpmachine)
-LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile
+LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile `freetype-config --libs`
 CFLAGS       := -pipe -Wall -Werror -Wno-unused \
                 -I.. -I$(NILE_RUNTIME) \
+                `freetype-config --cflags` \
                 -O3 -ffast-math
 
 ifneq (,$(findstring darwin,$(TARGET)))
