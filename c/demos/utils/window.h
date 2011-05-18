@@ -7,12 +7,45 @@ typedef struct {
     gezira_Window_t *window;
 } gezira_WindowUpdate_vars_t;
 
-#ifdef __APPLE__
+#ifdef GEZIRA_WINDOW_NONE
+
+struct gezira_Window_ {
+    int           width;
+    int           height;
+    uint32_t     *pixels;
+};
+
+static void
+gezira_Window_init (gezira_Window_t *window, int width, int height)
+{
+    window->width = width;
+    window->height = height;
+    window->pixels = malloc (width * height * sizeof (uint32_t));
+}
+
+static void
+gezira_Window_fini (gezira_Window_t *window)
+{
+    free (window->pixels);
+}
+
+static nile_Buffer_t *
+gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    return out;
+}
+
+#elif defined(__APPLE__)
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <objc/objc-runtime.h>
-#define NSTitledWindowMask     1
-#define NSBackingStoreBuffered 2
+#define NSTitledWindowMask                           1
+#define NSBackingStoreBuffered                       2
+#define NSAnyEventMask                       ULONG_MAX
+#define NSKeyDown                                   10
+#define NSApplicationActivationPolicyRegular         0
+typedef long NSEventType;
+extern void* const NSDefaultRunLoopMode;
 
 struct gezira_Window_ {
     int           width;
@@ -33,14 +66,23 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     window->width = width;
     window->height = height;
     window->pixels = malloc (width * height * sizeof (uint32_t));
+
+    /* NSApp */
     window->NSApp = objc_msgSend (objc_getClass ("NSApplication"), sel_getUid ("sharedApplication"));
     window->pool = objc_msgSend (objc_getClass ("NSAutoreleasePool"), sel_getUid ("alloc"));
     objc_msgSend (window->pool, sel_getUid ("init"));
+    if (objc_msgSend (window->NSApp, sel_getUid ("respondsToSelector:"), sel_getUid("setActivationPolicy:")))
+        objc_msgSend (window->NSApp, sel_getUid ("setActivationPolicy:"), NSApplicationActivationPolicyRegular);
+    objc_msgSend (window->NSApp, sel_getUid ("activateIgnoringOtherApps:"), YES);
+
+    /* NSWindow */
     window->nswindow = objc_msgSend (objc_getClass ("NSWindow"), sel_getUid ("alloc"));
     objc_msgSend (window->nswindow, sel_getUid ("initWithContentRect:styleMask:backing:defer:"),
         CGRectMake (0, 0, width, height),
         NSTitledWindowMask, NSBackingStoreBuffered, NO);
     objc_msgSend (window->nswindow, sel_getUid ("makeKeyAndOrderFront:"), window->NSApp);
+
+    /* CGContexts */
     nscontext = objc_msgSend (objc_getClass ("NSGraphicsContext"), sel_getUid ("currentContext"));
     window->context = (CGContextRef) objc_msgSend (nscontext, sel_getUid ("graphicsPort"));
     colorspace = CGColorSpaceCreateDeviceRGB ();
@@ -49,6 +91,23 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     CGColorSpaceRelease (colorspace);
     CGContextSetBlendMode (window->context, kCGBlendModeCopy);
     CGContextSetRenderingIntent (window->context, kCGRenderingIntentAbsoluteColorimetric);
+}
+
+static char
+gezira_Window_key_pressed (gezira_Window_t *window)
+{
+    id now = objc_msgSend (objc_getClass ("NSDate"), sel_getUid ("date"));
+    id event = objc_msgSend (window->NSApp, sel_getUid ("nextEventMatchingMask:untilDate:inMode:dequeue:"),
+                             NSAnyEventMask, now, NSDefaultRunLoopMode, YES);
+    if (event) {
+        NSEventType type = (NSEventType) objc_msgSend (event, sel_getUid ("type"));
+        if (type == NSKeyDown) {
+            id nsstring = objc_msgSend (event, sel_getUid ("characters"));
+            const char *cstring = (const char *) objc_msgSend (nsstring, sel_getUid ("UTF8String"));
+            return cstring[0];
+        }
+    }
+    return -1;
 }
 
 static void
@@ -167,6 +226,25 @@ gezira_WindowUpdate (nile_Process_t *p, gezira_Window_t *window)
         vars->window = window;
     }
     return p;
+}
+
+static nile_Process_t *
+gezira_Window_update_and_clear (gezira_Window_t *window, nile_Process_t *init, nile_Process_t *gate,
+                               float a, float r, float g, float b)
+{
+    nile_Process_t *gate_ = nile_Identity (init);
+    nile_Process_t *clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+        a, r, g, b,
+        window->pixels, window->width, window->height, window->width);
+    nile_Process_gate (clear, gate_);
+    nile_Process_feed (nile_Process_pipe (
+        gate,
+        gezira_WindowUpdate (init, window),
+        gezira_RectangleSpans (init, 0, 0, window->width, window->height),
+        clear,
+        NILE_NULL),
+        NULL, 0);
+    return gate_;
 }
 
 #endif
