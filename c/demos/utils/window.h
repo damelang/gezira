@@ -39,7 +39,6 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <objc/objc-runtime.h>
-#define NSBorderlessWindowMask                       0
 #define NSTitledWindowMask                           1
 #define NSBackingStoreBuffered                       2
 #define NSAnyEventMask                       ULONG_MAX
@@ -60,7 +59,7 @@ struct gezira_Window_ {
 };
 
 static void
-gezira_Window_init (gezira_Window_t *window, int x, int y, int width, int height, int has_border)
+gezira_Window_init (gezira_Window_t *window, int width, int height)
 {
     id nscontext;
     CGColorSpaceRef colorspace;
@@ -79,9 +78,8 @@ gezira_Window_init (gezira_Window_t *window, int x, int y, int width, int height
     /* NSWindow */
     window->nswindow = objc_msgSend (objc_getClass ("NSWindow"), sel_getUid ("alloc"));
     objc_msgSend (window->nswindow, sel_getUid ("initWithContentRect:styleMask:backing:defer:"),
-        CGRectMake (x, y, width, height),
-        has_border ? NSTitledWindowMask : NSBorderlessWindowMask,
-        NSBackingStoreBuffered, NO);
+        CGRectMake (0, 0, width, height),
+        NSTitledWindowMask, NSBackingStoreBuffered, NO);
     objc_msgSend (window->nswindow, sel_getUid ("makeKeyAndOrderFront:"), window->NSApp);
 
     /* CGContexts */
@@ -234,7 +232,7 @@ static nile_Process_t *
 gezira_Window_update_and_clear (gezira_Window_t *window, nile_Process_t *init, nile_Process_t *gate,
                                float a, float r, float g, float b)
 {
-    nile_Process_t *gate_ = nile_Identity (init);
+    nile_Process_t *gate_ = nile_Identity (init, 1);
     nile_Process_t *clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
         a, r, g, b,
         window->pixels, window->width, window->height, window->width);

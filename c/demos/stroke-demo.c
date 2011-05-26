@@ -1,157 +1,175 @@
 #include <stdio.h>
+#define NILE_INCLUDE_PROCESS_API
+#include "nile.h"
+#include "test/nile-print.h"
 #include "gezira.h"
 #include "gezira-image.h"
+#include "utils/all.h"
 
-#include "SDL.h"
-#ifdef main
-#undef main
-#endif 
+#define NBYTES_PER_THREAD 1000000
+#define WINDOW_WIDTH  600
+#define WINDOW_HEIGHT 600
+#define NSTARS 300
+#define PEN_WIDTH 4
 
-typedef nile_Real_t real;
+static int   is_zooming = 0;
+static float zoom       = 1.00;
+static float dzoom      = 0.01;
 
-#define NTHREADS 0
-#define DEFAULT_WIDTH  500
-#define DEFAULT_HEIGHT 500
-#define STROKE_WIDTH   0.25
+static gezira_Window_t window;
+static nile_Process_t *init;
+static nile_Process_t *gate;
 
-#define DIE(s, ...) \
-do { \
-    fprintf (stderr, "(%s:%4d) " s "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-    exit (1); \
-} while (0)
+typedef struct {
+    float x, y, dy, scale, angle, dangle, alpha, red, green, blue;
+} gezira_star_t;
 
-void
-draw_handles (nile_t *nl, real *path, int path_n, SDL_Surface *image)
+static void
+gezira_star_update (gezira_star_t *star)
 {
-    real dot[6];
-    int i;
-    for (i = 0; i < path_n; i += 2) {
-        dot[0] = dot[2] = path[i + 0];
-        dot[1] = dot[3] = path[i + 1];
-        dot[4] = dot[0] + 0.01;
-        dot[5] = dot[1] + 0.01;
-        nile_Kernel_t *stroke =
-            gezira_StrokeBeziers (nl, 3, gezira_StrokeJoinRound (nl),
-                                         gezira_StrokeJoinRound (nl));
-        nile_Kernel_t *texture = gezira_CompositeTextures (nl,
-                gezira_UniformColor (nl, 0.5, 1, 0, 0),
-                gezira_ReadFromImage_ARGB32 (nl, image->pixels, DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                             image->pitch / 4),
-                gezira_CompositeOver (nl));
-        nile_Kernel_t *pipeline = nile_Pipeline (nl,
-            stroke,
-            gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-            gezira_Rasterize (nl),
-            gezira_ApplyTexture (nl, texture),
-            gezira_WriteToImage_ARGB32 (nl, image->pixels,
-                                        DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                        image->pitch / 4),
-            NULL);
-        nile_feed (nl, pipeline, dot, 6, 6, 1);
-    }
-    nile_sync (nl);
+    star->y += star->dy;
+    star->angle += star->dangle;
+    if (star->y > WINDOW_HEIGHT + 10)
+        star->y = -10;
+}
+
+static int
+gezira_star_offscreen (gezira_star_t *star)
+{
+    float dx = WINDOW_WIDTH / fabs (star->x - WINDOW_WIDTH/2);
+    float dy = WINDOW_HEIGHT / fabs (star->y - WINDOW_HEIGHT/2);
+    return zoom > dx || zoom > dy;
+}
+
+static void
+gezira_star_render (gezira_star_t *star)
+{
+    nile_Process_t *pipeline, *gate_, *COI;
+    Matrix_t M = Matrix ();
+    if (gezira_star_offscreen (star))
+        return;
+    M = Matrix_translate (M, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    M = Matrix_scale (M, zoom, zoom);
+    M = Matrix_translate (M, -WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2);
+    M = Matrix_translate (M, star->x, star->y);
+    M = Matrix_rotate (M, star->angle);
+    M = Matrix_scale (M, star->scale, star->scale);
+    M = Matrix_translate (M, -250, -250);
+    COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
+        star->alpha, star->red, star->green, star->blue,
+        window.pixels, window.width, window.height, window.width);
+    gate_ = nile_Identity (init, 8);
+    nile_Process_gate (COI, gate_);
+    pipeline = nile_Process_pipe (
+        gezira_StrokeBezierPath (init, PEN_WIDTH / 2.0),
+        gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
+        gezira_ClipBeziers (init, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
+        gezira_Rasterize (init),
+        gate,
+        COI,
+        NILE_NULL);
+    nile_Process_feed (pipeline, star_path, star_path_n);
+    //nile_Process_feed (pipeline, star_path, star_path_n / 2);
+    gate = gate_;
 }
 
 int
 main (int argc, char **argv)
 {
-    int i, j;
-    SDL_Surface *image;
-    nile_t *nl;
-    char mem[500000];
-    int vertex_index = -1;
+    int i;
+    gezira_star_t stars[NSTARS];
+    int nthreads = 1;
+    int mem_size;
 
-    real path[] = {100, 100, 350, 200, 300, 100, 400, 200, 100, 400};
-    int path_n = sizeof (path) / sizeof (path[0]);
+    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    if (SDL_Init (SDL_INIT_VIDEO) == -1)
-        DIE ("SDL_Init failed: %s", SDL_GetError ());
-    if (!SDL_SetVideoMode (DEFAULT_WIDTH, DEFAULT_HEIGHT, 0,
-                           SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF))
-        DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
-    image = SDL_GetVideoSurface ();
-
-    nl = nile_new (NTHREADS, mem, sizeof (mem));
-
-    for (;;) {
-        SDL_Event event;
-
-        if (SDL_PollEvent (&event)) {
-            if (event.type == SDL_QUIT)
-                break;
-            switch (event.type) {
-                case SDL_MOUSEBUTTONDOWN:
-                    for (i = 0; i < path_n; i += 2) {
-                        if (fabs (event.motion.x - path[i]    ) < 5 &&
-                            fabs (event.motion.y - path[i + 1]) < 5) {
-                            vertex_index = i;
-                            break;
-                        }
-                    }
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    vertex_index = -1;
-                    break;
-                case SDL_MOUSEMOTION:
-                    if (vertex_index >= 0) {
-                        path[vertex_index]     = event.motion.x;
-                        path[vertex_index + 1] = event.motion.y;
-                    }
-                    break;
-            }
-        }
-
-        SDL_FillRect (image, NULL, 0xffffffff);
-        SDL_LockSurface (image);
-
-            nile_Kernel_t *stroke =
-                gezira_StrokeBeziers (nl, STROKE_WIDTH / 2,
-                                      //gezira_StrokeJoinRound (nl),
-                                      gezira_StrokeJoinMiter (nl, 1.1, 0),
-                                      //gezira_StrokeJoinMiter (nl, 1, 0),
-
-                                      //gezira_StrokeJoinRound (nl));
-                                      //gezira_StrokeJoinMiter (nl, 1, 100));
-                                      gezira_StrokeJoinMiter (nl, 1, 0));
-            nile_Kernel_t *texture = gezira_UniformColor (nl, 1, 0, 0, 0);
-            nile_Kernel_t *pipeline = nile_Pipeline (nl,
-                stroke,
-                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Rasterize (nl),
-                gezira_ApplyTexture (nl, texture),
-                gezira_WriteToImage_ARGB32 (nl, image->pixels,
-                                            DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                            image->pitch / 4),
-                NULL);
-
-            real nile_path[path_n / 4 * 6];
-            int nile_path_n = sizeof (nile_path) / sizeof (nile_path[0]);
-            for (i = 0, j = 0; j < nile_path_n; i += 4) {
-                real A_x = path[i + 0];
-                real A_y = path[i + 1];
-                real B_x = path[i + 2];
-                real B_y = path[i + 3];
-                real C_x = path[i + 4];
-                real C_y = path[i + 5];
-                nile_path[j++] = A_x;
-                nile_path[j++] = A_y;
-                nile_path[j++] = 2 * B_x - (A_x + C_x) / 2;
-                nile_path[j++] = 2 * B_y - (A_y + C_y) / 2;
-                nile_path[j++] = C_x;
-                nile_path[j++] = C_y;
-            }
-
-            nile_feed (nl, pipeline, nile_path, 6, nile_path_n, 1);
-            nile_sync (nl);
-
-            draw_handles (nl, path, path_n, image);
-
-        SDL_UnlockSurface (image);
-        SDL_Flip (image);
+    for (i = 0; i < NSTARS; i++) {
+        stars[i].x      = gezira_random (0, window.width);
+        stars[i].y      = gezira_random (0, window.height);
+        stars[i].dy     = gezira_random (0.5, 3.0);
+        //stars[i].scale  = gezira_random (0.2, 0.7);
+        stars[i].scale  = gezira_random (0.1, 0.5);
+        stars[i].angle  = gezira_random (0, 4);
+        stars[i].dangle = gezira_random (-0.1, 0.1);
+        stars[i].alpha  = 0.8;
+        stars[i].red    = gezira_random (0, 1);
+        stars[i].green  = gezira_random (0, 1);
+        stars[i].blue   = gezira_random (0, 1);
     }
 
-    nile_free (nl);
-    printf ("done\n");
+    mem_size = nthreads * NBYTES_PER_THREAD;
+    init = nile_startup (malloc (mem_size), mem_size, nthreads);
+    if (!init) {
+        fprintf (stderr, "nile_startup failed\n");
+        exit (1);
+    }
+
+    gate = nile_Identity (init, 8);
+
+    for (;;) {
+        char c = gezira_Window_key_pressed (&window);
+        while (c != -1) {
+            switch (c) {
+                case ')': nthreads = 10; break;
+                case '!': nthreads = 11; break;
+                case '@': nthreads = 12; break;
+                case '#': nthreads = 13; break;
+                case '$': nthreads = 14; break;
+                case '%': nthreads = 15; break;
+                case '^': nthreads = 16; break;
+                case '&': nthreads = 17; break;
+                case '*': nthreads = 18; break;
+                case '(': nthreads = 19; break;
+                case 'z': is_zooming = !is_zooming;  break;
+                default: nthreads = c - '0'; break;
+            }
+            if (!nthreads)
+                break;
+            if (c == 'z')
+                break;
+            printf ("Requesting %d threads\n", nthreads); fflush (stdout);
+            if (nthreads < 0 || nthreads > 50)
+                printf ("Invalid thread count\n");
+            else {
+                nile_Process_feed (gate, NULL, 0);
+                nile_sync (init);
+                free (nile_shutdown (init));
+                mem_size = nthreads * NBYTES_PER_THREAD;
+                init = nile_startup (malloc (mem_size), mem_size, nthreads);
+                gate = nile_Identity (init, 8);
+            }
+            c = gezira_Window_key_pressed (&window);
+        }
+        if (!nthreads)
+            break;
+
+        gate = gezira_Window_update_and_clear (&window, init, gate, 1, 0, 0, 0);
+        for (i = 0; i < NSTARS; i++) {
+            gezira_star_render (&stars[i]);
+            gezira_star_update (&stars[i]);
+        }
+
+        nile_sync (init);
+        if (nile_error (init)) {
+            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
+            break;
+        }
+
+        gezira_update_fps (init);
+
+        if (is_zooming) {
+            zoom += dzoom;
+            if (zoom > 8 || zoom < 1 - dzoom)
+                dzoom = -dzoom;
+        }
+    }
+
+    nile_Process_feed (gate, NULL, 0);
+    nile_sync (init);
+    free (nile_shutdown (init));
+    //printf ("Just Window_fini left\n"); fflush (stdout);
+    // TODO why does the line below cause a segfault every now and then?
+    //gezira_Window_fini (&window);
 
     return 0;
 }

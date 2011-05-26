@@ -1,165 +1,191 @@
 #include <stdio.h>
+#define NILE_INCLUDE_PROCESS_API
+#include "nile.h"
 #include "gezira.h"
 #include "gezira-image.h"
+#include "utils/all.h"
 
-#include "SDL.h"
-#ifdef main
-#undef main
-#endif 
+#define NBYTES_PER_THREAD 1000000
+#define WINDOW_WIDTH  600
+#define WINDOW_HEIGHT 600
+#define NFLAKES 500
 
-typedef nile_Real_t real;
+static int   is_zooming = 0;
+static float zoom       = 1.00;
+static float dzoom      = 0.01;
 
-#define NTHREADS 0
-#define DEFAULT_WIDTH  500
-#define DEFAULT_HEIGHT 500
-
-#define DIE(s, ...) \
-do { \
-    fprintf (stderr, "(%s:%4d) " s "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-    exit (1); \
-} while (0)
+static gezira_Window_t  window;
+static nile_Process_t  *init;
+static nile_Process_t  *gate;
 
 typedef struct {
-    real a, b, c, d, e, f;
-} matrix_t;
+    float x, y, dy, scale, angle, dangle;
+} gezira_snowflake_t;
 
-matrix_t
-matrix_new () {
-    matrix_t M = { 1, 0, 0, 1, 0, 0 };
-    return M;
+static void
+gezira_snowflake_update (gezira_snowflake_t *flake)
+{
+    flake->y += flake->dy;
+    flake->angle += flake->dangle;
+    if (flake->y > WINDOW_HEIGHT + 10)
+        flake->y = -10;
 }
 
-matrix_t
-matrix_translate (matrix_t M, real x, real y)
+static int
+gezira_snowflake_offscreen (gezira_snowflake_t *flake)
 {
-    matrix_t N = { M.a, M.b, M.c, M.d,
-                   M.a * x + M.c * y + M.e,
-                   M.b * x + M.d * y + M.f};
-    return N;
+    float dx = WINDOW_WIDTH / fabs (flake->x - WINDOW_WIDTH/2);
+    float dy = WINDOW_HEIGHT / fabs (flake->y - WINDOW_HEIGHT/2);
+    return zoom > dx || zoom > dy;
 }
 
-matrix_t
-matrix_rotate (matrix_t M, real t)
+static void
+gezira_snowflake_render (gezira_snowflake_t *flake)
 {
-    matrix_t N = { M.a *  cos (t) + M.c * sin (t),
-                   M.b *  cos (t) + M.d * sin (t),
-                   M.a * -sin (t) + M.c * cos (t),
-                   M.b * -sin (t) + M.d * cos (t),
-                   M.e, M.f};
-    return N;
-}
+    nile_Process_t *pipeline, *gate_, *WTI;
+    Matrix_t M = Matrix ();
+    if (gezira_snowflake_offscreen (flake))
+        return;
 
-matrix_t
-matrix_scale (matrix_t M, real sx, real sy)
-{
-    matrix_t N = { M.a * sx, M.b * sx, M.c * sy, M.d * sy, M.e, M.f};
-    return N;
-}
+    M = Matrix_translate (M, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    M = Matrix_scale (M, zoom, zoom);
+    M = Matrix_translate (M, -WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2);
+    M = Matrix_translate (M, flake->x, flake->y);
+    M = Matrix_rotate (M, flake->angle);
+    M = Matrix_scale (M, flake->scale, flake->scale);
 
-matrix_t
-matrix_inverse (matrix_t M)
-{
-    real det = M.a * M.d - M.b * M.c;
-    if (det == 0)
-        return (matrix_t) {0, 0, 0, 0, 0, 0};
-    real n = 1 / det;
-    return (matrix_t)
-        {n * M.d, -n * M.b, -n * M.c, n * M.a,
-         n * (M.f * M.c - M.d * M.e), -n * (M.f * M.a - M.b * M.e)};
-}
+    Matrix_t I = Matrix_inverse (M);
 
-real path[] =
-{
-    250.00000, 150.00000, 237.65650, 183.01064, 225.31301, 216.02128,
-    225.31301, 216.02128, 190.10368, 217.55979, 154.89434, 219.09830,
-    154.89434, 219.09830, 182.47498, 241.03850, 210.05562, 262.97871,
-    210.05562, 262.97871, 200.63855, 296.94020, 191.22147, 330.90169,
-    191.22147, 330.90169, 220.61073, 311.45084, 250.00000, 292.00000,
-    250.00000, 292.00000, 279.38926, 311.45084, 308.77852, 330.90169,
-    308.77852, 330.90169, 299.36144, 296.94020, 289.94437, 262.97871,
-    289.94437, 262.97871, 317.52501, 241.03850, 345.10565, 219.09830,
-    345.10565, 219.09830, 309.89631, 217.55979, 274.68698, 216.02128,
-    274.68698, 216.02128, 262.34349, 183.01064, 250.00000, 150.00000
-};
-int path_n = sizeof (path) / sizeof (path[0]);
+    /*
+    nile_Process_t *colors = nile_Process_pipe (
+        gezira_GradientColorSpan (init, 1,    0.5,   0.1, 0.3,
+                                        0,   -0.5,   0.6,   0, 0.5),
+        gezira_GradientColorSpan (init, 1,   0.25,   0.4, 0.3,
+                                        0,   -0.5,  -0.8, 1.4, 0.5),
+        NILE_NULL);
+    */
+    /*
+     */
+    nile_Process_t *colors =
+        gezira_GradientColorSpan (init, 1,    0.5,   0.1, 0.3,
+                                        0,   -0.5,   0.6,   0, 1);
+    nile_Process_t *texture = gezira_Gradient (init,
+            //gezira_LinearGradientShape (init, -7, 0.015, 0.015),
+            //gezira_RadialGradientShape (init, 250, 250, 50),
+            gezira_RadialGradientShape (init, 0, 0, 20),
+            gezira_GradientExtendReflect (init),
+            colors);
+    texture = nile_Process_pipe (
+        gezira_TransformPoints (init, I.a, I.b, I.c, I.d, I.e, I.f),
+        texture, NILE_NULL);
+
+    WTI = gezira_WriteToImage_ARGB32 (init,
+        window.pixels, window.width, window.height, window.width);
+    gate_ = nile_Identity (init, 8);
+    nile_Process_gate (WTI, gate_);
+    pipeline = nile_Process_pipe (
+        gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
+        gezira_ClipBeziers (init, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
+        gezira_Rasterize (init),
+        gezira_ApplyTexture (init, texture),
+        gate,
+        WTI,
+        NILE_NULL);
+    nile_Process_feed (pipeline, snowflake_path, snowflake_path_n);
+    gate = gate_;
+}
 
 int
 main (int argc, char **argv)
 {
-    SDL_Surface *image;
-    nile_t *nl;
-    char mem[500000];
-    real angle = 0;
-    real scale;
+    int i;
+    gezira_snowflake_t flakes[NFLAKES];
+    int nthreads = 1;
+    int mem_size;
 
-    if (SDL_Init (SDL_INIT_VIDEO) == -1)
-        DIE ("SDL_Init failed: %s", SDL_GetError ());
-    if (!SDL_SetVideoMode (DEFAULT_WIDTH, DEFAULT_HEIGHT, 0,
-                           SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF))
-        DIE ("SDL_SetVideoMode failed: %s", SDL_GetError ());
-    image = SDL_GetVideoSurface ();
+    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    nl = nile_new (NTHREADS, mem, sizeof (mem));
-
-    for (;;) {
-        angle += 0.005;
-        scale = fabs (angle - (int) angle - 0.5) * 10;
-        SDL_Event event;
-        if (SDL_PollEvent (&event) && event.type == SDL_QUIT)
-            break;
-
-        SDL_FillRect (image, NULL, 0xffffffff);
-        SDL_LockSurface (image);
-
-            matrix_t M = matrix_new ();
-            M = matrix_translate (M, 250, 250);
-            M = matrix_rotate (M, angle);
-            M = matrix_scale (M, scale, scale);
-            M = matrix_translate (M, -250, -250);
-            matrix_t I = matrix_inverse (M);
-
-            /*
-            */
-            nile_Kernel_t *colors = nile_Pipeline (nl,
-                gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
-                                              0,   -0.5,   0.6,   0, 0.5),
-                gezira_GradientColorSpan (nl, 1,   0.25,   0.4, 0.3,
-                                              0,   -0.5,  -0.8, 1.4, 0.5),
-                NULL);
-            /*
-            nile_Kernel_t *colors =
-                gezira_GradientColorSpan (nl, 1,    0.5,   0.1, 0.3,
-                                              0,   -0.5,   0.6,   0, 1);
-             */
-            nile_Kernel_t *texture = gezira_Gradient (nl,
-                    gezira_LinearGradientShape (nl, -7, 0.015, 0.015),
-                    //gezira_RadialGradientShape (nl, 250, 250, 50),
-                    gezira_GradientExtendReflect (nl),
-                    colors);
-            /*
-             */
-            texture = nile_Pipeline (nl, 
-                gezira_TransformPoints (nl, I.a, I.b, I.c, I.d, I.e, I.f),
-                texture, NULL);
-            nile_Kernel_t *pipeline = nile_Pipeline (nl,
-                gezira_TransformBeziers (nl, M.a, M.b, M.c, M.d, M.e, M.f),
-                gezira_ClipBeziers (nl, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT),
-                gezira_Rasterize (nl),
-                gezira_ApplyTexture (nl, texture),
-                gezira_WriteToImage_ARGB32 (nl, image->pixels,
-                                          DEFAULT_WIDTH, DEFAULT_HEIGHT,
-                                          image->pitch / 4),
-                NULL);
-
-            nile_feed (nl, pipeline, path, 6, path_n, 1);
-            nile_sync (nl);
-
-        SDL_UnlockSurface (image);
-        SDL_Flip (image);
+    for (i = 0; i < NFLAKES; i++) {
+        flakes[i].x      = gezira_random (0, window.width);
+        flakes[i].y      = gezira_random (0, window.height);
+        flakes[i].dy     = gezira_random (0.5, 3.0);
+        flakes[i].scale  = gezira_random (0.2, 0.7);
+        flakes[i].angle  = gezira_random (0, 4);
+        flakes[i].dangle = gezira_random (-0.1, 0.1);
     }
 
-    nile_free (nl);
-    printf ("done\n");
+    mem_size = nthreads * NBYTES_PER_THREAD;
+    init = nile_startup (malloc (mem_size), mem_size, nthreads);
+    if (!init) {
+        fprintf (stderr, "nile_startup failed\n");
+        exit (1);
+    }
+
+    gate = nile_Identity (init, 8);
+
+    for (;;) {
+        char c = gezira_Window_key_pressed (&window);
+        while (c != -1) {
+            switch (c) {
+                case ')': nthreads = 10; break;
+                case '!': nthreads = 11; break;
+                case '@': nthreads = 12; break;
+                case '#': nthreads = 13; break;
+                case '$': nthreads = 14; break;
+                case '%': nthreads = 15; break;
+                case '^': nthreads = 16; break;
+                case '&': nthreads = 17; break;
+                case '*': nthreads = 18; break;
+                case '(': nthreads = 19; break;
+                case 'z': is_zooming = !is_zooming;  break;
+                default: nthreads = c - '0'; break;
+            }
+            if (!nthreads)
+                break;
+            if (c == 'z')
+                break;
+            printf ("Requesting %d threads\n", nthreads); fflush (stdout);
+            if (nthreads < 0 || nthreads > 50)
+                printf ("Invalid thread count\n");
+            else {
+                nile_Process_feed (gate, NULL, 0);
+                nile_sync (init);
+                free (nile_shutdown (init));
+                mem_size = nthreads * NBYTES_PER_THREAD;
+                init = nile_startup (malloc (mem_size), mem_size, nthreads);
+                gate = nile_Identity (init, 8);
+            }
+            c = gezira_Window_key_pressed (&window);
+        }
+        if (!nthreads)
+            break;
+
+        gate = gezira_Window_update_and_clear (&window, init, gate, 1, 0, 0, 0);
+        for (i = 0; i < NFLAKES; i++) {
+            gezira_snowflake_render (&flakes[i]);
+            gezira_snowflake_update (&flakes[i]);
+        }
+
+        if (nile_error (init)) {
+            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
+            break;
+        }
+
+        gezira_update_fps (init);
+
+        if (is_zooming) {
+            zoom += dzoom;
+            if (zoom > 8 || zoom < 1 - dzoom)
+                dzoom = -dzoom;
+        }
+    }
+
+    nile_Process_feed (gate, NULL, 0);
+    nile_sync (init);
+    free (nile_shutdown (init));
+    //printf ("Just Window_fini left\n"); fflush (stdout);
+    // TODO why does the line below cause a segfault every now and then?
+    //gezira_Window_fini (&window);
 
     return 0;
 }
