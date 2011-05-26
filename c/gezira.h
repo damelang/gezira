@@ -303,6 +303,53 @@ nile_Process_t *
 gezira_ApplyTexture (nile_Process_t *p, 
                      nile_Process_t *v_t);
 
+nile_Process_t *
+gezira_OffsetBezier (nile_Process_t *p, 
+                     float v_o, 
+                     float v_Bi_A_x, 
+                     float v_Bi_A_y, 
+                     float v_Bi_B_x, 
+                     float v_Bi_B_y, 
+                     float v_Bi_C_x, 
+                     float v_Bi_C_y);
+
+nile_Process_t *
+gezira_JoinOffsets (nile_Process_t *p, 
+                    float v_o, 
+                    float v_P_x, 
+                    float v_P_y, 
+                    float v_u_x, 
+                    float v_u_y, 
+                    float v_v_x, 
+                    float v_v_y);
+
+nile_Process_t *
+gezira_OffsetAndJoinBezierPath (nile_Process_t *p, 
+                                float v_o, 
+                                float v_B0_A_x, 
+                                float v_B0_A_y, 
+                                float v_B0_B_x, 
+                                float v_B0_B_y, 
+                                float v_B0_C_x, 
+                                float v_B0_C_y, 
+                                float v_Bi_A_x, 
+                                float v_Bi_A_y, 
+                                float v_Bi_B_x, 
+                                float v_Bi_B_y, 
+                                float v_Bi_C_x, 
+                                float v_Bi_C_y);
+
+nile_Process_t *
+gezira_StrokeOneSide (nile_Process_t *p, 
+                      float v_o);
+
+nile_Process_t *
+gezira_ReverseBeziers (nile_Process_t *p);
+
+nile_Process_t *
+gezira_StrokeBezierPath (nile_Process_t *p, 
+                         float v_o);
+
 
 
 #endif
