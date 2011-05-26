@@ -41,4 +41,16 @@ Matrix_scale (Matrix_t M, float sx, float sy)
     return M_;
 }
 
+static Matrix_t
+Matrix_inverse (Matrix_t M)
+{
+    float det = M.a * M.d - M.b * M.c;
+    if (det == 0)
+        return (Matrix_t) {0, 0, 0, 0, 0, 0};
+    float n = 1 / det;
+    return (Matrix_t)
+        {n * M.d, -n * M.b, -n * M.c, n * M.a,
+         n * (M.f * M.c - M.d * M.e), -n * (M.f * M.a - M.b * M.e)};
+}
+
 #endif
