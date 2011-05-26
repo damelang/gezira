@@ -50,9 +50,6 @@ Compositor :: (Color, Color) >> Color
 (A : Point) ⟂ (B : Point) : Vector
     ^(A.y - B.y, B.x - A.x)
 
-(A : Point) ⇀ (B : Point) : Vector
-    ^(B.x - A.x, B.y - A.y)
-
 (M : Matrix) ⊗ (A : Point) : Point
     (M.a × A.x + M.c × A.y + M.e, M.b × A.x + M.d × A.y + M.f)
 
