@@ -6,15 +6,13 @@
 #include "utils/all.h"
 
 #define NBYTES_PER_THREAD 1000000
-#define NFALLING_GLYPHS   5000
+#define WINDOW_WIDTH  600
+#define WINDOW_HEIGHT 600
+#define NFALLING_GLYPHS 5000
 
-static int   window_width  = 600;
-static int   window_height = 600;
-static int   window_x      =   0;
-static int   window_y      =   0;
-static int   is_zooming    =   0;
-static float zoom          =   1.00;
-static float dzoom         =   0.01;
+static int   is_zooming = 0;
+static float zoom       = 1.00;
+static float dzoom      = 0.01;
 
 static gezira_Window_t window;
 static nile_Process_t *init;
@@ -128,15 +126,15 @@ gezira_falling_glyph_update (gezira_falling_glyph_t *fglyph)
 {
     fglyph->y += fglyph->dy;
     fglyph->angle += fglyph->dangle;
-    if (fglyph->y > window_height + 20)
+    if (fglyph->y > WINDOW_HEIGHT + 20)
         fglyph->y = -20;
 }
 
 static int
 gezira_falling_glyph_offscreen (gezira_falling_glyph_t *fglyph)
 {
-    float dx = window_width / fabs (fglyph->x - window_width/2);
-    float dy = window_height / fabs (fglyph->y - window_height/2);
+    float dx = WINDOW_WIDTH / fabs (fglyph->x - WINDOW_WIDTH/2);
+    float dy = WINDOW_HEIGHT / fabs (fglyph->y - WINDOW_HEIGHT/2);
     return zoom > dx || zoom > dy;
 }
 
@@ -148,10 +146,10 @@ gezira_falling_glyph_render (gezira_falling_glyph_t *fglyph)
     if (gezira_falling_glyph_offscreen (fglyph))
         return;
 
-    M = Matrix_translate (M, window_width / 2, window_height / 2);
+    M = Matrix_translate (M, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     M = Matrix_scale (M, zoom, zoom);
-    M = Matrix_translate (M, -window_width / 2, -window_height / 2);
-    //M = Matrix_translate (M, 0, window_height);
+    M = Matrix_translate (M, -WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2);
+    //M = Matrix_translate (M, 0, WINDOW_HEIGHT);
     M = Matrix_scale (M, 1, -1);
     M = Matrix_translate (M, fglyph->x, -fglyph->y);
     M = Matrix_scale (M, fglyph->scale, fglyph->scale);
@@ -161,12 +159,12 @@ gezira_falling_glyph_render (gezira_falling_glyph_t *fglyph)
     COI = gezira_CompositeUniformColorOverImage_ARGB32 (init,
         fglyph->alpha, fglyph->red, fglyph->green, fglyph->blue,
         window.pixels, window.width, window.height, window.width);
-    gate_ = nile_Identity (init);
+    gate_ = nile_Identity (init, 8);
     nile_Process_gate (COI, gate_);
 
     pipeline = nile_Process_pipe (
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
-        gezira_ClipBeziers (init, 0, 0, window_width, window_height),
+        gezira_ClipBeziers (init, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
         gezira_Rasterize (init),
         gate,
         COI,
@@ -196,18 +194,7 @@ main (int argc, char **argv)
     };
     int nglyphs = (sizeof (glyphs) / sizeof (glyphs[0]));
 
-    if (argc == 5) {
-        window_x = atoi (argv[1]);
-        window_y = atoi (argv[2]);
-        window_width = atoi (argv[3]);
-        window_height = atoi (argv[4]);
-        if (window_width <= 0 || window_height <= 0) {
-            fprintf (stderr, "Bad window dimensions\n");
-            exit (1);
-        }
-    }
-
-    gezira_Window_init (&window, window_x, window_y, window_width, window_height, 0);
+    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     ft_error = FT_Init_FreeType (&ft);
     ft_error = FT_New_Face (ft, FONT_FILE, 0, &ft_face);
@@ -223,16 +210,10 @@ main (int argc, char **argv)
         fglyphs[i].x      = gezira_random (0, window.width);
         fglyphs[i].y      = gezira_random (0, window.height);
         fglyphs[i].dy     = gezira_random (0.5, 2.5);
-        fglyphs[i].scale  = 0.17;
         //fglyphs[i].scale  = gezira_random (0.1, 0.3);
+        fglyphs[i].scale  = 0.17;
         fglyphs[i].angle  = gezira_random (0, 4);
         fglyphs[i].dangle = gezira_random (-0.1, 0.1);
-        /*
-        fglyphs[i].alpha  = 1;
-        fglyphs[i].red    = 0;
-        fglyphs[i].green  = 0;
-        fglyphs[i].blue   = 0;
-        */
         fglyphs[i].alpha  = gezira_random (0.7, 0.9);
         fglyphs[i].red    = gezira_random (0, 1);
         fglyphs[i].green  = gezira_random (0, 1);
@@ -247,7 +228,7 @@ main (int argc, char **argv)
         exit (1);
     }
 
-    gate = nile_Identity (init);
+    gate = nile_Identity (init, 8);
 
     for (;;) {
         char c = gezira_Window_key_pressed (&window);
@@ -279,7 +260,7 @@ main (int argc, char **argv)
                 free (nile_shutdown (init));
                 mem_size = nthreads * NBYTES_PER_THREAD;
                 init = nile_startup (malloc (mem_size), mem_size, nthreads);
-                gate = nile_Identity (init);
+                gate = nile_Identity (init, 8);
             }
             c = gezira_Window_key_pressed (&window);
         }
