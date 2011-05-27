@@ -1,3 +1,13 @@
+- stroke
+    - what about Miter joins/caps?
+        - process substitution based on arguments (like a 'round' flag)?
+    - deal with degenerate input
+    - fix compiler
+        - unnecessary (->) at the end of single process substitution statements
+        - support for field access in process substitution statement
+        - epilogue temporary variables problem (see 'vv' variable)
+        - input prefixing in prologue
+
 - rasterizer
     - why is it so much slower for zoomed in snowflakes? Where is
       the time spent? (horizontal line optimization below helps some)

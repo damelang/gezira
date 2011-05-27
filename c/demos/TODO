@@ -1,6 +1,3 @@
 - snowflake probably has more beziers than needed
-- Add other platforms window code
 - get keyboard events a better way
-- create a gettimeofday_d function in utils
-  - for windows:
-    QueryPerformanceCounter () / QueryPerformanceFrequency
+- Add other platforms window code
