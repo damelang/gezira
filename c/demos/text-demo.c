@@ -243,7 +243,7 @@ main (int argc, char **argv)
     gate = nile_Identity (init, 8);
 
     for (;;) {
-        char c = gezira_Window_key_pressed (&window);
+        char c = gezira_stdin_key_pressed ();
         while (c != -1) {
             switch (c) {
                 case ')': nthreads = 10; break;
@@ -274,7 +274,7 @@ main (int argc, char **argv)
                 init = nile_startup (malloc (mem_size), mem_size, nthreads);
                 gate = nile_Identity (init, 8);
             }
-            c = gezira_Window_key_pressed (&window);
+            c = gezira_stdin_key_pressed ();
         }
         if (!nthreads)
             break;
