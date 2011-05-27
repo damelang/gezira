@@ -1,7 +1,7 @@
 NILE_RUNTIME := ../../../nile/runtimes/c
 TARGET       := $(shell $(CC) -dumpmachine)
 LDFLAGS      := -L.. -lgezira -L$(NILE_RUNTIME) -lnile \
-                /opt/local/lib/libfreetype.a /opt/local/lib/libz.a -static-libgcc
+                /opt/local/lib/libfreetype.a /opt/local/lib/libz.a -static-libgcc -dead_strip
 CFLAGS       := -pipe -Wall -Werror -Wno-unused \
                 -I.. -I$(NILE_RUNTIME) \
                 `freetype-config --cflags` \
@@ -19,6 +19,7 @@ endif
 	$(MAKE) -C $(NILE_RUNTIME) -f Makefile.gcc
 	$(MAKE) -C .. -f Makefile.gcc
 	$(CC) $< -o $@ $(CFLAGS) $(LDFLAGS)
+	strip $@
 
 snow-demo:
 
