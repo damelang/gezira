@@ -82,6 +82,7 @@ gezira_Window_init (gezira_Window_t *window, int width, int height, int x, int y
         CGRectMake (x, y, width, height),
         NSBorderlessWindowMask, NSBackingStoreBuffered, NO);
     objc_msgSend (window->nswindow, sel_getUid ("makeKeyAndOrderFront:"), window->NSApp);
+    objc_msgSend (window->nswindow, sel_getUid ("setLevel:"), 1000);
 
     /* CGContexts */
     nscontext = objc_msgSend (objc_getClass ("NSGraphicsContext"), sel_getUid ("currentContext"));
