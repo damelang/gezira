@@ -6,13 +6,13 @@
 #include "utils/all.h"
 
 #define NBYTES_PER_THREAD 1000000
-#define WINDOW_WIDTH  600
-#define WINDOW_HEIGHT 600
 #define NFALLING_GLYPHS 5000
 
-static int   is_zooming = 0;
-static float zoom       = 1.00;
-static float dzoom      = 0.01;
+static int window_width  = 600;
+static int window_height = 600;
+static int   is_zooming  = 0;
+static float zoom        = 1.00;
+static float dzoom       = 0.01;
 
 static gezira_Window_t window;
 static nile_Process_t *init;
@@ -126,15 +126,15 @@ gezira_falling_glyph_update (gezira_falling_glyph_t *fglyph)
 {
     fglyph->y += fglyph->dy;
     fglyph->angle += fglyph->dangle;
-    if (fglyph->y > WINDOW_HEIGHT + 20)
+    if (fglyph->y > window_height + 20)
         fglyph->y = -20;
 }
 
 static int
 gezira_falling_glyph_offscreen (gezira_falling_glyph_t *fglyph)
 {
-    float dx = WINDOW_WIDTH / fabs (fglyph->x - WINDOW_WIDTH/2);
-    float dy = WINDOW_HEIGHT / fabs (fglyph->y - WINDOW_HEIGHT/2);
+    float dx = window_width / fabs (fglyph->x - window_width/2);
+    float dy = window_height / fabs (fglyph->y - window_height/2);
     return zoom > dx || zoom > dy;
 }
 
@@ -146,10 +146,10 @@ gezira_falling_glyph_render (gezira_falling_glyph_t *fglyph)
     if (gezira_falling_glyph_offscreen (fglyph))
         return;
 
-    M = Matrix_translate (M, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    M = Matrix_translate (M, window_width / 2, window_height / 2);
     M = Matrix_scale (M, zoom, zoom);
-    M = Matrix_translate (M, -WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2);
-    //M = Matrix_translate (M, 0, WINDOW_HEIGHT);
+    M = Matrix_translate (M, -window_width / 2, -window_height / 2);
+    //M = Matrix_translate (M, 0, window_height);
     M = Matrix_scale (M, 1, -1);
     M = Matrix_translate (M, fglyph->x, -fglyph->y);
     M = Matrix_scale (M, fglyph->scale, fglyph->scale);
@@ -164,7 +164,7 @@ gezira_falling_glyph_render (gezira_falling_glyph_t *fglyph)
 
     pipeline = nile_Process_pipe (
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
-        gezira_ClipBeziers (init, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
+        gezira_ClipBeziers (init, 0, 0, window_width, window_height),
         gezira_Rasterize (init),
         gate,
         COI,
@@ -196,7 +196,17 @@ main (int argc, char **argv)
     int window_x = 0;
     int window_y = 0;
 
-    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT, window_x, window_y);
+    if (argc == 5) {
+        window_x      = atoi (argv[1]);
+        window_y      = atoi (argv[2]);
+        window_width  = atoi (argv[3]);
+        window_height = atoi (argv[4]);
+        if (window_width <= 0 || window_height <= 0) {
+            fprintf (stderr, "Invalid window dimensions\n");
+            exit (1);
+        }
+    }
+    gezira_Window_init (&window, window_width, window_height, window_x, window_y);
 
     ft_error = FT_Init_FreeType (&ft);
     ft_error = FT_New_Face (ft, FONT_FILE, 0, &ft_face);
