@@ -193,8 +193,10 @@ main (int argc, char **argv)
         {'y'}, {'z'},
     };
     int nglyphs = (sizeof (glyphs) / sizeof (glyphs[0]));
+    int window_x = 0;
+    int window_y = 0;
 
-    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT);
+    gezira_Window_init (&window, WINDOW_WIDTH, WINDOW_HEIGHT, window_x, window_y);
 
     ft_error = FT_Init_FreeType (&ft);
     ft_error = FT_New_Face (ft, FONT_FILE, 0, &ft_face);
