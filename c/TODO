@@ -3,12 +3,42 @@
   and only in gezira.c. Do a diff on
   the generated assembly w/ and w/out -mssse3?
 
+- fix problem that processes with no body don't pass NULL for body parameter,
+    which means they don't get the default body, which swaps for nothing.
+
 - hack to fix prologue input prefixing
 
+    (in RectangleSpans_prologue)
     nile_Buffer_t *in = nile_Process_prefix_input (p, NULL);
     if (in)
         nile_Buffer_push_head(in, t_12);
 
+static nile_Buffer_t *
+gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
+    gezira_RectangleSpans_vars_t v = *vars;
+    nile_Real_t t_6 = nile_Real_sub(v.v_max_x, v.v_min_x);
+    nile_Real_t t_7 = nile_Real (1);
+    nile_Real_t t_8 = nile_Real_sub(t_6, t_7);
+    v.v_l = t_8;
+    nile_Real_t t_9 = nile_Real (0.5);
+    nile_Real_t t_10 = nile_Real_add(v.v_min_x, t_9);
+    v.v_x = t_10;
+    nile_Real_t t_11 = nile_Real (0.5);
+    nile_Real_t t_12 = nile_Real_add(v.v_min_y, t_11);
+
+    nile_Buffer_t *in = nile_Process_prefix_input (p, 0);
+    if (in)
+        nile_Buffer_push_head(in, t_12);
+
+    *vars = v;
+    return out;
+}
+
+- fix hack for OffsetBezier (OffsetBezierDummy) for recursive processes
+  (and other similar hacks)
+    
 - over formulas notes
 
   r = (v.r * v.a + r * (1 - v.a)) * c + r * (1 - c);
