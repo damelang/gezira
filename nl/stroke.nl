@@ -52,7 +52,7 @@ SanitizeBezierPath : Bezier >> Bezier
         v = B ⟂ C
         M = A ~ C
         if u ∙ v < -0.9999
-            << (A, A ~ C, C)
+            << (A, M, C)
         else if u ≠* 0 ∧ v ≠* 0
             >> (A, B, C)
         else if (A ⟂ M) ≠* 0 ∧ (M ⟂ C) ≠* 0
