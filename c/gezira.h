@@ -347,6 +347,9 @@ nile_Process_t *
 gezira_ReverseBeziers (nile_Process_t *p);
 
 nile_Process_t *
+gezira_SanitizeBezierPath (nile_Process_t *p);
+
+nile_Process_t *
 gezira_StrokeBezierPath (nile_Process_t *p, 
                          float v_o);
 
