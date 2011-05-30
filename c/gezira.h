@@ -306,42 +306,85 @@ gezira_ApplyTexture (nile_Process_t *p,
 nile_Process_t *
 gezira_OffsetBezier (nile_Process_t *p, 
                      float v_o, 
-                     float v_Bi_A_x, 
-                     float v_Bi_A_y, 
-                     float v_Bi_B_x, 
-                     float v_Bi_B_y, 
-                     float v_Bi_C_x, 
-                     float v_Bi_C_y);
+                     float v_Z_A_x, 
+                     float v_Z_A_y, 
+                     float v_Z_B_x, 
+                     float v_Z_B_y, 
+                     float v_Z_C_x, 
+                     float v_Z_C_y);
 
 nile_Process_t *
-gezira_JoinOffsets (nile_Process_t *p, 
+gezira_MiterJoin (nile_Process_t *p, 
+                  float v_o, 
+                  float v_l, 
+                  float v_P_x, 
+                  float v_P_y, 
+                  float v_u_x, 
+                  float v_u_y, 
+                  float v_v_x, 
+                  float v_v_y);
+
+nile_Process_t *
+gezira_RoundJoin (nile_Process_t *p, 
+                  float v_o, 
+                  float v_P_x, 
+                  float v_P_y, 
+                  float v_u_x, 
+                  float v_u_y, 
+                  float v_v_x, 
+                  float v_v_y);
+
+nile_Process_t *
+gezira_JoinBeziers (nile_Process_t *p, 
                     float v_o, 
-                    float v_P_x, 
-                    float v_P_y, 
-                    float v_u_x, 
-                    float v_u_y, 
-                    float v_v_x, 
-                    float v_v_y);
+                    float v_l, 
+                    float v_Zi_A_x, 
+                    float v_Zi_A_y, 
+                    float v_Zi_B_x, 
+                    float v_Zi_B_y, 
+                    float v_Zi_C_x, 
+                    float v_Zi_C_y, 
+                    float v_Zj_A_x, 
+                    float v_Zj_A_y, 
+                    float v_Zj_B_x, 
+                    float v_Zj_B_y, 
+                    float v_Zj_C_x, 
+                    float v_Zj_C_y);
 
 nile_Process_t *
-gezira_OffsetAndJoinBezierPath (nile_Process_t *p, 
-                                float v_o, 
-                                float v_B0_A_x, 
-                                float v_B0_A_y, 
-                                float v_B0_B_x, 
-                                float v_B0_B_y, 
-                                float v_B0_C_x, 
-                                float v_B0_C_y, 
-                                float v_Bi_A_x, 
-                                float v_Bi_A_y, 
-                                float v_Bi_B_x, 
-                                float v_Bi_B_y, 
-                                float v_Bi_C_x, 
-                                float v_Bi_C_y);
+gezira_CapBezier (nile_Process_t *p, 
+                  float v_o, 
+                  float v_c, 
+                  float v_Z_A_x, 
+                  float v_Z_A_y, 
+                  float v_Z_B_x, 
+                  float v_Z_B_y, 
+                  float v_Z_C_x, 
+                  float v_Z_C_y);
+
+nile_Process_t *
+gezira_OffsetAndJoin (nile_Process_t *p, 
+                      float v_o, 
+                      float v_l, 
+                      float v_c, 
+                      float v_Z1_A_x, 
+                      float v_Z1_A_y, 
+                      float v_Z1_B_x, 
+                      float v_Z1_B_y, 
+                      float v_Z1_C_x, 
+                      float v_Z1_C_y, 
+                      float v_Zi_A_x, 
+                      float v_Zi_A_y, 
+                      float v_Zi_B_x, 
+                      float v_Zi_B_y, 
+                      float v_Zi_C_x, 
+                      float v_Zi_C_y);
 
 nile_Process_t *
 gezira_StrokeOneSide (nile_Process_t *p, 
-                      float v_o);
+                      float v_w, 
+                      float v_l, 
+                      float v_c);
 
 nile_Process_t *
 gezira_ReverseBeziers (nile_Process_t *p);
@@ -351,7 +394,9 @@ gezira_SanitizeBezierPath (nile_Process_t *p);
 
 nile_Process_t *
 gezira_StrokeBezierPath (nile_Process_t *p, 
-                         float v_o);
+                         float v_w, 
+                         float v_l, 
+                         float v_c);
 
 
 
