@@ -9,8 +9,10 @@
 #define NBYTES_PER_THREAD 1000000
 #define WINDOW_WIDTH  600
 #define WINDOW_HEIGHT 600
-#define NSTARS 300
-#define PEN_WIDTH 4
+#define NSTARS 500
+#define PEN_WIDTH 5
+#define MITER_LIMIT 4
+#define PEN_CAP -1
 
 static int   is_zooming = 0;
 static float zoom       = 1.00;
@@ -61,15 +63,14 @@ gezira_star_render (gezira_star_t *star)
     gate_ = nile_Identity (init, 8);
     nile_Process_gate (COI, gate_);
     pipeline = nile_Process_pipe (
-        gezira_StrokeBezierPath (init, PEN_WIDTH / 2.0),
+        gezira_StrokeBezierPath (init, PEN_WIDTH, MITER_LIMIT, PEN_CAP),
         gezira_TransformBeziers (init, M.a, M.b, M.c, M.d, M.e, M.f),
         gezira_ClipBeziers (init, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT),
         gezira_Rasterize (init),
         gate,
         COI,
         NILE_NULL);
-    nile_Process_feed (pipeline, star_path, star_path_n);
-    //nile_Process_feed (pipeline, star_path, star_path_n / 2);
+    nile_Process_feed (pipeline, star_path, star_path_n / 2);
     gate = gate_;
 }
 
@@ -87,7 +88,6 @@ main (int argc, char **argv)
         stars[i].x      = gezira_random (0, window.width);
         stars[i].y      = gezira_random (0, window.height);
         stars[i].dy     = gezira_random (0.5, 3.0);
-        //stars[i].scale  = gezira_random (0.2, 0.7);
         stars[i].scale  = gezira_random (0.1, 0.5);
         stars[i].angle  = gezira_random (0, 4);
         stars[i].dangle = gezira_random (-0.1, 0.1);

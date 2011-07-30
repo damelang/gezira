@@ -5,9 +5,9 @@ NO_FPMATH   := $(shell $(CC) -E - </dev/null >/dev/null 2>&1 -mfpmath=sse;  echo
 NO_SSSE3    := $(shell $(CC) -E - </dev/null >/dev/null 2>&1 -mssse3;       echo $$?)
 NO_AVX_FLAG := $(shell $(CC) -E - </dev/null >/dev/null 2>&1 -mavx;         echo $$?)
 
-CFLAGS       := -pipe -Wall -Werror -Wno-unused -Wno-uninitialized \
-                -I$(NILE_RUNTIME) \
-                -O3 -ffast-math
+CFLAGS      := -pipe -Wall -Werror -Wno-unused -Wno-uninitialized \
+               -I$(NILE_RUNTIME) \
+               -O3 -ffast-math
 
 ifeq ($(NO_NATIVE), 0)
   CFLAGS += -march=native

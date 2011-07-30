@@ -5,7 +5,10 @@
 #include "gezira-image.h"
 #include "utils/all.h"
 
-#define NBYTES_PER_THREAD 1000000
+#define INITIAL_NBYTES_PER_THREAD 100000
+#define MEM_SIZE_MAX 5000000
+#define WINDOW_WIDTH  600
+#define WINDOW_HEIGHT 600
 #define NFALLING_GLYPHS 5000
 
 static int window_width  = 600;
@@ -233,7 +236,7 @@ main (int argc, char **argv)
         fglyphs[i].glyph  = &glyphs[i % nglyphs];
     }
 
-    mem_size = nthreads * NBYTES_PER_THREAD;
+    mem_size = nthreads * INITIAL_NBYTES_PER_THREAD;
     init = nile_startup (malloc (mem_size), mem_size, nthreads);
     if (!init) {
         fprintf (stderr, "nile_startup failed\n");
@@ -270,7 +273,6 @@ main (int argc, char **argv)
                 nile_Process_feed (gate, NULL, 0);
                 nile_sync (init);
                 free (nile_shutdown (init));
-                mem_size = nthreads * NBYTES_PER_THREAD;
                 init = nile_startup (malloc (mem_size), mem_size, nthreads);
                 gate = nile_Identity (init, 8);
             }
@@ -286,8 +288,15 @@ main (int argc, char **argv)
         }
 
         if (nile_error (init)) {
-            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
-            break;
+            mem_size *= 2;
+            if (mem_size > MEM_SIZE_MAX) {
+                fprintf (stderr, "Memory maxed out\n");
+                break;
+            }
+            //printf ("mem size is now: %d\n", mem_size);
+            free (nile_shutdown (init));
+            init = nile_startup (malloc (mem_size), mem_size, nthreads);
+            gate = nile_Identity (init, 8);
         }
 
         gezira_update_fps (init);

@@ -9005,12 +9005,12 @@ gezira_ApplyTexture (nile_Process_t *p,
 
 typedef struct {
     nile_Real_t v_o;
-    nile_Real_t v_Bi_A_x;
-    nile_Real_t v_Bi_A_y;
-    nile_Real_t v_Bi_B_x;
-    nile_Real_t v_Bi_B_y;
-    nile_Real_t v_Bi_C_x;
-    nile_Real_t v_Bi_C_y;
+    nile_Real_t v_Z_A_x;
+    nile_Real_t v_Z_A_y;
+    nile_Real_t v_Z_B_x;
+    nile_Real_t v_Z_B_y;
+    nile_Real_t v_Z_C_x;
+    nile_Real_t v_Z_C_y;
     nile_Real_t v_A_x;
     nile_Real_t v_A_y;
     nile_Real_t v_B_x;
@@ -9030,12 +9030,12 @@ gezira_OffsetBezier_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_OffsetBezier_vars_t *vars = nile_Process_vars (p);
     gezira_OffsetBezier_vars_t v = *vars;
-    v.v_A_x = v.v_Bi_A_x;
-    v.v_A_y = v.v_Bi_A_y;
-    v.v_B_x = v.v_Bi_B_x;
-    v.v_B_y = v.v_Bi_B_y;
-    v.v_C_x = v.v_Bi_C_x;
-    v.v_C_y = v.v_Bi_C_y;
+    v.v_A_x = v.v_Z_A_x;
+    v.v_A_y = v.v_Z_A_y;
+    v.v_B_x = v.v_Z_B_x;
+    v.v_B_y = v.v_Z_B_y;
+    v.v_C_x = v.v_Z_C_x;
+    v.v_C_y = v.v_Z_C_y;
     nile_Real_t t_66 = nile_Real_sub(v.v_A_y, v.v_B_y);
     nile_Real_t t_67 = nile_Real_sub(v.v_B_x, v.v_A_x);
     nile_Real_t t_65_1 = t_66;
@@ -9130,7 +9130,7 @@ gezira_OffsetBezier_prologue (nile_Process_t *p, nile_Buffer_t *out)
     nile_Real_t t_130 = nile_Real_mul(v.v_u_y, v.v_v_y);
     nile_Real_t t_131 = nile_Real_add(t_129, t_130);
     nile_Real_t t_132 = nile_Real (0.9);
-    nile_Real_t t_133 = nile_Real_gt(t_131, t_132);
+    nile_Real_t t_133 = nile_Real_geq(t_131, t_132);
     if (nile_Real_nz (t_133)) {
         nile_Real_t t_134 = nile_Real_add(v.v_A_x, v.v_B_x);
         nile_Real_t t_135 = nile_Real (2);
@@ -9255,70 +9255,66 @@ gezira_OffsetBezier_prologue (nile_Process_t *p, nile_Buffer_t *out)
         nile_Real_t t_196 = nile_Real (0);
         nile_Real_t t_197_x = t_196;
         nile_Real_t t_197_y = t_196;
-        nile_Real_t t_198 = nile_Real_eq(v.v_u_x, t_197_x);
-        nile_Real_t t_199 = nile_Real_eq(v.v_u_y, t_197_y);
-        nile_Real_t t_200 = nile_Real_and(t_198, t_199);
+        nile_Real_t t_198 = nile_Real_neq(v.v_u_x, t_197_x);
+        nile_Real_t t_199 = nile_Real_neq(v.v_u_y, t_197_y);
+        nile_Real_t t_200 = nile_Real_or(t_198, t_199);
         nile_Real_t t_201 = nile_Real (0);
-        nile_Real_t t_202 = nile_Real_eq(t_200, t_201);
-        nile_Real_t t_203 = nile_Real (0);
-        nile_Real_t t_204_x = t_203;
-        nile_Real_t t_204_y = t_203;
-        nile_Real_t t_205 = nile_Real_eq(v.v_v_x, t_204_x);
-        nile_Real_t t_206 = nile_Real_eq(v.v_v_y, t_204_y);
-        nile_Real_t t_207 = nile_Real_and(t_205, t_206);
-        nile_Real_t t_208 = nile_Real (0);
-        nile_Real_t t_209 = nile_Real_eq(t_207, t_208);
-        nile_Real_t t_210 = nile_Real_and(t_202, t_209);
-        if (nile_Real_nz (t_210)) {
+        nile_Real_t t_202_x = t_201;
+        nile_Real_t t_202_y = t_201;
+        nile_Real_t t_203 = nile_Real_neq(v.v_v_x, t_202_x);
+        nile_Real_t t_204 = nile_Real_neq(v.v_v_y, t_202_y);
+        nile_Real_t t_205 = nile_Real_or(t_203, t_204);
+        nile_Real_t t_206 = nile_Real_and(t_200, t_205);
+        if (nile_Real_nz (t_206)) {
             ; /* no-op */
-            nile_Real_t t_212 = nile_Real_add(v.v_B_x, v.v_C_x);
-            nile_Real_t t_213 = nile_Real (2);
-            nile_Real_t t_214 = nile_Real_div(t_212, t_213);
-            nile_Real_t t_215 = nile_Real_add(v.v_B_y, v.v_C_y);
-            nile_Real_t t_216 = nile_Real (2);
-            nile_Real_t t_217 = nile_Real_div(t_215, t_216);
-            nile_Real_t t_218_1 = t_214;
-            nile_Real_t t_218_2 = t_217;
-            nile_Real_t t_219_x = t_218_1;
-            nile_Real_t t_219_y = t_218_2;
-            nile_Real_t t_211_1_x = v.v_M_x;
-            nile_Real_t t_211_1_y = v.v_M_y;
-            nile_Real_t t_211_2_x = t_219_x;
-            nile_Real_t t_211_2_y = t_219_y;
-            nile_Real_t t_211_3_x = v.v_C_x;
-            nile_Real_t t_211_3_y = v.v_C_y;
-            nile_Real_t t_220_A_x = t_211_1_x;
-            nile_Real_t t_220_A_y = t_211_1_y;
-            nile_Real_t t_220_B_x = t_211_2_x;
-            nile_Real_t t_220_B_y = t_211_2_y;
-            nile_Real_t t_220_C_x = t_211_3_x;
-            nile_Real_t t_220_C_y = t_211_3_y;
-            nile_Process_t *t_221 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (t_220_A_x), nile_Real_tof (t_220_A_y), nile_Real_tof (t_220_B_x), nile_Real_tof (t_220_B_y), nile_Real_tof (t_220_C_x), nile_Real_tof (t_220_C_y));
-            nile_Real_t t_223 = nile_Real_add(v.v_A_x, v.v_B_x);
-            nile_Real_t t_224 = nile_Real (2);
-            nile_Real_t t_225 = nile_Real_div(t_223, t_224);
-            nile_Real_t t_226 = nile_Real_add(v.v_A_y, v.v_B_y);
-            nile_Real_t t_227 = nile_Real (2);
-            nile_Real_t t_228 = nile_Real_div(t_226, t_227);
-            nile_Real_t t_229_1 = t_225;
-            nile_Real_t t_229_2 = t_228;
-            nile_Real_t t_230_x = t_229_1;
-            nile_Real_t t_230_y = t_229_2;
-            nile_Real_t t_222_1_x = v.v_A_x;
-            nile_Real_t t_222_1_y = v.v_A_y;
-            nile_Real_t t_222_2_x = t_230_x;
-            nile_Real_t t_222_2_y = t_230_y;
-            nile_Real_t t_222_3_x = v.v_M_x;
-            nile_Real_t t_222_3_y = v.v_M_y;
-            nile_Real_t t_231_A_x = t_222_1_x;
-            nile_Real_t t_231_A_y = t_222_1_y;
-            nile_Real_t t_231_B_x = t_222_2_x;
-            nile_Real_t t_231_B_y = t_222_2_y;
-            nile_Real_t t_231_C_x = t_222_3_x;
-            nile_Real_t t_231_C_y = t_222_3_y;
-            nile_Process_t *t_232 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (t_231_A_x), nile_Real_tof (t_231_A_y), nile_Real_tof (t_231_B_x), nile_Real_tof (t_231_B_y), nile_Real_tof (t_231_C_x), nile_Real_tof (t_231_C_y));
-            nile_Process_t *t_233 = nile_Process_pipe (t_221, t_232, NILE_NULL);
-            return nile_Process_swap (p, t_233, out);
+            nile_Real_t t_208 = nile_Real_add(v.v_B_x, v.v_C_x);
+            nile_Real_t t_209 = nile_Real (2);
+            nile_Real_t t_210 = nile_Real_div(t_208, t_209);
+            nile_Real_t t_211 = nile_Real_add(v.v_B_y, v.v_C_y);
+            nile_Real_t t_212 = nile_Real (2);
+            nile_Real_t t_213 = nile_Real_div(t_211, t_212);
+            nile_Real_t t_214_1 = t_210;
+            nile_Real_t t_214_2 = t_213;
+            nile_Real_t t_215_x = t_214_1;
+            nile_Real_t t_215_y = t_214_2;
+            nile_Real_t t_207_1_x = v.v_M_x;
+            nile_Real_t t_207_1_y = v.v_M_y;
+            nile_Real_t t_207_2_x = t_215_x;
+            nile_Real_t t_207_2_y = t_215_y;
+            nile_Real_t t_207_3_x = v.v_C_x;
+            nile_Real_t t_207_3_y = v.v_C_y;
+            nile_Real_t t_216_A_x = t_207_1_x;
+            nile_Real_t t_216_A_y = t_207_1_y;
+            nile_Real_t t_216_B_x = t_207_2_x;
+            nile_Real_t t_216_B_y = t_207_2_y;
+            nile_Real_t t_216_C_x = t_207_3_x;
+            nile_Real_t t_216_C_y = t_207_3_y;
+            nile_Process_t *t_217 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (t_216_A_x), nile_Real_tof (t_216_A_y), nile_Real_tof (t_216_B_x), nile_Real_tof (t_216_B_y), nile_Real_tof (t_216_C_x), nile_Real_tof (t_216_C_y));
+            nile_Real_t t_219 = nile_Real_add(v.v_A_x, v.v_B_x);
+            nile_Real_t t_220 = nile_Real (2);
+            nile_Real_t t_221 = nile_Real_div(t_219, t_220);
+            nile_Real_t t_222 = nile_Real_add(v.v_A_y, v.v_B_y);
+            nile_Real_t t_223 = nile_Real (2);
+            nile_Real_t t_224 = nile_Real_div(t_222, t_223);
+            nile_Real_t t_225_1 = t_221;
+            nile_Real_t t_225_2 = t_224;
+            nile_Real_t t_226_x = t_225_1;
+            nile_Real_t t_226_y = t_225_2;
+            nile_Real_t t_218_1_x = v.v_A_x;
+            nile_Real_t t_218_1_y = v.v_A_y;
+            nile_Real_t t_218_2_x = t_226_x;
+            nile_Real_t t_218_2_y = t_226_y;
+            nile_Real_t t_218_3_x = v.v_M_x;
+            nile_Real_t t_218_3_y = v.v_M_y;
+            nile_Real_t t_227_A_x = t_218_1_x;
+            nile_Real_t t_227_A_y = t_218_1_y;
+            nile_Real_t t_227_B_x = t_218_2_x;
+            nile_Real_t t_227_B_y = t_218_2_y;
+            nile_Real_t t_227_C_x = t_218_3_x;
+            nile_Real_t t_227_C_y = t_218_3_y;
+            nile_Process_t *t_228 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (t_227_A_x), nile_Real_tof (t_227_A_y), nile_Real_tof (t_227_B_x), nile_Real_tof (t_227_B_y), nile_Real_tof (t_227_C_x), nile_Real_tof (t_227_C_y));
+            nile_Process_t *t_229 = nile_Process_pipe (t_217, t_228, NILE_NULL);
+            return nile_Process_swap (p, t_229, out);
         }
         else {
             ; /* no-op */
@@ -9342,12 +9338,12 @@ gezira_OffsetBezier_epilogue (nile_Process_t *p, nile_Buffer_t *out)
 nile_Process_t *
 gezira_OffsetBezier (nile_Process_t *p, 
                      float v_o, 
-                     float v_Bi_A_x, 
-                     float v_Bi_A_y, 
-                     float v_Bi_B_x, 
-                     float v_Bi_B_y, 
-                     float v_Bi_C_x, 
-                     float v_Bi_C_y)
+                     float v_Z_A_x, 
+                     float v_Z_A_y, 
+                     float v_Z_B_x, 
+                     float v_Z_B_y, 
+                     float v_Z_C_x, 
+                     float v_Z_C_y)
 {
     gezira_OffsetBezier_vars_t *vars;
     gezira_OffsetBezier_vars_t v;
@@ -9355,12 +9351,258 @@ gezira_OffsetBezier (nile_Process_t *p,
     if (p) {
         vars = nile_Process_vars (p);
         v.v_o = nile_Real (v_o);
-        v.v_Bi_A_x = nile_Real (v_Bi_A_x);
-        v.v_Bi_A_y = nile_Real (v_Bi_A_y);
-        v.v_Bi_B_x = nile_Real (v_Bi_B_x);
-        v.v_Bi_B_y = nile_Real (v_Bi_B_y);
-        v.v_Bi_C_x = nile_Real (v_Bi_C_x);
-        v.v_Bi_C_y = nile_Real (v_Bi_C_y);
+        v.v_Z_A_x = nile_Real (v_Z_A_x);
+        v.v_Z_A_y = nile_Real (v_Z_A_y);
+        v.v_Z_B_x = nile_Real (v_Z_B_x);
+        v.v_Z_B_y = nile_Real (v_Z_B_y);
+        v.v_Z_C_x = nile_Real (v_Z_C_x);
+        v.v_Z_C_y = nile_Real (v_Z_C_y);
+        *vars = v;
+    }
+    return p;
+}
+
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+
+#define IN_QUANTUM 6
+#define OUT_QUANTUM 6
+
+typedef struct {
+    nile_Real_t v_o;
+    nile_Real_t v_l;
+    nile_Real_t v_P_x;
+    nile_Real_t v_P_y;
+    nile_Real_t v_u_x;
+    nile_Real_t v_u_y;
+    nile_Real_t v_v_x;
+    nile_Real_t v_v_y;
+    nile_Real_t v_A_x;
+    nile_Real_t v_A_y;
+    nile_Real_t v_C_x;
+    nile_Real_t v_C_y;
+    nile_Real_t v_w_x;
+    nile_Real_t v_w_y;
+} gezira_MiterJoin_vars_t;
+
+static nile_Buffer_t *
+gezira_MiterJoin_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_MiterJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_MiterJoin_vars_t v = *vars;
+    nile_Real_t t_36_x = v.v_o;
+    nile_Real_t t_36_y = v.v_o;
+    nile_Real_t t_37_x = nile_Real_mul(t_36_x, v.v_u_x);
+    nile_Real_t t_37_y = nile_Real_mul(t_36_y, v.v_u_y);
+    nile_Real_t t_38_x = t_37_x;
+    nile_Real_t t_38_y = t_37_y;
+    nile_Real_t t_39_x = nile_Real_add(v.v_P_x, t_38_x);
+    nile_Real_t t_39_y = nile_Real_add(v.v_P_y, t_38_y);
+    v.v_A_x = t_39_x;
+    v.v_A_y = t_39_y;
+    nile_Real_t t_40_x = v.v_o;
+    nile_Real_t t_40_y = v.v_o;
+    nile_Real_t t_41_x = nile_Real_mul(t_40_x, v.v_v_x);
+    nile_Real_t t_41_y = nile_Real_mul(t_40_y, v.v_v_y);
+    nile_Real_t t_42_x = t_41_x;
+    nile_Real_t t_42_y = t_41_y;
+    nile_Real_t t_43_x = nile_Real_add(v.v_P_x, t_42_x);
+    nile_Real_t t_43_y = nile_Real_add(v.v_P_y, t_42_y);
+    v.v_C_x = t_43_x;
+    v.v_C_y = t_43_y;
+    nile_Real_t t_45 = nile_Real_sub(v.v_A_y, v.v_C_y);
+    nile_Real_t t_46 = nile_Real_sub(v.v_C_x, v.v_A_x);
+    nile_Real_t t_44_1 = t_45;
+    nile_Real_t t_44_2 = t_46;
+    nile_Real_t t_47_x = t_44_1;
+    nile_Real_t t_47_y = t_44_2;
+    nile_Real_t t_48 = nile_Real_mul(t_47_x, t_47_x);
+    nile_Real_t t_49 = nile_Real_mul(t_47_y, t_47_y);
+    nile_Real_t t_50 = nile_Real_add(t_48, t_49);
+    nile_Real_t t_51 = nile_Real_sqt(t_50);
+    nile_Real_t t_52 = nile_Real (0);
+    nile_Real_t t_53 = nile_Real_neq(t_51, t_52);
+    nile_Real_t t_54 = nile_Real_mul(t_47_x, t_47_x);
+    nile_Real_t t_55 = nile_Real_mul(t_47_y, t_47_y);
+    nile_Real_t t_56 = nile_Real_add(t_54, t_55);
+    nile_Real_t t_57 = nile_Real_sqt(t_56);
+    nile_Real_t t_58_x = t_57;
+    nile_Real_t t_58_y = t_57;
+    nile_Real_t t_59_x = nile_Real_div(t_47_x, t_58_x);
+    nile_Real_t t_59_y = nile_Real_div(t_47_y, t_58_y);
+    nile_Real_t t_60 = nile_Real (0);
+    nile_Real_t t_61_x = t_60;
+    nile_Real_t t_61_y = t_60;
+    nile_Real_t t_62_x = t_53;
+    nile_Real_t t_62_y = t_53;
+    nile_Real_t t_63_x = nile_Real_nz (t_62_x) ? t_59_x : t_61_x;
+    nile_Real_t t_63_y = nile_Real_nz (t_62_y) ? t_59_y : t_61_y;
+    nile_Real_t t_64 = nile_Real (0);
+    nile_Real_t t_65_x = t_64;
+    nile_Real_t t_65_y = t_64;
+    nile_Real_t t_66 = nile_Real_neq(t_63_x, t_65_x);
+    nile_Real_t t_67 = nile_Real_neq(t_63_y, t_65_y);
+    nile_Real_t t_68 = nile_Real_or(t_66, t_67);
+    nile_Real_t t_69_x = t_68;
+    nile_Real_t t_69_y = t_68;
+    nile_Real_t t_70_x = nile_Real_nz (t_69_x) ? t_63_x : v.v_u_x;
+    nile_Real_t t_70_y = nile_Real_nz (t_69_y) ? t_63_y : v.v_u_y;
+    v.v_w_x = t_70_x;
+    v.v_w_y = t_70_y;
+    nile_Real_t t_71 = nile_Real_mul(v.v_u_x, v.v_w_x);
+    nile_Real_t t_72 = nile_Real_mul(v.v_u_y, v.v_w_y);
+    nile_Real_t t_73 = nile_Real_add(t_71, t_72);
+    nile_Real_t t_74 = nile_Real (1);
+    nile_Real_t t_75 = nile_Real_div(t_74, v.v_l);
+    nile_Real_t t_76 = nile_Real_geq(t_73, t_75);
+    if (nile_Real_nz (t_76)) {
+        nile_Real_t t_77 = nile_Real_mul(v.v_u_x, v.v_w_x);
+        nile_Real_t t_78 = nile_Real_mul(v.v_u_y, v.v_w_y);
+        nile_Real_t t_79 = nile_Real_add(t_77, t_78);
+        nile_Real_t t_80 = nile_Real_div(v.v_o, t_79);
+        nile_Real_t v_p = t_80;
+        nile_Real_t t_81_x = v_p;
+        nile_Real_t t_81_y = v_p;
+        nile_Real_t t_82_x = nile_Real_mul(t_81_x, v.v_w_x);
+        nile_Real_t t_82_y = nile_Real_mul(t_81_y, v.v_w_y);
+        nile_Real_t t_83_x = t_82_x;
+        nile_Real_t t_83_y = t_82_y;
+        nile_Real_t t_84_x = nile_Real_add(v.v_P_x, t_83_x);
+        nile_Real_t t_84_y = nile_Real_add(v.v_P_y, t_83_y);
+        nile_Real_t v_M_x = t_84_x;
+        nile_Real_t v_M_y = t_84_y;
+        nile_Real_t t_86 = nile_Real_add(v_M_x, v.v_C_x);
+        nile_Real_t t_87 = nile_Real (2);
+        nile_Real_t t_88 = nile_Real_div(t_86, t_87);
+        nile_Real_t t_89 = nile_Real_add(v_M_y, v.v_C_y);
+        nile_Real_t t_90 = nile_Real (2);
+        nile_Real_t t_91 = nile_Real_div(t_89, t_90);
+        nile_Real_t t_92_1 = t_88;
+        nile_Real_t t_92_2 = t_91;
+        nile_Real_t t_93_x = t_92_1;
+        nile_Real_t t_93_y = t_92_2;
+        nile_Real_t t_85_1_x = v_M_x;
+        nile_Real_t t_85_1_y = v_M_y;
+        nile_Real_t t_85_2_x = t_93_x;
+        nile_Real_t t_85_2_y = t_93_y;
+        nile_Real_t t_85_3_x = v.v_C_x;
+        nile_Real_t t_85_3_y = v.v_C_y;
+        nile_Real_t t_94_A_x = t_85_1_x;
+        nile_Real_t t_94_A_y = t_85_1_y;
+        nile_Real_t t_94_B_x = t_85_2_x;
+        nile_Real_t t_94_B_y = t_85_2_y;
+        nile_Real_t t_94_C_x = t_85_3_x;
+        nile_Real_t t_94_C_y = t_85_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_94_A_x);
+        nile_Buffer_push_tail(out, t_94_A_y);
+        nile_Buffer_push_tail(out, t_94_B_x);
+        nile_Buffer_push_tail(out, t_94_B_y);
+        nile_Buffer_push_tail(out, t_94_C_x);
+        nile_Buffer_push_tail(out, t_94_C_y);
+        nile_Real_t t_96 = nile_Real_add(v.v_A_x, v_M_x);
+        nile_Real_t t_97 = nile_Real (2);
+        nile_Real_t t_98 = nile_Real_div(t_96, t_97);
+        nile_Real_t t_99 = nile_Real_add(v.v_A_y, v_M_y);
+        nile_Real_t t_100 = nile_Real (2);
+        nile_Real_t t_101 = nile_Real_div(t_99, t_100);
+        nile_Real_t t_102_1 = t_98;
+        nile_Real_t t_102_2 = t_101;
+        nile_Real_t t_103_x = t_102_1;
+        nile_Real_t t_103_y = t_102_2;
+        nile_Real_t t_95_1_x = v.v_A_x;
+        nile_Real_t t_95_1_y = v.v_A_y;
+        nile_Real_t t_95_2_x = t_103_x;
+        nile_Real_t t_95_2_y = t_103_y;
+        nile_Real_t t_95_3_x = v_M_x;
+        nile_Real_t t_95_3_y = v_M_y;
+        nile_Real_t t_104_A_x = t_95_1_x;
+        nile_Real_t t_104_A_y = t_95_1_y;
+        nile_Real_t t_104_B_x = t_95_2_x;
+        nile_Real_t t_104_B_y = t_95_2_y;
+        nile_Real_t t_104_C_x = t_95_3_x;
+        nile_Real_t t_104_C_y = t_95_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_104_A_x);
+        nile_Buffer_push_tail(out, t_104_A_y);
+        nile_Buffer_push_tail(out, t_104_B_x);
+        nile_Buffer_push_tail(out, t_104_B_y);
+        nile_Buffer_push_tail(out, t_104_C_x);
+        nile_Buffer_push_tail(out, t_104_C_y);
+    }
+    else {
+        nile_Real_t t_106 = nile_Real_add(v.v_A_x, v.v_C_x);
+        nile_Real_t t_107 = nile_Real (2);
+        nile_Real_t t_108 = nile_Real_div(t_106, t_107);
+        nile_Real_t t_109 = nile_Real_add(v.v_A_y, v.v_C_y);
+        nile_Real_t t_110 = nile_Real (2);
+        nile_Real_t t_111 = nile_Real_div(t_109, t_110);
+        nile_Real_t t_112_1 = t_108;
+        nile_Real_t t_112_2 = t_111;
+        nile_Real_t t_113_x = t_112_1;
+        nile_Real_t t_113_y = t_112_2;
+        nile_Real_t t_105_1_x = v.v_A_x;
+        nile_Real_t t_105_1_y = v.v_A_y;
+        nile_Real_t t_105_2_x = t_113_x;
+        nile_Real_t t_105_2_y = t_113_y;
+        nile_Real_t t_105_3_x = v.v_C_x;
+        nile_Real_t t_105_3_y = v.v_C_y;
+        nile_Real_t t_114_A_x = t_105_1_x;
+        nile_Real_t t_114_A_y = t_105_1_y;
+        nile_Real_t t_114_B_x = t_105_2_x;
+        nile_Real_t t_114_B_y = t_105_2_y;
+        nile_Real_t t_114_C_x = t_105_3_x;
+        nile_Real_t t_114_C_y = t_105_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_114_A_x);
+        nile_Buffer_push_tail(out, t_114_A_y);
+        nile_Buffer_push_tail(out, t_114_B_x);
+        nile_Buffer_push_tail(out, t_114_B_y);
+        nile_Buffer_push_tail(out, t_114_C_x);
+        nile_Buffer_push_tail(out, t_114_C_y);
+    }
+    *vars = v;
+    return out;
+}
+
+#define gezira_MiterJoin_body 0
+
+static nile_Buffer_t *
+gezira_MiterJoin_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_MiterJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_MiterJoin_vars_t v = *vars;
+    ; /* no-op */
+    return out;
+}
+
+nile_Process_t *
+gezira_MiterJoin (nile_Process_t *p, 
+                  float v_o, 
+                  float v_l, 
+                  float v_P_x, 
+                  float v_P_y, 
+                  float v_u_x, 
+                  float v_u_y, 
+                  float v_v_x, 
+                  float v_v_y)
+{
+    gezira_MiterJoin_vars_t *vars;
+    gezira_MiterJoin_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_MiterJoin_prologue, gezira_MiterJoin_body, gezira_MiterJoin_epilogue);
+    if (p) {
+        vars = nile_Process_vars (p);
+        v.v_o = nile_Real (v_o);
+        v.v_l = nile_Real (v_l);
+        v.v_P_x = nile_Real (v_P_x);
+        v.v_P_y = nile_Real (v_P_y);
+        v.v_u_x = nile_Real (v_u_x);
+        v.v_u_y = nile_Real (v_u_y);
+        v.v_v_x = nile_Real (v_v_x);
+        v.v_v_y = nile_Real (v_v_y);
         *vars = v;
     }
     return p;
@@ -9386,205 +9628,163 @@ typedef struct {
     nile_Real_t v_C_y;
     nile_Real_t v_w_x;
     nile_Real_t v_w_y;
-} gezira_JoinOffsets_vars_t;
+} gezira_RoundJoin_vars_t;
 
 static nile_Buffer_t *
-gezira_JoinOffsets_prologue (nile_Process_t *p, nile_Buffer_t *out)
+gezira_RoundJoin_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
-    gezira_JoinOffsets_vars_t *vars = nile_Process_vars (p);
-    gezira_JoinOffsets_vars_t v = *vars;
-    nile_Real_t t_38_x = v.v_o;
-    nile_Real_t t_38_y = v.v_o;
-    nile_Real_t t_39_x = nile_Real_mul(t_38_x, v.v_u_x);
-    nile_Real_t t_39_y = nile_Real_mul(t_38_y, v.v_u_y);
-    nile_Real_t t_40_x = t_39_x;
-    nile_Real_t t_40_y = t_39_y;
-    nile_Real_t t_41_x = nile_Real_add(v.v_P_x, t_40_x);
-    nile_Real_t t_41_y = nile_Real_add(v.v_P_y, t_40_y);
-    v.v_A_x = t_41_x;
-    v.v_A_y = t_41_y;
-    nile_Real_t t_42_x = v.v_o;
-    nile_Real_t t_42_y = v.v_o;
-    nile_Real_t t_43_x = nile_Real_mul(t_42_x, v.v_v_x);
-    nile_Real_t t_43_y = nile_Real_mul(t_42_y, v.v_v_y);
-    nile_Real_t t_44_x = t_43_x;
-    nile_Real_t t_44_y = t_43_y;
-    nile_Real_t t_45_x = nile_Real_add(v.v_P_x, t_44_x);
-    nile_Real_t t_45_y = nile_Real_add(v.v_P_y, t_44_y);
-    v.v_C_x = t_45_x;
-    v.v_C_y = t_45_y;
-    nile_Real_t t_47 = nile_Real_sub(v.v_u_y, v.v_v_y);
-    nile_Real_t t_48 = nile_Real_sub(v.v_v_x, v.v_u_x);
-    nile_Real_t t_46_1 = t_47;
-    nile_Real_t t_46_2 = t_48;
-    nile_Real_t t_49_x = t_46_1;
-    nile_Real_t t_49_y = t_46_2;
-    nile_Real_t t_50 = nile_Real_mul(t_49_x, t_49_x);
-    nile_Real_t t_51 = nile_Real_mul(t_49_y, t_49_y);
-    nile_Real_t t_52 = nile_Real_add(t_50, t_51);
-    nile_Real_t t_53 = nile_Real_sqt(t_52);
-    nile_Real_t t_54 = nile_Real (0);
-    nile_Real_t t_55 = nile_Real_neq(t_53, t_54);
-    nile_Real_t t_56 = nile_Real_mul(t_49_x, t_49_x);
-    nile_Real_t t_57 = nile_Real_mul(t_49_y, t_49_y);
-    nile_Real_t t_58 = nile_Real_add(t_56, t_57);
-    nile_Real_t t_59 = nile_Real_sqt(t_58);
-    nile_Real_t t_60_x = t_59;
-    nile_Real_t t_60_y = t_59;
-    nile_Real_t t_61_x = nile_Real_div(t_49_x, t_60_x);
-    nile_Real_t t_61_y = nile_Real_div(t_49_y, t_60_y);
-    nile_Real_t t_62 = nile_Real (0);
-    nile_Real_t t_63_x = t_62;
-    nile_Real_t t_63_y = t_62;
-    nile_Real_t t_64_x = t_55;
-    nile_Real_t t_64_y = t_55;
-    nile_Real_t t_65_x = nile_Real_nz (t_64_x) ? t_61_x : t_63_x;
-    nile_Real_t t_65_y = nile_Real_nz (t_64_y) ? t_61_y : t_63_y;
-    nile_Real_t t_66 = nile_Real (0);
-    nile_Real_t t_67_x = t_66;
-    nile_Real_t t_67_y = t_66;
-    nile_Real_t t_68 = nile_Real_eq(t_65_x, t_67_x);
-    nile_Real_t t_69 = nile_Real_eq(t_65_y, t_67_y);
-    nile_Real_t t_70 = nile_Real_and(t_68, t_69);
-    nile_Real_t t_71 = nile_Real (0);
-    nile_Real_t t_72 = nile_Real_eq(t_70, t_71);
-    nile_Real_t t_73_x = t_72;
-    nile_Real_t t_73_y = t_72;
-    nile_Real_t t_74_x = nile_Real_nz (t_73_x) ? t_65_x : v.v_u_x;
-    nile_Real_t t_74_y = nile_Real_nz (t_73_y) ? t_65_y : v.v_u_y;
-    v.v_w_x = t_74_x;
-    v.v_w_y = t_74_y;
-    nile_Real_t t_75 = nile_Real_mul(v.v_u_x, v.v_w_x);
-    nile_Real_t t_76 = nile_Real_mul(v.v_u_y, v.v_w_y);
-    nile_Real_t t_77 = nile_Real_add(t_75, t_76);
-    nile_Real_t t_78 = nile_Real (0.01);
-    nile_Real_t t_79 = nile_Real_neg(t_78);
-    nile_Real_t t_80 = nile_Real_lt(t_77, t_79);
-    if (nile_Real_nz (t_80)) {
-        nile_Real_t t_82 = nile_Real_add(v.v_A_x, v.v_C_x);
-        nile_Real_t t_83 = nile_Real (2);
-        nile_Real_t t_84 = nile_Real_div(t_82, t_83);
-        nile_Real_t t_85 = nile_Real_add(v.v_A_y, v.v_C_y);
-        nile_Real_t t_86 = nile_Real (2);
-        nile_Real_t t_87 = nile_Real_div(t_85, t_86);
-        nile_Real_t t_88_1 = t_84;
-        nile_Real_t t_88_2 = t_87;
-        nile_Real_t t_89_x = t_88_1;
-        nile_Real_t t_89_y = t_88_2;
-        nile_Real_t t_81_1_x = v.v_A_x;
-        nile_Real_t t_81_1_y = v.v_A_y;
-        nile_Real_t t_81_2_x = t_89_x;
-        nile_Real_t t_81_2_y = t_89_y;
-        nile_Real_t t_81_3_x = v.v_C_x;
-        nile_Real_t t_81_3_y = v.v_C_y;
-        nile_Real_t t_90_A_x = t_81_1_x;
-        nile_Real_t t_90_A_y = t_81_1_y;
-        nile_Real_t t_90_B_x = t_81_2_x;
-        nile_Real_t t_90_B_y = t_81_2_y;
-        nile_Real_t t_90_C_x = t_81_3_x;
-        nile_Real_t t_90_C_y = t_81_3_y;
+    gezira_RoundJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_RoundJoin_vars_t v = *vars;
+    nile_Real_t t_36_x = v.v_o;
+    nile_Real_t t_36_y = v.v_o;
+    nile_Real_t t_37_x = nile_Real_mul(t_36_x, v.v_u_x);
+    nile_Real_t t_37_y = nile_Real_mul(t_36_y, v.v_u_y);
+    nile_Real_t t_38_x = t_37_x;
+    nile_Real_t t_38_y = t_37_y;
+    nile_Real_t t_39_x = nile_Real_add(v.v_P_x, t_38_x);
+    nile_Real_t t_39_y = nile_Real_add(v.v_P_y, t_38_y);
+    v.v_A_x = t_39_x;
+    v.v_A_y = t_39_y;
+    nile_Real_t t_40_x = v.v_o;
+    nile_Real_t t_40_y = v.v_o;
+    nile_Real_t t_41_x = nile_Real_mul(t_40_x, v.v_v_x);
+    nile_Real_t t_41_y = nile_Real_mul(t_40_y, v.v_v_y);
+    nile_Real_t t_42_x = t_41_x;
+    nile_Real_t t_42_y = t_41_y;
+    nile_Real_t t_43_x = nile_Real_add(v.v_P_x, t_42_x);
+    nile_Real_t t_43_y = nile_Real_add(v.v_P_y, t_42_y);
+    v.v_C_x = t_43_x;
+    v.v_C_y = t_43_y;
+    nile_Real_t t_45 = nile_Real_sub(v.v_A_y, v.v_C_y);
+    nile_Real_t t_46 = nile_Real_sub(v.v_C_x, v.v_A_x);
+    nile_Real_t t_44_1 = t_45;
+    nile_Real_t t_44_2 = t_46;
+    nile_Real_t t_47_x = t_44_1;
+    nile_Real_t t_47_y = t_44_2;
+    nile_Real_t t_48 = nile_Real_mul(t_47_x, t_47_x);
+    nile_Real_t t_49 = nile_Real_mul(t_47_y, t_47_y);
+    nile_Real_t t_50 = nile_Real_add(t_48, t_49);
+    nile_Real_t t_51 = nile_Real_sqt(t_50);
+    nile_Real_t t_52 = nile_Real (0);
+    nile_Real_t t_53 = nile_Real_neq(t_51, t_52);
+    nile_Real_t t_54 = nile_Real_mul(t_47_x, t_47_x);
+    nile_Real_t t_55 = nile_Real_mul(t_47_y, t_47_y);
+    nile_Real_t t_56 = nile_Real_add(t_54, t_55);
+    nile_Real_t t_57 = nile_Real_sqt(t_56);
+    nile_Real_t t_58_x = t_57;
+    nile_Real_t t_58_y = t_57;
+    nile_Real_t t_59_x = nile_Real_div(t_47_x, t_58_x);
+    nile_Real_t t_59_y = nile_Real_div(t_47_y, t_58_y);
+    nile_Real_t t_60 = nile_Real (0);
+    nile_Real_t t_61_x = t_60;
+    nile_Real_t t_61_y = t_60;
+    nile_Real_t t_62_x = t_53;
+    nile_Real_t t_62_y = t_53;
+    nile_Real_t t_63_x = nile_Real_nz (t_62_x) ? t_59_x : t_61_x;
+    nile_Real_t t_63_y = nile_Real_nz (t_62_y) ? t_59_y : t_61_y;
+    nile_Real_t t_64 = nile_Real (0);
+    nile_Real_t t_65_x = t_64;
+    nile_Real_t t_65_y = t_64;
+    nile_Real_t t_66 = nile_Real_neq(t_63_x, t_65_x);
+    nile_Real_t t_67 = nile_Real_neq(t_63_y, t_65_y);
+    nile_Real_t t_68 = nile_Real_or(t_66, t_67);
+    nile_Real_t t_69_x = t_68;
+    nile_Real_t t_69_y = t_68;
+    nile_Real_t t_70_x = nile_Real_nz (t_69_x) ? t_63_x : v.v_u_x;
+    nile_Real_t t_70_y = nile_Real_nz (t_69_y) ? t_63_y : v.v_u_y;
+    v.v_w_x = t_70_x;
+    v.v_w_y = t_70_y;
+    nile_Real_t t_71 = nile_Real_mul(v.v_u_x, v.v_w_x);
+    nile_Real_t t_72 = nile_Real_mul(v.v_u_y, v.v_w_y);
+    nile_Real_t t_73 = nile_Real_add(t_71, t_72);
+    nile_Real_t t_74 = nile_Real (0.9);
+    nile_Real_t t_75 = nile_Real_geq(t_73, t_74);
+    if (nile_Real_nz (t_75)) {
+        nile_Real_t t_76_x = v.v_o;
+        nile_Real_t t_76_y = v.v_o;
+        nile_Real_t t_77_x = nile_Real_mul(t_76_x, v.v_w_x);
+        nile_Real_t t_77_y = nile_Real_mul(t_76_y, v.v_w_y);
+        nile_Real_t t_78_x = t_77_x;
+        nile_Real_t t_78_y = t_77_y;
+        nile_Real_t t_79_x = nile_Real_add(v.v_P_x, t_78_x);
+        nile_Real_t t_79_y = nile_Real_add(v.v_P_y, t_78_y);
+        nile_Real_t v_N_x = t_79_x;
+        nile_Real_t v_N_y = t_79_y;
+        nile_Real_t t_80 = nile_Real (2);
+        nile_Real_t t_81_x = t_80;
+        nile_Real_t t_81_y = t_80;
+        nile_Real_t t_82_x = nile_Real_mul(t_81_x, v_N_x);
+        nile_Real_t t_82_y = nile_Real_mul(t_81_y, v_N_y);
+        nile_Real_t t_83 = nile_Real_add(v.v_A_x, v.v_C_x);
+        nile_Real_t t_84 = nile_Real (2);
+        nile_Real_t t_85 = nile_Real_div(t_83, t_84);
+        nile_Real_t t_86 = nile_Real_add(v.v_A_y, v.v_C_y);
+        nile_Real_t t_87 = nile_Real (2);
+        nile_Real_t t_88 = nile_Real_div(t_86, t_87);
+        nile_Real_t t_89_1 = t_85;
+        nile_Real_t t_89_2 = t_88;
+        nile_Real_t t_90_x = t_89_1;
+        nile_Real_t t_90_y = t_89_2;
+        nile_Real_t t_91_x = nile_Real_sub(t_82_x, t_90_x);
+        nile_Real_t t_91_y = nile_Real_sub(t_82_y, t_90_y);
+        nile_Real_t v_B_x = t_91_x;
+        nile_Real_t v_B_y = t_91_y;
+        nile_Real_t t_92_1_x = v.v_A_x;
+        nile_Real_t t_92_1_y = v.v_A_y;
+        nile_Real_t t_92_2_x = v_B_x;
+        nile_Real_t t_92_2_y = v_B_y;
+        nile_Real_t t_92_3_x = v.v_C_x;
+        nile_Real_t t_92_3_y = v.v_C_y;
+        nile_Real_t t_93_A_x = t_92_1_x;
+        nile_Real_t t_93_A_y = t_92_1_y;
+        nile_Real_t t_93_B_x = t_92_2_x;
+        nile_Real_t t_93_B_y = t_92_2_y;
+        nile_Real_t t_93_C_x = t_92_3_x;
+        nile_Real_t t_93_C_y = t_92_3_y;
         if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
             out = nile_Process_append_output (p, out);
-        nile_Buffer_push_tail(out, t_90_A_x);
-        nile_Buffer_push_tail(out, t_90_A_y);
-        nile_Buffer_push_tail(out, t_90_B_x);
-        nile_Buffer_push_tail(out, t_90_B_y);
-        nile_Buffer_push_tail(out, t_90_C_x);
-        nile_Buffer_push_tail(out, t_90_C_y);
+        nile_Buffer_push_tail(out, t_93_A_x);
+        nile_Buffer_push_tail(out, t_93_A_y);
+        nile_Buffer_push_tail(out, t_93_B_x);
+        nile_Buffer_push_tail(out, t_93_B_y);
+        nile_Buffer_push_tail(out, t_93_C_x);
+        nile_Buffer_push_tail(out, t_93_C_y);
     }
     else {
-        nile_Real_t t_91 = nile_Real_mul(v.v_u_x, v.v_w_x);
-        nile_Real_t t_92 = nile_Real_mul(v.v_u_y, v.v_w_y);
-        nile_Real_t t_93 = nile_Real_add(t_91, t_92);
-        nile_Real_t t_94 = nile_Real (0.9);
-        nile_Real_t t_95 = nile_Real_lt(t_93, t_94);
-        if (nile_Real_nz (t_95)) {
-            ; /* no-op */
-            nile_Process_t *t_96 = gezira_JoinOffsets(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_P_x), nile_Real_tof (v.v_P_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v.v_w_x), nile_Real_tof (v.v_w_y));
-            nile_Process_t *t_97 = gezira_JoinOffsets(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_P_x), nile_Real_tof (v.v_P_y), nile_Real_tof (v.v_w_x), nile_Real_tof (v.v_w_y), nile_Real_tof (v.v_v_x), nile_Real_tof (v.v_v_y));
-            nile_Process_t *t_98 = nile_Process_pipe (t_96, t_97, NILE_NULL);
-            return nile_Process_swap (p, t_98, out);
-        }
-        else {
-            nile_Real_t t_99_x = v.v_o;
-            nile_Real_t t_99_y = v.v_o;
-            nile_Real_t t_100_x = nile_Real_mul(t_99_x, v.v_w_x);
-            nile_Real_t t_100_y = nile_Real_mul(t_99_y, v.v_w_y);
-            nile_Real_t t_101_x = t_100_x;
-            nile_Real_t t_101_y = t_100_y;
-            nile_Real_t t_102_x = nile_Real_add(v.v_P_x, t_101_x);
-            nile_Real_t t_102_y = nile_Real_add(v.v_P_y, t_101_y);
-            nile_Real_t v_N_x = t_102_x;
-            nile_Real_t v_N_y = t_102_y;
-            nile_Real_t t_103 = nile_Real (2);
-            nile_Real_t t_104_x = t_103;
-            nile_Real_t t_104_y = t_103;
-            nile_Real_t t_105_x = nile_Real_mul(t_104_x, v_N_x);
-            nile_Real_t t_105_y = nile_Real_mul(t_104_y, v_N_y);
-            nile_Real_t t_106 = nile_Real_add(v.v_A_x, v.v_C_x);
-            nile_Real_t t_107 = nile_Real (2);
-            nile_Real_t t_108 = nile_Real_div(t_106, t_107);
-            nile_Real_t t_109 = nile_Real_add(v.v_A_y, v.v_C_y);
-            nile_Real_t t_110 = nile_Real (2);
-            nile_Real_t t_111 = nile_Real_div(t_109, t_110);
-            nile_Real_t t_112_1 = t_108;
-            nile_Real_t t_112_2 = t_111;
-            nile_Real_t t_113_x = t_112_1;
-            nile_Real_t t_113_y = t_112_2;
-            nile_Real_t t_114_x = nile_Real_sub(t_105_x, t_113_x);
-            nile_Real_t t_114_y = nile_Real_sub(t_105_y, t_113_y);
-            nile_Real_t v_B_x = t_114_x;
-            nile_Real_t v_B_y = t_114_y;
-            nile_Real_t t_115_1_x = v.v_A_x;
-            nile_Real_t t_115_1_y = v.v_A_y;
-            nile_Real_t t_115_2_x = v_B_x;
-            nile_Real_t t_115_2_y = v_B_y;
-            nile_Real_t t_115_3_x = v.v_C_x;
-            nile_Real_t t_115_3_y = v.v_C_y;
-            nile_Real_t t_116_A_x = t_115_1_x;
-            nile_Real_t t_116_A_y = t_115_1_y;
-            nile_Real_t t_116_B_x = t_115_2_x;
-            nile_Real_t t_116_B_y = t_115_2_y;
-            nile_Real_t t_116_C_x = t_115_3_x;
-            nile_Real_t t_116_C_y = t_115_3_y;
-            if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
-                out = nile_Process_append_output (p, out);
-            nile_Buffer_push_tail(out, t_116_A_x);
-            nile_Buffer_push_tail(out, t_116_A_y);
-            nile_Buffer_push_tail(out, t_116_B_x);
-            nile_Buffer_push_tail(out, t_116_B_y);
-            nile_Buffer_push_tail(out, t_116_C_x);
-            nile_Buffer_push_tail(out, t_116_C_y);
-        }
+        ; /* no-op */
+        nile_Process_t *t_94 = gezira_RoundJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_P_x), nile_Real_tof (v.v_P_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v.v_w_x), nile_Real_tof (v.v_w_y));
+        nile_Process_t *t_95 = gezira_RoundJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_P_x), nile_Real_tof (v.v_P_y), nile_Real_tof (v.v_w_x), nile_Real_tof (v.v_w_y), nile_Real_tof (v.v_v_x), nile_Real_tof (v.v_v_y));
+        nile_Process_t *t_96 = nile_Process_pipe (t_94, t_95, NILE_NULL);
+        return nile_Process_swap (p, t_96, out);
     }
     *vars = v;
     return out;
 }
 
-#define gezira_JoinOffsets_body 0
+#define gezira_RoundJoin_body 0
 
 static nile_Buffer_t *
-gezira_JoinOffsets_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+gezira_RoundJoin_epilogue (nile_Process_t *p, nile_Buffer_t *out)
 {
-    gezira_JoinOffsets_vars_t *vars = nile_Process_vars (p);
-    gezira_JoinOffsets_vars_t v = *vars;
+    gezira_RoundJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_RoundJoin_vars_t v = *vars;
     ; /* no-op */
     return out;
 }
 
 nile_Process_t *
-gezira_JoinOffsets (nile_Process_t *p, 
-                    float v_o, 
-                    float v_P_x, 
-                    float v_P_y, 
-                    float v_u_x, 
-                    float v_u_y, 
-                    float v_v_x, 
-                    float v_v_y)
+gezira_RoundJoin (nile_Process_t *p, 
+                  float v_o, 
+                  float v_P_x, 
+                  float v_P_y, 
+                  float v_u_x, 
+                  float v_u_y, 
+                  float v_v_x, 
+                  float v_v_y)
 {
-    gezira_JoinOffsets_vars_t *vars;
-    gezira_JoinOffsets_vars_t v;
-    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_JoinOffsets_prologue, gezira_JoinOffsets_body, gezira_JoinOffsets_epilogue);
+    gezira_RoundJoin_vars_t *vars;
+    gezira_RoundJoin_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_RoundJoin_prologue, gezira_RoundJoin_body, gezira_RoundJoin_epilogue);
     if (p) {
         vars = nile_Process_vars (p);
         v.v_o = nile_Real (v_o);
@@ -9607,233 +9807,155 @@ gezira_JoinOffsets (nile_Process_t *p,
 
 typedef struct {
     nile_Real_t v_o;
-    nile_Real_t v_B0_A_x;
-    nile_Real_t v_B0_A_y;
-    nile_Real_t v_B0_B_x;
-    nile_Real_t v_B0_B_y;
-    nile_Real_t v_B0_C_x;
-    nile_Real_t v_B0_C_y;
-    nile_Real_t v_Bi_A_x;
-    nile_Real_t v_Bi_A_y;
-    nile_Real_t v_Bi_B_x;
-    nile_Real_t v_Bi_B_y;
-    nile_Real_t v_Bi_C_x;
-    nile_Real_t v_Bi_C_y;
-    nile_Real_t v_bic_x;
-    nile_Real_t v_bic_y;
+    nile_Real_t v_l;
+    nile_Real_t v_Zi_A_x;
+    nile_Real_t v_Zi_A_y;
+    nile_Real_t v_Zi_B_x;
+    nile_Real_t v_Zi_B_y;
+    nile_Real_t v_Zi_C_x;
+    nile_Real_t v_Zi_C_y;
+    nile_Real_t v_Zj_A_x;
+    nile_Real_t v_Zj_A_y;
+    nile_Real_t v_Zj_B_x;
+    nile_Real_t v_Zj_B_y;
+    nile_Real_t v_Zj_C_x;
+    nile_Real_t v_Zj_C_y;
     nile_Real_t v_u_x;
     nile_Real_t v_u_y;
-} gezira_OffsetAndJoinBezierPath_vars_t;
+    nile_Real_t v_v_x;
+    nile_Real_t v_v_y;
+} gezira_JoinBeziers_vars_t;
 
 static nile_Buffer_t *
-gezira_OffsetAndJoinBezierPath_prologue (nile_Process_t *p, nile_Buffer_t *out)
+gezira_JoinBeziers_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
-    gezira_OffsetAndJoinBezierPath_vars_t *vars = nile_Process_vars (p);
-    gezira_OffsetAndJoinBezierPath_vars_t v = *vars;
-    v.v_bic_x = v.v_Bi_C_x;
-    v.v_bic_y = v.v_Bi_C_y;
-    nile_Real_t t_22 = nile_Real_sub(v.v_Bi_B_y, v.v_Bi_C_y);
-    nile_Real_t t_23 = nile_Real_sub(v.v_Bi_C_x, v.v_Bi_B_x);
-    nile_Real_t t_21_1 = t_22;
-    nile_Real_t t_21_2 = t_23;
-    nile_Real_t t_24_x = t_21_1;
-    nile_Real_t t_24_y = t_21_2;
-    nile_Real_t t_25 = nile_Real_mul(t_24_x, t_24_x);
-    nile_Real_t t_26 = nile_Real_mul(t_24_y, t_24_y);
-    nile_Real_t t_27 = nile_Real_add(t_25, t_26);
-    nile_Real_t t_28 = nile_Real_sqt(t_27);
-    nile_Real_t t_29 = nile_Real (0);
-    nile_Real_t t_30 = nile_Real_neq(t_28, t_29);
-    nile_Real_t t_31 = nile_Real_mul(t_24_x, t_24_x);
-    nile_Real_t t_32 = nile_Real_mul(t_24_y, t_24_y);
-    nile_Real_t t_33 = nile_Real_add(t_31, t_32);
-    nile_Real_t t_34 = nile_Real_sqt(t_33);
-    nile_Real_t t_35_x = t_34;
-    nile_Real_t t_35_y = t_34;
-    nile_Real_t t_36_x = nile_Real_div(t_24_x, t_35_x);
-    nile_Real_t t_36_y = nile_Real_div(t_24_y, t_35_y);
-    nile_Real_t t_37 = nile_Real (0);
-    nile_Real_t t_38_x = t_37;
-    nile_Real_t t_38_y = t_37;
-    nile_Real_t t_39_x = t_30;
-    nile_Real_t t_39_y = t_30;
-    nile_Real_t t_40_x = nile_Real_nz (t_39_x) ? t_36_x : t_38_x;
-    nile_Real_t t_40_y = nile_Real_nz (t_39_y) ? t_36_y : t_38_y;
-    v.v_u_x = t_40_x;
-    v.v_u_y = t_40_y;
-    *vars = v;
-    return out;
-}
-
-static nile_Buffer_t *
-gezira_OffsetAndJoinBezierPath_body (nile_Process_t *p,
-                                     nile_Buffer_t *in,
-                                     nile_Buffer_t *out)
-{
-    gezira_OffsetAndJoinBezierPath_vars_t *vars = nile_Process_vars (p);
-    gezira_OffsetAndJoinBezierPath_vars_t v = *vars;
-    
-    while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
-        gezira_OffsetAndJoinBezierPath_vars_t v_ = v;
-        nile_Real_t v_Bj_A_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_Bj_A_y = nile_Buffer_pop_head(in);
-        nile_Real_t v_Bj_B_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_Bj_B_y = nile_Buffer_pop_head(in);
-        nile_Real_t v_Bj_C_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_Bj_C_y = nile_Buffer_pop_head(in);
-        nile_Real_t t_42 = nile_Real_sub(v_Bj_A_y, v_Bj_B_y);
-        nile_Real_t t_43 = nile_Real_sub(v_Bj_B_x, v_Bj_A_x);
-        nile_Real_t t_41_1 = t_42;
-        nile_Real_t t_41_2 = t_43;
-        nile_Real_t t_44_x = t_41_1;
-        nile_Real_t t_44_y = t_41_2;
-        nile_Real_t t_45 = nile_Real_mul(t_44_x, t_44_x);
-        nile_Real_t t_46 = nile_Real_mul(t_44_y, t_44_y);
-        nile_Real_t t_47 = nile_Real_add(t_45, t_46);
-        nile_Real_t t_48 = nile_Real_sqt(t_47);
-        nile_Real_t t_49 = nile_Real (0);
-        nile_Real_t t_50 = nile_Real_neq(t_48, t_49);
-        nile_Real_t t_51 = nile_Real_mul(t_44_x, t_44_x);
-        nile_Real_t t_52 = nile_Real_mul(t_44_y, t_44_y);
-        nile_Real_t t_53 = nile_Real_add(t_51, t_52);
-        nile_Real_t t_54 = nile_Real_sqt(t_53);
-        nile_Real_t t_55_x = t_54;
-        nile_Real_t t_55_y = t_54;
-        nile_Real_t t_56_x = nile_Real_div(t_44_x, t_55_x);
-        nile_Real_t t_56_y = nile_Real_div(t_44_y, t_55_y);
-        nile_Real_t t_57 = nile_Real (0);
-        nile_Real_t t_58_x = t_57;
-        nile_Real_t t_58_y = t_57;
-        nile_Real_t t_59_x = t_50;
-        nile_Real_t t_59_y = t_50;
-        nile_Real_t t_60_x = nile_Real_nz (t_59_x) ? t_56_x : t_58_x;
-        nile_Real_t t_60_y = nile_Real_nz (t_59_y) ? t_56_y : t_58_y;
-        nile_Real_t v_v_x = t_60_x;
-        nile_Real_t v_v_y = t_60_y;
-        ; /* no-op */
-        nile_Process_t *t_61 = gezira_OffsetAndJoinBezierPath(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_B0_A_x), nile_Real_tof (v.v_B0_A_y), nile_Real_tof (v.v_B0_B_x), nile_Real_tof (v.v_B0_B_y), nile_Real_tof (v.v_B0_C_x), nile_Real_tof (v.v_B0_C_y), nile_Real_tof (v_Bj_A_x), nile_Real_tof (v_Bj_A_y), nile_Real_tof (v_Bj_B_x), nile_Real_tof (v_Bj_B_y), nile_Real_tof (v_Bj_C_x), nile_Real_tof (v_Bj_C_y));
-        nile_Process_t *t_62 = gezira_JoinOffsets(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_bic_x), nile_Real_tof (v.v_bic_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v_v_x), nile_Real_tof (v_v_y));
-        nile_Process_t *t_63 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Bi_A_x), nile_Real_tof (v.v_Bi_A_y), nile_Real_tof (v.v_Bi_B_x), nile_Real_tof (v.v_Bi_B_y), nile_Real_tof (v.v_Bi_C_x), nile_Real_tof (v.v_Bi_C_y));
-        nile_Process_t *t_64 = nile_Process_pipe (t_62, t_63, NILE_NULL);
-        nile_Process_t *t_65 = nile_Process_pipe (t_61, t_64, NILE_NULL);
-        return nile_Process_swap (p, t_65, out);
-        v = v_;
-    }
-    
-    *vars = v;
-    return out;
-}
-
-static nile_Buffer_t *
-gezira_OffsetAndJoinBezierPath_epilogue (nile_Process_t *p, nile_Buffer_t *out)
-{
-    gezira_OffsetAndJoinBezierPath_vars_t *vars = nile_Process_vars (p);
-    gezira_OffsetAndJoinBezierPath_vars_t v = *vars;
-    nile_Real_t t_66 = nile_Real_eq(v.v_Bi_C_x, v.v_B0_A_x);
-    nile_Real_t t_67 = nile_Real_eq(v.v_Bi_C_y, v.v_B0_A_y);
-    nile_Real_t t_68 = nile_Real_and(t_66, t_67);
-    nile_Real_t t_70 = nile_Real_sub(v.v_B0_A_y, v.v_B0_B_y);
-    nile_Real_t t_71 = nile_Real_sub(v.v_B0_B_x, v.v_B0_A_x);
-    nile_Real_t t_69_1 = t_70;
-    nile_Real_t t_69_2 = t_71;
-    nile_Real_t t_72_x = t_69_1;
-    nile_Real_t t_72_y = t_69_2;
-    nile_Real_t t_73 = nile_Real_mul(t_72_x, t_72_x);
-    nile_Real_t t_74 = nile_Real_mul(t_72_y, t_72_y);
-    nile_Real_t t_75 = nile_Real_add(t_73, t_74);
-    nile_Real_t t_76 = nile_Real_sqt(t_75);
+    gezira_JoinBeziers_vars_t *vars = nile_Process_vars (p);
+    gezira_JoinBeziers_vars_t v = *vars;
+    nile_Real_t t_42 = nile_Real_sub(v.v_Zi_B_y, v.v_Zi_C_y);
+    nile_Real_t t_43 = nile_Real_sub(v.v_Zi_C_x, v.v_Zi_B_x);
+    nile_Real_t t_41_1 = t_42;
+    nile_Real_t t_41_2 = t_43;
+    nile_Real_t t_44_x = t_41_1;
+    nile_Real_t t_44_y = t_41_2;
+    nile_Real_t t_45 = nile_Real_mul(t_44_x, t_44_x);
+    nile_Real_t t_46 = nile_Real_mul(t_44_y, t_44_y);
+    nile_Real_t t_47 = nile_Real_add(t_45, t_46);
+    nile_Real_t t_48 = nile_Real_sqt(t_47);
+    nile_Real_t t_49 = nile_Real (0);
+    nile_Real_t t_50 = nile_Real_neq(t_48, t_49);
+    nile_Real_t t_51 = nile_Real_mul(t_44_x, t_44_x);
+    nile_Real_t t_52 = nile_Real_mul(t_44_y, t_44_y);
+    nile_Real_t t_53 = nile_Real_add(t_51, t_52);
+    nile_Real_t t_54 = nile_Real_sqt(t_53);
+    nile_Real_t t_55_x = t_54;
+    nile_Real_t t_55_y = t_54;
+    nile_Real_t t_56_x = nile_Real_div(t_44_x, t_55_x);
+    nile_Real_t t_56_y = nile_Real_div(t_44_y, t_55_y);
+    nile_Real_t t_57 = nile_Real (0);
+    nile_Real_t t_58_x = t_57;
+    nile_Real_t t_58_y = t_57;
+    nile_Real_t t_59_x = t_50;
+    nile_Real_t t_59_y = t_50;
+    nile_Real_t t_60_x = nile_Real_nz (t_59_x) ? t_56_x : t_58_x;
+    nile_Real_t t_60_y = nile_Real_nz (t_59_y) ? t_56_y : t_58_y;
+    v.v_u_x = t_60_x;
+    v.v_u_y = t_60_y;
+    nile_Real_t t_62 = nile_Real_sub(v.v_Zj_A_y, v.v_Zj_B_y);
+    nile_Real_t t_63 = nile_Real_sub(v.v_Zj_B_x, v.v_Zj_A_x);
+    nile_Real_t t_61_1 = t_62;
+    nile_Real_t t_61_2 = t_63;
+    nile_Real_t t_64_x = t_61_1;
+    nile_Real_t t_64_y = t_61_2;
+    nile_Real_t t_65 = nile_Real_mul(t_64_x, t_64_x);
+    nile_Real_t t_66 = nile_Real_mul(t_64_y, t_64_y);
+    nile_Real_t t_67 = nile_Real_add(t_65, t_66);
+    nile_Real_t t_68 = nile_Real_sqt(t_67);
+    nile_Real_t t_69 = nile_Real (0);
+    nile_Real_t t_70 = nile_Real_neq(t_68, t_69);
+    nile_Real_t t_71 = nile_Real_mul(t_64_x, t_64_x);
+    nile_Real_t t_72 = nile_Real_mul(t_64_y, t_64_y);
+    nile_Real_t t_73 = nile_Real_add(t_71, t_72);
+    nile_Real_t t_74 = nile_Real_sqt(t_73);
+    nile_Real_t t_75_x = t_74;
+    nile_Real_t t_75_y = t_74;
+    nile_Real_t t_76_x = nile_Real_div(t_64_x, t_75_x);
+    nile_Real_t t_76_y = nile_Real_div(t_64_y, t_75_y);
     nile_Real_t t_77 = nile_Real (0);
-    nile_Real_t t_78 = nile_Real_neq(t_76, t_77);
-    nile_Real_t t_79 = nile_Real_mul(t_72_x, t_72_x);
-    nile_Real_t t_80 = nile_Real_mul(t_72_y, t_72_y);
-    nile_Real_t t_81 = nile_Real_add(t_79, t_80);
-    nile_Real_t t_82 = nile_Real_sqt(t_81);
-    nile_Real_t t_83_x = t_82;
-    nile_Real_t t_83_y = t_82;
-    nile_Real_t t_84_x = nile_Real_div(t_72_x, t_83_x);
-    nile_Real_t t_84_y = nile_Real_div(t_72_y, t_83_y);
-    nile_Real_t t_85 = nile_Real (0);
-    nile_Real_t t_86_x = t_85;
-    nile_Real_t t_86_y = t_85;
-    nile_Real_t t_87_x = t_78;
-    nile_Real_t t_87_y = t_78;
-    nile_Real_t t_88_x = nile_Real_nz (t_87_x) ? t_84_x : t_86_x;
-    nile_Real_t t_88_y = nile_Real_nz (t_87_y) ? t_84_y : t_86_y;
-    nile_Real_t t_90 = nile_Real_sub(v.v_Bi_C_y, v.v_Bi_B_y);
-    nile_Real_t t_91 = nile_Real_sub(v.v_Bi_B_x, v.v_Bi_C_x);
-    nile_Real_t t_89_1 = t_90;
-    nile_Real_t t_89_2 = t_91;
-    nile_Real_t t_92_x = t_89_1;
-    nile_Real_t t_92_y = t_89_2;
-    nile_Real_t t_93 = nile_Real_mul(t_92_x, t_92_x);
-    nile_Real_t t_94 = nile_Real_mul(t_92_y, t_92_y);
-    nile_Real_t t_95 = nile_Real_add(t_93, t_94);
-    nile_Real_t t_96 = nile_Real_sqt(t_95);
-    nile_Real_t t_97 = nile_Real (0);
-    nile_Real_t t_98 = nile_Real_neq(t_96, t_97);
-    nile_Real_t t_99 = nile_Real_mul(t_92_x, t_92_x);
-    nile_Real_t t_100 = nile_Real_mul(t_92_y, t_92_y);
-    nile_Real_t t_101 = nile_Real_add(t_99, t_100);
-    nile_Real_t t_102 = nile_Real_sqt(t_101);
-    nile_Real_t t_103_x = t_102;
-    nile_Real_t t_103_y = t_102;
-    nile_Real_t t_104_x = nile_Real_div(t_92_x, t_103_x);
-    nile_Real_t t_104_y = nile_Real_div(t_92_y, t_103_y);
-    nile_Real_t t_105 = nile_Real (0);
-    nile_Real_t t_106_x = t_105;
-    nile_Real_t t_106_y = t_105;
-    nile_Real_t t_107_x = t_98;
-    nile_Real_t t_107_y = t_98;
-    nile_Real_t t_108_x = nile_Real_nz (t_107_x) ? t_104_x : t_106_x;
-    nile_Real_t t_108_y = nile_Real_nz (t_107_y) ? t_104_y : t_106_y;
-    nile_Real_t t_109_x = t_68;
-    nile_Real_t t_109_y = t_68;
-    nile_Real_t t_110_x = nile_Real_nz (t_109_x) ? t_88_x : t_108_x;
-    nile_Real_t t_110_y = nile_Real_nz (t_109_y) ? t_88_y : t_108_y;
-    nile_Real_t v_vv_x = t_110_x;
-    nile_Real_t v_vv_y = t_110_y;
+    nile_Real_t t_78_x = t_77;
+    nile_Real_t t_78_y = t_77;
+    nile_Real_t t_79_x = t_70;
+    nile_Real_t t_79_y = t_70;
+    nile_Real_t t_80_x = nile_Real_nz (t_79_x) ? t_76_x : t_78_x;
+    nile_Real_t t_80_y = nile_Real_nz (t_79_y) ? t_76_y : t_78_y;
+    v.v_v_x = t_80_x;
+    v.v_v_y = t_80_y;
+    nile_Real_t t_81 = nile_Real (1);
+    nile_Real_t t_82 = nile_Real_lt(v.v_l, t_81);
+    if (nile_Real_nz (t_82)) {
+        ; /* no-op */
+        nile_Process_t *t_83 = gezira_RoundJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v.v_v_x), nile_Real_tof (v.v_v_y));
+        nile_Process_t *t_84 = nile_Process_pipe (NILE_NULL);
+        nile_Process_t *t_85 = nile_Process_pipe (t_83, t_84, NILE_NULL);
+        return nile_Process_swap (p, t_85, out);
+    }
+    else {
+        ; /* no-op */
+        nile_Process_t *t_86 = gezira_MiterJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_l), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v.v_v_x), nile_Real_tof (v.v_v_y));
+        nile_Process_t *t_87 = nile_Process_pipe (NILE_NULL);
+        nile_Process_t *t_88 = nile_Process_pipe (t_86, t_87, NILE_NULL);
+        return nile_Process_swap (p, t_88, out);
+    }
+    *vars = v;
+    return out;
+}
+
+#define gezira_JoinBeziers_body 0
+
+static nile_Buffer_t *
+gezira_JoinBeziers_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_JoinBeziers_vars_t *vars = nile_Process_vars (p);
+    gezira_JoinBeziers_vars_t v = *vars;
     ; /* no-op */
-    nile_Process_t *t_111 = gezira_JoinOffsets(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_bic_x), nile_Real_tof (v.v_bic_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (v_vv_x), nile_Real_tof (v_vv_y));
-    nile_Process_t *t_112 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Bi_A_x), nile_Real_tof (v.v_Bi_A_y), nile_Real_tof (v.v_Bi_B_x), nile_Real_tof (v.v_Bi_B_y), nile_Real_tof (v.v_Bi_C_x), nile_Real_tof (v.v_Bi_C_y));
-    nile_Process_t *t_113 = nile_Process_pipe (t_111, t_112, NILE_NULL);
-    return nile_Process_swap (p, t_113, out);
     return out;
 }
 
 nile_Process_t *
-gezira_OffsetAndJoinBezierPath (nile_Process_t *p, 
-                                float v_o, 
-                                float v_B0_A_x, 
-                                float v_B0_A_y, 
-                                float v_B0_B_x, 
-                                float v_B0_B_y, 
-                                float v_B0_C_x, 
-                                float v_B0_C_y, 
-                                float v_Bi_A_x, 
-                                float v_Bi_A_y, 
-                                float v_Bi_B_x, 
-                                float v_Bi_B_y, 
-                                float v_Bi_C_x, 
-                                float v_Bi_C_y)
+gezira_JoinBeziers (nile_Process_t *p, 
+                    float v_o, 
+                    float v_l, 
+                    float v_Zi_A_x, 
+                    float v_Zi_A_y, 
+                    float v_Zi_B_x, 
+                    float v_Zi_B_y, 
+                    float v_Zi_C_x, 
+                    float v_Zi_C_y, 
+                    float v_Zj_A_x, 
+                    float v_Zj_A_y, 
+                    float v_Zj_B_x, 
+                    float v_Zj_B_y, 
+                    float v_Zj_C_x, 
+                    float v_Zj_C_y)
 {
-    gezira_OffsetAndJoinBezierPath_vars_t *vars;
-    gezira_OffsetAndJoinBezierPath_vars_t v;
-    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_OffsetAndJoinBezierPath_prologue, gezira_OffsetAndJoinBezierPath_body, gezira_OffsetAndJoinBezierPath_epilogue);
+    gezira_JoinBeziers_vars_t *vars;
+    gezira_JoinBeziers_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_JoinBeziers_prologue, gezira_JoinBeziers_body, gezira_JoinBeziers_epilogue);
     if (p) {
         vars = nile_Process_vars (p);
         v.v_o = nile_Real (v_o);
-        v.v_B0_A_x = nile_Real (v_B0_A_x);
-        v.v_B0_A_y = nile_Real (v_B0_A_y);
-        v.v_B0_B_x = nile_Real (v_B0_B_x);
-        v.v_B0_B_y = nile_Real (v_B0_B_y);
-        v.v_B0_C_x = nile_Real (v_B0_C_x);
-        v.v_B0_C_y = nile_Real (v_B0_C_y);
-        v.v_Bi_A_x = nile_Real (v_Bi_A_x);
-        v.v_Bi_A_y = nile_Real (v_Bi_A_y);
-        v.v_Bi_B_x = nile_Real (v_Bi_B_x);
-        v.v_Bi_B_y = nile_Real (v_Bi_B_y);
-        v.v_Bi_C_x = nile_Real (v_Bi_C_x);
-        v.v_Bi_C_y = nile_Real (v_Bi_C_y);
+        v.v_l = nile_Real (v_l);
+        v.v_Zi_A_x = nile_Real (v_Zi_A_x);
+        v.v_Zi_A_y = nile_Real (v_Zi_A_y);
+        v.v_Zi_B_x = nile_Real (v_Zi_B_x);
+        v.v_Zi_B_y = nile_Real (v_Zi_B_y);
+        v.v_Zi_C_x = nile_Real (v_Zi_C_x);
+        v.v_Zi_C_y = nile_Real (v_Zi_C_y);
+        v.v_Zj_A_x = nile_Real (v_Zj_A_x);
+        v.v_Zj_A_y = nile_Real (v_Zj_A_y);
+        v.v_Zj_B_x = nile_Real (v_Zj_B_x);
+        v.v_Zj_B_y = nile_Real (v_Zj_B_y);
+        v.v_Zj_C_x = nile_Real (v_Zj_C_x);
+        v.v_Zj_C_y = nile_Real (v_Zj_C_y);
         *vars = v;
     }
     return p;
@@ -9847,6 +9969,391 @@ gezira_OffsetAndJoinBezierPath (nile_Process_t *p,
 
 typedef struct {
     nile_Real_t v_o;
+    nile_Real_t v_c;
+    nile_Real_t v_Z_A_x;
+    nile_Real_t v_Z_A_y;
+    nile_Real_t v_Z_B_x;
+    nile_Real_t v_Z_B_y;
+    nile_Real_t v_Z_C_x;
+    nile_Real_t v_Z_C_y;
+    nile_Real_t v_C_x;
+    nile_Real_t v_C_y;
+    nile_Real_t v_u_x;
+    nile_Real_t v_u_y;
+    nile_Real_t v_v_1;
+    nile_Real_t v_v_2;
+} gezira_CapBezier_vars_t;
+
+static nile_Buffer_t *
+gezira_CapBezier_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_CapBezier_vars_t *vars = nile_Process_vars (p);
+    gezira_CapBezier_vars_t v = *vars;
+    v.v_C_x = v.v_Z_C_x;
+    v.v_C_y = v.v_Z_C_y;
+    nile_Real_t t_24 = nile_Real_sub(v.v_Z_B_y, v.v_Z_C_y);
+    nile_Real_t t_25 = nile_Real_sub(v.v_Z_C_x, v.v_Z_B_x);
+    nile_Real_t t_23_1 = t_24;
+    nile_Real_t t_23_2 = t_25;
+    nile_Real_t t_26_x = t_23_1;
+    nile_Real_t t_26_y = t_23_2;
+    nile_Real_t t_27 = nile_Real_mul(t_26_x, t_26_x);
+    nile_Real_t t_28 = nile_Real_mul(t_26_y, t_26_y);
+    nile_Real_t t_29 = nile_Real_add(t_27, t_28);
+    nile_Real_t t_30 = nile_Real_sqt(t_29);
+    nile_Real_t t_31 = nile_Real (0);
+    nile_Real_t t_32 = nile_Real_neq(t_30, t_31);
+    nile_Real_t t_33 = nile_Real_mul(t_26_x, t_26_x);
+    nile_Real_t t_34 = nile_Real_mul(t_26_y, t_26_y);
+    nile_Real_t t_35 = nile_Real_add(t_33, t_34);
+    nile_Real_t t_36 = nile_Real_sqt(t_35);
+    nile_Real_t t_37_x = t_36;
+    nile_Real_t t_37_y = t_36;
+    nile_Real_t t_38_x = nile_Real_div(t_26_x, t_37_x);
+    nile_Real_t t_38_y = nile_Real_div(t_26_y, t_37_y);
+    nile_Real_t t_39 = nile_Real (0);
+    nile_Real_t t_40_x = t_39;
+    nile_Real_t t_40_y = t_39;
+    nile_Real_t t_41_x = t_32;
+    nile_Real_t t_41_y = t_32;
+    nile_Real_t t_42_x = nile_Real_nz (t_41_x) ? t_38_x : t_40_x;
+    nile_Real_t t_42_y = nile_Real_nz (t_41_y) ? t_38_y : t_40_y;
+    v.v_u_x = t_42_x;
+    v.v_u_y = t_42_y;
+    nile_Real_t t_44_x = nile_Real_neg(v.v_u_x);
+    nile_Real_t t_44_y = nile_Real_neg(v.v_u_y);
+    nile_Real_t t_43_1 = v.v_u_y;
+    nile_Real_t t_43_2 = t_44_x;
+    v.v_v_1 = t_43_1;
+    v.v_v_2 = t_43_2;
+    nile_Real_t t_45 = nile_Real (0);
+    nile_Real_t t_46 = nile_Real_lt(v.v_c, t_45);
+    if (nile_Real_nz (t_46)) {
+        ; /* no-op */
+        nile_Real_t t_47_x = nile_Real_neg(v.v_u_x);
+        nile_Real_t t_47_y = nile_Real_neg(v.v_u_y);
+        nile_Process_t *t_48 = gezira_RoundJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_C_x), nile_Real_tof (v.v_C_y), nile_Real_tof (v.v_u_x), nile_Real_tof (v.v_u_y), nile_Real_tof (t_47_x), nile_Real_tof (t_47_y));
+        nile_Process_t *t_49 = nile_Process_pipe (NILE_NULL);
+        nile_Process_t *t_50 = nile_Process_pipe (t_48, t_49, NILE_NULL);
+        return nile_Process_swap (p, t_50, out);
+    }
+    else {
+        nile_Real_t t_51_x = v.v_o;
+        nile_Real_t t_51_y = v.v_o;
+        nile_Real_t t_52_x = nile_Real_mul(t_51_x, v.v_u_x);
+        nile_Real_t t_52_y = nile_Real_mul(t_51_y, v.v_u_y);
+        nile_Real_t t_53_x = t_52_x;
+        nile_Real_t t_53_y = t_52_y;
+        nile_Real_t t_54_x = nile_Real_add(v.v_C_x, t_53_x);
+        nile_Real_t t_54_y = nile_Real_add(v.v_C_y, t_53_y);
+        nile_Real_t v_D_x = t_54_x;
+        nile_Real_t v_D_y = t_54_y;
+        nile_Real_t t_55_x = v.v_o;
+        nile_Real_t t_55_y = v.v_o;
+        nile_Real_t t_56_x = nile_Real_mul(t_55_x, v.v_u_x);
+        nile_Real_t t_56_y = nile_Real_mul(t_55_y, v.v_u_y);
+        nile_Real_t t_57_x = t_56_x;
+        nile_Real_t t_57_y = t_56_y;
+        nile_Real_t t_58_x = nile_Real_sub(v.v_C_x, t_57_x);
+        nile_Real_t t_58_y = nile_Real_sub(v.v_C_y, t_57_y);
+        nile_Real_t v_G_x = t_58_x;
+        nile_Real_t v_G_y = t_58_y;
+        nile_Real_t t_59_1 = v.v_c;
+        nile_Real_t t_59_2 = v.v_c;
+        nile_Real_t t_60_1 = nile_Real_mul(t_59_1, v.v_v_1);
+        nile_Real_t t_60_2 = nile_Real_mul(t_59_2, v.v_v_2);
+        nile_Real_t t_61_x = t_60_1;
+        nile_Real_t t_61_y = t_60_2;
+        nile_Real_t t_62_x = nile_Real_add(v_D_x, t_61_x);
+        nile_Real_t t_62_y = nile_Real_add(v_D_y, t_61_y);
+        nile_Real_t v_E_x = t_62_x;
+        nile_Real_t v_E_y = t_62_y;
+        nile_Real_t t_63_1 = v.v_c;
+        nile_Real_t t_63_2 = v.v_c;
+        nile_Real_t t_64_1 = nile_Real_mul(t_63_1, v.v_v_1);
+        nile_Real_t t_64_2 = nile_Real_mul(t_63_2, v.v_v_2);
+        nile_Real_t t_65_x = t_64_1;
+        nile_Real_t t_65_y = t_64_2;
+        nile_Real_t t_66_x = nile_Real_add(v_G_x, t_65_x);
+        nile_Real_t t_66_y = nile_Real_add(v_G_y, t_65_y);
+        nile_Real_t v_F_x = t_66_x;
+        nile_Real_t v_F_y = t_66_y;
+        nile_Real_t t_68 = nile_Real_add(v_D_x, v_E_x);
+        nile_Real_t t_69 = nile_Real (2);
+        nile_Real_t t_70 = nile_Real_div(t_68, t_69);
+        nile_Real_t t_71 = nile_Real_add(v_D_y, v_E_y);
+        nile_Real_t t_72 = nile_Real (2);
+        nile_Real_t t_73 = nile_Real_div(t_71, t_72);
+        nile_Real_t t_74_1 = t_70;
+        nile_Real_t t_74_2 = t_73;
+        nile_Real_t t_75_x = t_74_1;
+        nile_Real_t t_75_y = t_74_2;
+        nile_Real_t t_67_1_x = v_D_x;
+        nile_Real_t t_67_1_y = v_D_y;
+        nile_Real_t t_67_2_x = t_75_x;
+        nile_Real_t t_67_2_y = t_75_y;
+        nile_Real_t t_67_3_x = v_E_x;
+        nile_Real_t t_67_3_y = v_E_y;
+        nile_Real_t t_76_A_x = t_67_1_x;
+        nile_Real_t t_76_A_y = t_67_1_y;
+        nile_Real_t t_76_B_x = t_67_2_x;
+        nile_Real_t t_76_B_y = t_67_2_y;
+        nile_Real_t t_76_C_x = t_67_3_x;
+        nile_Real_t t_76_C_y = t_67_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_76_A_x);
+        nile_Buffer_push_tail(out, t_76_A_y);
+        nile_Buffer_push_tail(out, t_76_B_x);
+        nile_Buffer_push_tail(out, t_76_B_y);
+        nile_Buffer_push_tail(out, t_76_C_x);
+        nile_Buffer_push_tail(out, t_76_C_y);
+        nile_Real_t t_78 = nile_Real_add(v_E_x, v_F_x);
+        nile_Real_t t_79 = nile_Real (2);
+        nile_Real_t t_80 = nile_Real_div(t_78, t_79);
+        nile_Real_t t_81 = nile_Real_add(v_E_y, v_F_y);
+        nile_Real_t t_82 = nile_Real (2);
+        nile_Real_t t_83 = nile_Real_div(t_81, t_82);
+        nile_Real_t t_84_1 = t_80;
+        nile_Real_t t_84_2 = t_83;
+        nile_Real_t t_85_x = t_84_1;
+        nile_Real_t t_85_y = t_84_2;
+        nile_Real_t t_77_1_x = v_E_x;
+        nile_Real_t t_77_1_y = v_E_y;
+        nile_Real_t t_77_2_x = t_85_x;
+        nile_Real_t t_77_2_y = t_85_y;
+        nile_Real_t t_77_3_x = v_F_x;
+        nile_Real_t t_77_3_y = v_F_y;
+        nile_Real_t t_86_A_x = t_77_1_x;
+        nile_Real_t t_86_A_y = t_77_1_y;
+        nile_Real_t t_86_B_x = t_77_2_x;
+        nile_Real_t t_86_B_y = t_77_2_y;
+        nile_Real_t t_86_C_x = t_77_3_x;
+        nile_Real_t t_86_C_y = t_77_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_86_A_x);
+        nile_Buffer_push_tail(out, t_86_A_y);
+        nile_Buffer_push_tail(out, t_86_B_x);
+        nile_Buffer_push_tail(out, t_86_B_y);
+        nile_Buffer_push_tail(out, t_86_C_x);
+        nile_Buffer_push_tail(out, t_86_C_y);
+        nile_Real_t t_88 = nile_Real_add(v_F_x, v_G_x);
+        nile_Real_t t_89 = nile_Real (2);
+        nile_Real_t t_90 = nile_Real_div(t_88, t_89);
+        nile_Real_t t_91 = nile_Real_add(v_F_y, v_G_y);
+        nile_Real_t t_92 = nile_Real (2);
+        nile_Real_t t_93 = nile_Real_div(t_91, t_92);
+        nile_Real_t t_94_1 = t_90;
+        nile_Real_t t_94_2 = t_93;
+        nile_Real_t t_95_x = t_94_1;
+        nile_Real_t t_95_y = t_94_2;
+        nile_Real_t t_87_1_x = v_F_x;
+        nile_Real_t t_87_1_y = v_F_y;
+        nile_Real_t t_87_2_x = t_95_x;
+        nile_Real_t t_87_2_y = t_95_y;
+        nile_Real_t t_87_3_x = v_G_x;
+        nile_Real_t t_87_3_y = v_G_y;
+        nile_Real_t t_96_A_x = t_87_1_x;
+        nile_Real_t t_96_A_y = t_87_1_y;
+        nile_Real_t t_96_B_x = t_87_2_x;
+        nile_Real_t t_96_B_y = t_87_2_y;
+        nile_Real_t t_96_C_x = t_87_3_x;
+        nile_Real_t t_96_C_y = t_87_3_y;
+        if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+            out = nile_Process_append_output (p, out);
+        nile_Buffer_push_tail(out, t_96_A_x);
+        nile_Buffer_push_tail(out, t_96_A_y);
+        nile_Buffer_push_tail(out, t_96_B_x);
+        nile_Buffer_push_tail(out, t_96_B_y);
+        nile_Buffer_push_tail(out, t_96_C_x);
+        nile_Buffer_push_tail(out, t_96_C_y);
+    }
+    *vars = v;
+    return out;
+}
+
+#define gezira_CapBezier_body 0
+
+static nile_Buffer_t *
+gezira_CapBezier_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_CapBezier_vars_t *vars = nile_Process_vars (p);
+    gezira_CapBezier_vars_t v = *vars;
+    ; /* no-op */
+    return out;
+}
+
+nile_Process_t *
+gezira_CapBezier (nile_Process_t *p, 
+                  float v_o, 
+                  float v_c, 
+                  float v_Z_A_x, 
+                  float v_Z_A_y, 
+                  float v_Z_B_x, 
+                  float v_Z_B_y, 
+                  float v_Z_C_x, 
+                  float v_Z_C_y)
+{
+    gezira_CapBezier_vars_t *vars;
+    gezira_CapBezier_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_CapBezier_prologue, gezira_CapBezier_body, gezira_CapBezier_epilogue);
+    if (p) {
+        vars = nile_Process_vars (p);
+        v.v_o = nile_Real (v_o);
+        v.v_c = nile_Real (v_c);
+        v.v_Z_A_x = nile_Real (v_Z_A_x);
+        v.v_Z_A_y = nile_Real (v_Z_A_y);
+        v.v_Z_B_x = nile_Real (v_Z_B_x);
+        v.v_Z_B_y = nile_Real (v_Z_B_y);
+        v.v_Z_C_x = nile_Real (v_Z_C_x);
+        v.v_Z_C_y = nile_Real (v_Z_C_y);
+        *vars = v;
+    }
+    return p;
+}
+
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+
+#define IN_QUANTUM 6
+#define OUT_QUANTUM 6
+
+typedef struct {
+    nile_Real_t v_o;
+    nile_Real_t v_l;
+    nile_Real_t v_c;
+    nile_Real_t v_Z1_A_x;
+    nile_Real_t v_Z1_A_y;
+    nile_Real_t v_Z1_B_x;
+    nile_Real_t v_Z1_B_y;
+    nile_Real_t v_Z1_C_x;
+    nile_Real_t v_Z1_C_y;
+    nile_Real_t v_Zi_A_x;
+    nile_Real_t v_Zi_A_y;
+    nile_Real_t v_Zi_B_x;
+    nile_Real_t v_Zi_B_y;
+    nile_Real_t v_Zi_C_x;
+    nile_Real_t v_Zi_C_y;
+} gezira_OffsetAndJoin_vars_t;
+
+static nile_Buffer_t *
+gezira_OffsetAndJoin_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_OffsetAndJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_OffsetAndJoin_vars_t v = *vars;
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_OffsetAndJoin_body (nile_Process_t *p,
+                           nile_Buffer_t *in,
+                           nile_Buffer_t *out)
+{
+    gezira_OffsetAndJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_OffsetAndJoin_vars_t v = *vars;
+    
+    while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
+        gezira_OffsetAndJoin_vars_t v_ = v;
+        nile_Real_t v_Zj_A_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Zj_A_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_Zj_B_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Zj_B_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_Zj_C_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Zj_C_y = nile_Buffer_pop_head(in);
+        ; /* no-op */
+        nile_Process_t *t_1 = gezira_OffsetAndJoin(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_l), nile_Real_tof (v.v_c), nile_Real_tof (v.v_Z1_A_x), nile_Real_tof (v.v_Z1_A_y), nile_Real_tof (v.v_Z1_B_x), nile_Real_tof (v.v_Z1_B_y), nile_Real_tof (v.v_Z1_C_x), nile_Real_tof (v.v_Z1_C_y), nile_Real_tof (v_Zj_A_x), nile_Real_tof (v_Zj_A_y), nile_Real_tof (v_Zj_B_x), nile_Real_tof (v_Zj_B_y), nile_Real_tof (v_Zj_C_x), nile_Real_tof (v_Zj_C_y));
+        nile_Process_t *t_2 = gezira_JoinBeziers(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_l), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y), nile_Real_tof (v_Zj_A_x), nile_Real_tof (v_Zj_A_y), nile_Real_tof (v_Zj_B_x), nile_Real_tof (v_Zj_B_y), nile_Real_tof (v_Zj_C_x), nile_Real_tof (v_Zj_C_y));
+        nile_Process_t *t_3 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y));
+        nile_Process_t *t_4 = nile_Process_pipe (t_2, t_3, NILE_NULL);
+        nile_Process_t *t_5 = nile_Process_pipe (t_1, t_4, NILE_NULL);
+        return nile_Process_swap (p, t_5, out);
+        v = v_;
+    }
+    
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_OffsetAndJoin_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_OffsetAndJoin_vars_t *vars = nile_Process_vars (p);
+    gezira_OffsetAndJoin_vars_t v = *vars;
+    nile_Real_t t_6 = nile_Real_eq(v.v_Zi_C_x, v.v_Z1_A_x);
+    nile_Real_t t_7 = nile_Real_eq(v.v_Zi_C_y, v.v_Z1_A_y);
+    nile_Real_t t_8 = nile_Real_and(t_6, t_7);
+    if (nile_Real_nz (t_8)) {
+        ; /* no-op */
+        nile_Process_t *t_9 = gezira_JoinBeziers(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_l), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y), nile_Real_tof (v.v_Z1_A_x), nile_Real_tof (v.v_Z1_A_y), nile_Real_tof (v.v_Z1_B_x), nile_Real_tof (v.v_Z1_B_y), nile_Real_tof (v.v_Z1_C_x), nile_Real_tof (v.v_Z1_C_y));
+        nile_Process_t *t_10 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y));
+        nile_Process_t *t_11 = nile_Process_pipe (t_9, t_10, NILE_NULL);
+        return nile_Process_swap (p, t_11, out);
+    }
+    else {
+        ; /* no-op */
+        nile_Process_t *t_12 = gezira_CapBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_c), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y));
+        nile_Process_t *t_13 = gezira_OffsetBezier(p, nile_Real_tof (v.v_o), nile_Real_tof (v.v_Zi_A_x), nile_Real_tof (v.v_Zi_A_y), nile_Real_tof (v.v_Zi_B_x), nile_Real_tof (v.v_Zi_B_y), nile_Real_tof (v.v_Zi_C_x), nile_Real_tof (v.v_Zi_C_y));
+        nile_Process_t *t_14 = nile_Process_pipe (t_12, t_13, NILE_NULL);
+        return nile_Process_swap (p, t_14, out);
+    }
+    return out;
+}
+
+nile_Process_t *
+gezira_OffsetAndJoin (nile_Process_t *p, 
+                      float v_o, 
+                      float v_l, 
+                      float v_c, 
+                      float v_Z1_A_x, 
+                      float v_Z1_A_y, 
+                      float v_Z1_B_x, 
+                      float v_Z1_B_y, 
+                      float v_Z1_C_x, 
+                      float v_Z1_C_y, 
+                      float v_Zi_A_x, 
+                      float v_Zi_A_y, 
+                      float v_Zi_B_x, 
+                      float v_Zi_B_y, 
+                      float v_Zi_C_x, 
+                      float v_Zi_C_y)
+{
+    gezira_OffsetAndJoin_vars_t *vars;
+    gezira_OffsetAndJoin_vars_t v;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_OffsetAndJoin_prologue, gezira_OffsetAndJoin_body, gezira_OffsetAndJoin_epilogue);
+    if (p) {
+        vars = nile_Process_vars (p);
+        v.v_o = nile_Real (v_o);
+        v.v_l = nile_Real (v_l);
+        v.v_c = nile_Real (v_c);
+        v.v_Z1_A_x = nile_Real (v_Z1_A_x);
+        v.v_Z1_A_y = nile_Real (v_Z1_A_y);
+        v.v_Z1_B_x = nile_Real (v_Z1_B_x);
+        v.v_Z1_B_y = nile_Real (v_Z1_B_y);
+        v.v_Z1_C_x = nile_Real (v_Z1_C_x);
+        v.v_Z1_C_y = nile_Real (v_Z1_C_y);
+        v.v_Zi_A_x = nile_Real (v_Zi_A_x);
+        v.v_Zi_A_y = nile_Real (v_Zi_A_y);
+        v.v_Zi_B_x = nile_Real (v_Zi_B_x);
+        v.v_Zi_B_y = nile_Real (v_Zi_B_y);
+        v.v_Zi_C_x = nile_Real (v_Zi_C_x);
+        v.v_Zi_C_y = nile_Real (v_Zi_C_y);
+        *vars = v;
+    }
+    return p;
+}
+
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+
+#define IN_QUANTUM 6
+#define OUT_QUANTUM 6
+
+typedef struct {
+    nile_Real_t v_w;
+    nile_Real_t v_l;
+    nile_Real_t v_c;
 } gezira_StrokeOneSide_vars_t;
 
 static nile_Buffer_t *
@@ -9868,17 +10375,19 @@ gezira_StrokeOneSide_body (nile_Process_t *p,
     
     while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
         gezira_StrokeOneSide_vars_t v_ = v;
-        nile_Real_t v_B0_A_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_B0_A_y = nile_Buffer_pop_head(in);
-        nile_Real_t v_B0_B_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_B0_B_y = nile_Buffer_pop_head(in);
-        nile_Real_t v_B0_C_x = nile_Buffer_pop_head(in);
-        nile_Real_t v_B0_C_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_A_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_A_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_B_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_B_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_C_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_Z1_C_y = nile_Buffer_pop_head(in);
         ; /* no-op */
-        nile_Process_t *t_1 = gezira_OffsetAndJoinBezierPath(p, nile_Real_tof (v.v_o), nile_Real_tof (v_B0_A_x), nile_Real_tof (v_B0_A_y), nile_Real_tof (v_B0_B_x), nile_Real_tof (v_B0_B_y), nile_Real_tof (v_B0_C_x), nile_Real_tof (v_B0_C_y), nile_Real_tof (v_B0_A_x), nile_Real_tof (v_B0_A_y), nile_Real_tof (v_B0_B_x), nile_Real_tof (v_B0_B_y), nile_Real_tof (v_B0_C_x), nile_Real_tof (v_B0_C_y));
-        nile_Process_t *t_2 = nile_Process_pipe (NILE_NULL);
-        nile_Process_t *t_3 = nile_Process_pipe (t_1, t_2, NILE_NULL);
-        return nile_Process_swap (p, t_3, out);
+        nile_Real_t t_1 = nile_Real (2);
+        nile_Real_t t_2 = nile_Real_div(v.v_w, t_1);
+        nile_Process_t *t_3 = gezira_OffsetAndJoin(p, nile_Real_tof (t_2), nile_Real_tof (v.v_l), nile_Real_tof (v.v_c), nile_Real_tof (v_Z1_A_x), nile_Real_tof (v_Z1_A_y), nile_Real_tof (v_Z1_B_x), nile_Real_tof (v_Z1_B_y), nile_Real_tof (v_Z1_C_x), nile_Real_tof (v_Z1_C_y), nile_Real_tof (v_Z1_A_x), nile_Real_tof (v_Z1_A_y), nile_Real_tof (v_Z1_B_x), nile_Real_tof (v_Z1_B_y), nile_Real_tof (v_Z1_C_x), nile_Real_tof (v_Z1_C_y));
+        nile_Process_t *t_4 = nile_Process_pipe (NILE_NULL);
+        nile_Process_t *t_5 = nile_Process_pipe (t_3, t_4, NILE_NULL);
+        return nile_Process_swap (p, t_5, out);
         v = v_;
     }
     
@@ -9896,14 +10405,18 @@ gezira_StrokeOneSide_epilogue (nile_Process_t *p, nile_Buffer_t *out)
 
 nile_Process_t *
 gezira_StrokeOneSide (nile_Process_t *p, 
-                      float v_o)
+                      float v_w, 
+                      float v_l, 
+                      float v_c)
 {
     gezira_StrokeOneSide_vars_t *vars;
     gezira_StrokeOneSide_vars_t v;
     p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_StrokeOneSide_prologue, gezira_StrokeOneSide_body, gezira_StrokeOneSide_epilogue);
     if (p) {
         vars = nile_Process_vars (p);
-        v.v_o = nile_Real (v_o);
+        v.v_w = nile_Real (v_w);
+        v.v_l = nile_Real (v_l);
+        v.v_c = nile_Real (v_c);
         *vars = v;
     }
     return p;
@@ -9993,7 +10506,295 @@ gezira_ReverseBeziers (nile_Process_t *p)
 #define OUT_QUANTUM 6
 
 typedef struct {
-    nile_Real_t v_o;
+} gezira_SanitizeBezierPath_vars_t;
+
+static nile_Buffer_t *
+gezira_SanitizeBezierPath_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_SanitizeBezierPath_vars_t *vars = nile_Process_vars (p);
+    gezira_SanitizeBezierPath_vars_t v = *vars;
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_SanitizeBezierPath_body (nile_Process_t *p,
+                                nile_Buffer_t *in,
+                                nile_Buffer_t *out)
+{
+    gezira_SanitizeBezierPath_vars_t *vars = nile_Process_vars (p);
+    gezira_SanitizeBezierPath_vars_t v = *vars;
+    
+    while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
+        gezira_SanitizeBezierPath_vars_t v_ = v;
+        nile_Real_t v_A_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_A_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_B_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_B_y = nile_Buffer_pop_head(in);
+        nile_Real_t v_C_x = nile_Buffer_pop_head(in);
+        nile_Real_t v_C_y = nile_Buffer_pop_head(in);
+        nile_Real_t t_2 = nile_Real_sub(v_A_y, v_B_y);
+        nile_Real_t t_3 = nile_Real_sub(v_B_x, v_A_x);
+        nile_Real_t t_1_1 = t_2;
+        nile_Real_t t_1_2 = t_3;
+        nile_Real_t t_4_x = t_1_1;
+        nile_Real_t t_4_y = t_1_2;
+        nile_Real_t t_5 = nile_Real_mul(t_4_x, t_4_x);
+        nile_Real_t t_6 = nile_Real_mul(t_4_y, t_4_y);
+        nile_Real_t t_7 = nile_Real_add(t_5, t_6);
+        nile_Real_t t_8 = nile_Real_sqt(t_7);
+        nile_Real_t t_9 = nile_Real (0);
+        nile_Real_t t_10 = nile_Real_neq(t_8, t_9);
+        nile_Real_t t_11 = nile_Real_mul(t_4_x, t_4_x);
+        nile_Real_t t_12 = nile_Real_mul(t_4_y, t_4_y);
+        nile_Real_t t_13 = nile_Real_add(t_11, t_12);
+        nile_Real_t t_14 = nile_Real_sqt(t_13);
+        nile_Real_t t_15_x = t_14;
+        nile_Real_t t_15_y = t_14;
+        nile_Real_t t_16_x = nile_Real_div(t_4_x, t_15_x);
+        nile_Real_t t_16_y = nile_Real_div(t_4_y, t_15_y);
+        nile_Real_t t_17 = nile_Real (0);
+        nile_Real_t t_18_x = t_17;
+        nile_Real_t t_18_y = t_17;
+        nile_Real_t t_19_x = t_10;
+        nile_Real_t t_19_y = t_10;
+        nile_Real_t t_20_x = nile_Real_nz (t_19_x) ? t_16_x : t_18_x;
+        nile_Real_t t_20_y = nile_Real_nz (t_19_y) ? t_16_y : t_18_y;
+        nile_Real_t v_u_x = t_20_x;
+        nile_Real_t v_u_y = t_20_y;
+        nile_Real_t t_22 = nile_Real_sub(v_B_y, v_C_y);
+        nile_Real_t t_23 = nile_Real_sub(v_C_x, v_B_x);
+        nile_Real_t t_21_1 = t_22;
+        nile_Real_t t_21_2 = t_23;
+        nile_Real_t t_24_x = t_21_1;
+        nile_Real_t t_24_y = t_21_2;
+        nile_Real_t t_25 = nile_Real_mul(t_24_x, t_24_x);
+        nile_Real_t t_26 = nile_Real_mul(t_24_y, t_24_y);
+        nile_Real_t t_27 = nile_Real_add(t_25, t_26);
+        nile_Real_t t_28 = nile_Real_sqt(t_27);
+        nile_Real_t t_29 = nile_Real (0);
+        nile_Real_t t_30 = nile_Real_neq(t_28, t_29);
+        nile_Real_t t_31 = nile_Real_mul(t_24_x, t_24_x);
+        nile_Real_t t_32 = nile_Real_mul(t_24_y, t_24_y);
+        nile_Real_t t_33 = nile_Real_add(t_31, t_32);
+        nile_Real_t t_34 = nile_Real_sqt(t_33);
+        nile_Real_t t_35_x = t_34;
+        nile_Real_t t_35_y = t_34;
+        nile_Real_t t_36_x = nile_Real_div(t_24_x, t_35_x);
+        nile_Real_t t_36_y = nile_Real_div(t_24_y, t_35_y);
+        nile_Real_t t_37 = nile_Real (0);
+        nile_Real_t t_38_x = t_37;
+        nile_Real_t t_38_y = t_37;
+        nile_Real_t t_39_x = t_30;
+        nile_Real_t t_39_y = t_30;
+        nile_Real_t t_40_x = nile_Real_nz (t_39_x) ? t_36_x : t_38_x;
+        nile_Real_t t_40_y = nile_Real_nz (t_39_y) ? t_36_y : t_38_y;
+        nile_Real_t v_v_x = t_40_x;
+        nile_Real_t v_v_y = t_40_y;
+        nile_Real_t t_41 = nile_Real_add(v_A_x, v_C_x);
+        nile_Real_t t_42 = nile_Real (2);
+        nile_Real_t t_43 = nile_Real_div(t_41, t_42);
+        nile_Real_t t_44 = nile_Real_add(v_A_y, v_C_y);
+        nile_Real_t t_45 = nile_Real (2);
+        nile_Real_t t_46 = nile_Real_div(t_44, t_45);
+        nile_Real_t t_47_1 = t_43;
+        nile_Real_t t_47_2 = t_46;
+        nile_Real_t t_48_x = t_47_1;
+        nile_Real_t t_48_y = t_47_2;
+        nile_Real_t v_M_x = t_48_x;
+        nile_Real_t v_M_y = t_48_y;
+        nile_Real_t t_49 = nile_Real_mul(v_u_x, v_v_x);
+        nile_Real_t t_50 = nile_Real_mul(v_u_y, v_v_y);
+        nile_Real_t t_51 = nile_Real_add(t_49, t_50);
+        nile_Real_t t_52 = nile_Real (0.9999);
+        nile_Real_t t_53 = nile_Real_neg(t_52);
+        nile_Real_t t_54 = nile_Real_lt(t_51, t_53);
+        if (nile_Real_nz (t_54)) {
+            nile_Real_t t_55_1_x = v_A_x;
+            nile_Real_t t_55_1_y = v_A_y;
+            nile_Real_t t_55_2_x = v_M_x;
+            nile_Real_t t_55_2_y = v_M_y;
+            nile_Real_t t_55_3_x = v_C_x;
+            nile_Real_t t_55_3_y = v_C_y;
+            nile_Real_t t_56_A_x = t_55_1_x;
+            nile_Real_t t_56_A_y = t_55_1_y;
+            nile_Real_t t_56_B_x = t_55_2_x;
+            nile_Real_t t_56_B_y = t_55_2_y;
+            nile_Real_t t_56_C_x = t_55_3_x;
+            nile_Real_t t_56_C_y = t_55_3_y;
+            if (nile_Buffer_headroom (in) < IN_QUANTUM)
+                in = nile_Process_prefix_input (p, in);
+            nile_Buffer_push_head(in, t_56_C_y);
+            nile_Buffer_push_head(in, t_56_C_x);
+            nile_Buffer_push_head(in, t_56_B_y);
+            nile_Buffer_push_head(in, t_56_B_x);
+            nile_Buffer_push_head(in, t_56_A_y);
+            nile_Buffer_push_head(in, t_56_A_x);
+        }
+        else {
+            nile_Real_t t_57 = nile_Real (0);
+            nile_Real_t t_58_x = t_57;
+            nile_Real_t t_58_y = t_57;
+            nile_Real_t t_59 = nile_Real_neq(v_u_x, t_58_x);
+            nile_Real_t t_60 = nile_Real_neq(v_u_y, t_58_y);
+            nile_Real_t t_61 = nile_Real_or(t_59, t_60);
+            nile_Real_t t_62 = nile_Real (0);
+            nile_Real_t t_63_x = t_62;
+            nile_Real_t t_63_y = t_62;
+            nile_Real_t t_64 = nile_Real_neq(v_v_x, t_63_x);
+            nile_Real_t t_65 = nile_Real_neq(v_v_y, t_63_y);
+            nile_Real_t t_66 = nile_Real_or(t_64, t_65);
+            nile_Real_t t_67 = nile_Real_and(t_61, t_66);
+            if (nile_Real_nz (t_67)) {
+                nile_Real_t t_68_1_x = v_A_x;
+                nile_Real_t t_68_1_y = v_A_y;
+                nile_Real_t t_68_2_x = v_B_x;
+                nile_Real_t t_68_2_y = v_B_y;
+                nile_Real_t t_68_3_x = v_C_x;
+                nile_Real_t t_68_3_y = v_C_y;
+                nile_Real_t t_69_A_x = t_68_1_x;
+                nile_Real_t t_69_A_y = t_68_1_y;
+                nile_Real_t t_69_B_x = t_68_2_x;
+                nile_Real_t t_69_B_y = t_68_2_y;
+                nile_Real_t t_69_C_x = t_68_3_x;
+                nile_Real_t t_69_C_y = t_68_3_y;
+                if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+                    out = nile_Process_append_output (p, out);
+                nile_Buffer_push_tail(out, t_69_A_x);
+                nile_Buffer_push_tail(out, t_69_A_y);
+                nile_Buffer_push_tail(out, t_69_B_x);
+                nile_Buffer_push_tail(out, t_69_B_y);
+                nile_Buffer_push_tail(out, t_69_C_x);
+                nile_Buffer_push_tail(out, t_69_C_y);
+            }
+            else {
+                nile_Real_t t_71 = nile_Real_sub(v_A_y, v_M_y);
+                nile_Real_t t_72 = nile_Real_sub(v_M_x, v_A_x);
+                nile_Real_t t_70_1 = t_71;
+                nile_Real_t t_70_2 = t_72;
+                nile_Real_t t_73_x = t_70_1;
+                nile_Real_t t_73_y = t_70_2;
+                nile_Real_t t_74 = nile_Real_mul(t_73_x, t_73_x);
+                nile_Real_t t_75 = nile_Real_mul(t_73_y, t_73_y);
+                nile_Real_t t_76 = nile_Real_add(t_74, t_75);
+                nile_Real_t t_77 = nile_Real_sqt(t_76);
+                nile_Real_t t_78 = nile_Real (0);
+                nile_Real_t t_79 = nile_Real_neq(t_77, t_78);
+                nile_Real_t t_80 = nile_Real_mul(t_73_x, t_73_x);
+                nile_Real_t t_81 = nile_Real_mul(t_73_y, t_73_y);
+                nile_Real_t t_82 = nile_Real_add(t_80, t_81);
+                nile_Real_t t_83 = nile_Real_sqt(t_82);
+                nile_Real_t t_84_x = t_83;
+                nile_Real_t t_84_y = t_83;
+                nile_Real_t t_85_x = nile_Real_div(t_73_x, t_84_x);
+                nile_Real_t t_85_y = nile_Real_div(t_73_y, t_84_y);
+                nile_Real_t t_86 = nile_Real (0);
+                nile_Real_t t_87_x = t_86;
+                nile_Real_t t_87_y = t_86;
+                nile_Real_t t_88_x = t_79;
+                nile_Real_t t_88_y = t_79;
+                nile_Real_t t_89_x = nile_Real_nz (t_88_x) ? t_85_x : t_87_x;
+                nile_Real_t t_89_y = nile_Real_nz (t_88_y) ? t_85_y : t_87_y;
+                nile_Real_t t_90 = nile_Real (0);
+                nile_Real_t t_91_x = t_90;
+                nile_Real_t t_91_y = t_90;
+                nile_Real_t t_92 = nile_Real_neq(t_89_x, t_91_x);
+                nile_Real_t t_93 = nile_Real_neq(t_89_y, t_91_y);
+                nile_Real_t t_94 = nile_Real_or(t_92, t_93);
+                nile_Real_t t_96 = nile_Real_sub(v_M_y, v_C_y);
+                nile_Real_t t_97 = nile_Real_sub(v_C_x, v_M_x);
+                nile_Real_t t_95_1 = t_96;
+                nile_Real_t t_95_2 = t_97;
+                nile_Real_t t_98_x = t_95_1;
+                nile_Real_t t_98_y = t_95_2;
+                nile_Real_t t_99 = nile_Real_mul(t_98_x, t_98_x);
+                nile_Real_t t_100 = nile_Real_mul(t_98_y, t_98_y);
+                nile_Real_t t_101 = nile_Real_add(t_99, t_100);
+                nile_Real_t t_102 = nile_Real_sqt(t_101);
+                nile_Real_t t_103 = nile_Real (0);
+                nile_Real_t t_104 = nile_Real_neq(t_102, t_103);
+                nile_Real_t t_105 = nile_Real_mul(t_98_x, t_98_x);
+                nile_Real_t t_106 = nile_Real_mul(t_98_y, t_98_y);
+                nile_Real_t t_107 = nile_Real_add(t_105, t_106);
+                nile_Real_t t_108 = nile_Real_sqt(t_107);
+                nile_Real_t t_109_x = t_108;
+                nile_Real_t t_109_y = t_108;
+                nile_Real_t t_110_x = nile_Real_div(t_98_x, t_109_x);
+                nile_Real_t t_110_y = nile_Real_div(t_98_y, t_109_y);
+                nile_Real_t t_111 = nile_Real (0);
+                nile_Real_t t_112_x = t_111;
+                nile_Real_t t_112_y = t_111;
+                nile_Real_t t_113_x = t_104;
+                nile_Real_t t_113_y = t_104;
+                nile_Real_t t_114_x = nile_Real_nz (t_113_x) ? t_110_x : t_112_x;
+                nile_Real_t t_114_y = nile_Real_nz (t_113_y) ? t_110_y : t_112_y;
+                nile_Real_t t_115 = nile_Real (0);
+                nile_Real_t t_116_x = t_115;
+                nile_Real_t t_116_y = t_115;
+                nile_Real_t t_117 = nile_Real_neq(t_114_x, t_116_x);
+                nile_Real_t t_118 = nile_Real_neq(t_114_y, t_116_y);
+                nile_Real_t t_119 = nile_Real_or(t_117, t_118);
+                nile_Real_t t_120 = nile_Real_and(t_94, t_119);
+                if (nile_Real_nz (t_120)) {
+                    nile_Real_t t_121_1_x = v_A_x;
+                    nile_Real_t t_121_1_y = v_A_y;
+                    nile_Real_t t_121_2_x = v_M_x;
+                    nile_Real_t t_121_2_y = v_M_y;
+                    nile_Real_t t_121_3_x = v_C_x;
+                    nile_Real_t t_121_3_y = v_C_y;
+                    nile_Real_t t_122_A_x = t_121_1_x;
+                    nile_Real_t t_122_A_y = t_121_1_y;
+                    nile_Real_t t_122_B_x = t_121_2_x;
+                    nile_Real_t t_122_B_y = t_121_2_y;
+                    nile_Real_t t_122_C_x = t_121_3_x;
+                    nile_Real_t t_122_C_y = t_121_3_y;
+                    if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
+                        out = nile_Process_append_output (p, out);
+                    nile_Buffer_push_tail(out, t_122_A_x);
+                    nile_Buffer_push_tail(out, t_122_A_y);
+                    nile_Buffer_push_tail(out, t_122_B_x);
+                    nile_Buffer_push_tail(out, t_122_B_y);
+                    nile_Buffer_push_tail(out, t_122_C_x);
+                    nile_Buffer_push_tail(out, t_122_C_y);
+                }
+                else {
+                    ; /* no-op */
+                }
+            }
+        }
+        v = v_;
+    }
+    
+    *vars = v;
+    return out;
+}
+
+static nile_Buffer_t *
+gezira_SanitizeBezierPath_epilogue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_SanitizeBezierPath_vars_t *vars = nile_Process_vars (p);
+    gezira_SanitizeBezierPath_vars_t v = *vars;
+    return out;
+}
+
+nile_Process_t *
+gezira_SanitizeBezierPath (nile_Process_t *p)
+{
+    gezira_SanitizeBezierPath_vars_t *vars;
+    p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_SanitizeBezierPath_prologue, gezira_SanitizeBezierPath_body, gezira_SanitizeBezierPath_epilogue);
+    return p;
+}
+
+#undef IN_QUANTUM
+#undef OUT_QUANTUM
+
+#define IN_QUANTUM 6
+#define OUT_QUANTUM 6
+
+typedef struct {
+    nile_Real_t v_w;
+    nile_Real_t v_l;
+    nile_Real_t v_c;
 } gezira_StrokeBezierPath_vars_t;
 
 static nile_Buffer_t *
@@ -10002,18 +10803,17 @@ gezira_StrokeBezierPath_prologue (nile_Process_t *p, nile_Buffer_t *out)
     gezira_StrokeBezierPath_vars_t *vars = nile_Process_vars (p);
     gezira_StrokeBezierPath_vars_t v = *vars;
     ; /* no-op */
-    nile_Process_t *t_1 = gezira_StrokeOneSide(p, nile_Real_tof (v.v_o));
+    nile_Process_t *t_1 = gezira_StrokeOneSide(p, nile_Real_tof (v.v_w), nile_Real_tof (v.v_l), nile_Real_tof (v.v_c));
     nile_Real_t t_2 = nile_Real (6);
     nile_Real_t t_3 = nile_Real (6);
     nile_Process_t *t_4 = nile_Reverse(p, nile_Real_toi (t_3));
-    nile_Process_t *t_5 = gezira_StrokeOneSide(p, nile_Real_tof (v.v_o));
+    nile_Process_t *t_5 = gezira_StrokeOneSide(p, nile_Real_tof (v.v_w), nile_Real_tof (v.v_l), nile_Real_tof (v.v_c));
     nile_Process_t *t_6 = nile_Process_pipe (gezira_ReverseBeziers(p), t_5, NILE_NULL);
     nile_Process_t *t_7 = nile_Process_pipe (t_4, t_6, NILE_NULL);
     nile_Real_t t_8 = nile_Real (6);
     nile_Process_t *t_9 = nile_DupCat(p, 6, t_1, nile_Real_toi (t_2), t_7, nile_Real_toi (t_8));
-    nile_Process_t *t_10 = nile_Process_pipe (NILE_NULL);
-    nile_Process_t *t_11 = nile_Process_pipe (t_9, t_10, NILE_NULL);
-    return nile_Process_swap (p, t_11, out);
+    nile_Process_t *t_10 = nile_Process_pipe (gezira_SanitizeBezierPath(p), t_9, NILE_NULL);
+    return nile_Process_swap (p, t_10, out);
     *vars = v;
     return out;
 }
@@ -10031,14 +10831,18 @@ gezira_StrokeBezierPath_epilogue (nile_Process_t *p, nile_Buffer_t *out)
 
 nile_Process_t *
 gezira_StrokeBezierPath (nile_Process_t *p, 
-                         float v_o)
+                         float v_w, 
+                         float v_l, 
+                         float v_c)
 {
     gezira_StrokeBezierPath_vars_t *vars;
     gezira_StrokeBezierPath_vars_t v;
     p = nile_Process (p, IN_QUANTUM, sizeof (*vars), gezira_StrokeBezierPath_prologue, gezira_StrokeBezierPath_body, gezira_StrokeBezierPath_epilogue);
     if (p) {
         vars = nile_Process_vars (p);
-        v.v_o = nile_Real (v_o);
+        v.v_w = nile_Real (v_w);
+        v.v_l = nile_Real (v_l);
+        v.v_c = nile_Real (v_c);
         *vars = v;
     }
     return p;

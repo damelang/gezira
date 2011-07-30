@@ -232,7 +232,7 @@ gezira_WindowUpdate (nile_Process_t *p, gezira_Window_t *window)
 
 static nile_Process_t *
 gezira_Window_update_and_clear (gezira_Window_t *window, nile_Process_t *init, nile_Process_t *gate,
-                               float a, float r, float g, float b)
+                                float a, float r, float g, float b)
 {
     nile_Process_t *gate_ = nile_Identity (init, 1);
     nile_Process_t *clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
