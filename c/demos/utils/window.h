@@ -23,17 +23,17 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     window->pixels = malloc (width * height * sizeof (uint32_t));
 }
 
+static char
+gezira_Window_key_pressed (gezira_Window_t *window)
+    { return -1; }
+
 static void
 gezira_Window_fini (gezira_Window_t *window)
-{
-    free (window->pixels);
-}
+    { free (window->pixels); }
 
 static nile_Buffer_t *
 gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
-{
-    return out;
-}
+    { return out; }
 
 #elif defined(__APPLE__)
 
