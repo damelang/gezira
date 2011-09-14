@@ -85,7 +85,7 @@ SanitizeBezierPath : Bezier >> Bezier
             >> (A, B, C)
         else if (A ⟂ M) ≠* 0 ∧ (M ⟂ C) ≠* 0
             >> (A, M, C)
-        
+
 StrokeBezierPath (w, l, c : Real) : Bezier >> Bezier
     ⇒ SanitizeBezierPath →
       DupCat (StrokeOneSide (w, l, c),
