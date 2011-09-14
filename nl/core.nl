@@ -69,8 +69,9 @@ CalculateBounds : Bezier >> (Point, Point)
     min =  999999 : Point
     max = -999999 : Point
     ∀ (A, B, C)
-        min' = min ◁ A ◁ B ◁ C
-        max' = max ▷ A ▷ B ▷ C
+        if ¬(A.y = B.y ∧ B.y = C.y)
+            min' = min ◁ A ◁ B ◁ C
+            max' = max ▷ A ▷ B ▷ C
     >> (min, max)
 
 RectangleSpans (min, max : Point) : Real >> EdgeSpan
