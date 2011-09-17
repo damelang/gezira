@@ -1,35 +1,35 @@
-LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
+LinearGradient (s00, dsdx, dsdy : Real) : Point >> Real
     ∀ (x, y)
         >> s00 + x × dsdx + y × dsdy
 
-RadialGradientShape (C : Point, r : Real) : GradientShape
+RadialGradient (C : Point, r : Real) : Point >> Real
     ∀ P
         >> ‖ P - C ‖ / r
 
-GradientExtendPad : GradientExtendMode
+PadGradient : Real >> Real
     ∀ s
         >> 0 ▷ s ◁ 1
 
-GradientExtendRepeat : GradientExtendMode
+RepeatGradient : Real >> Real
     ∀ s
         >> s - ⌊ s ⌋
 
-GradientExtendReflect : GradientExtendMode
+ReflectGradient : Real >> Real
     ∀ s
         >> | (| s - 1 | % 2 - 1) |
 
-GradientColorBegin : Real >> (Real, Color)
+ColorSpansBegin : Real >> (Real, Color)
     ∀ s
         >> (s, 0)
 
-GradientColorSpan (c0, dcds : Color, l : Real) : GradientColor
+ColorSpan (c0, dcds : Color, l : Real) : ColorSpans
     ∀ (s, c)
         d = c0 + s × dcds
         >> (s - l, {c if s < 0, d})
 
-GradientColorEnd : (Real, Color) >> Color
+ColorSpansEnd : (Real, Color) >> Color
     ∀ (_, c)
         >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
 
-Gradient (s : GradientShape, m : GradientExtendMode, c : GradientColor) : Texture
-    ⇒ s → m → GradientColorBegin → c → GradientColorEnd
+ApplyColorSpans (spans : ColorSpans) : Real >> Color
+    ⇒ ColorSpansBegin → spans → ColorSpansEnd
