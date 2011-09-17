@@ -1,5 +1,3 @@
-EdgeSample <: (x, y, a, h : Real)
-
 DecomposeBeziers : Bezier >> EdgeSample
     ∀ (A, B, C)
         inside = (⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉)
