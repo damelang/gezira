@@ -18,7 +18,7 @@ OffsetBezier (o : Real, Z : Bezier) : Bezier >> Bezier
 MiterJoin (o, l : Real, P : Point, u, v : Vector) : Bezier >> Bezier
     A = P + o × u
     C = P + o × v
-    w = (A ⟂ C) ?? u
+    w = (A ⟂ C) ?* u
     if u ∙ w ≥ (1 / l)
         p = o / (u ∙ w)
         M = P + p × w
@@ -29,7 +29,7 @@ MiterJoin (o, l : Real, P : Point, u, v : Vector) : Bezier >> Bezier
 RoundJoin (o : Real, P : Point, u, v : Vector) : Bezier >> Bezier
     A = P + o × u
     C = P + o × v
-    w = (A ⟂ C) ?? u
+    w = (A ⟂ C) ?* u
     if u ∙ w ≥ 0.9
         N = P + o × w
         B = 2 × N - (A ~ C)
