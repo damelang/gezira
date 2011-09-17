@@ -4,14 +4,14 @@ Vector   <: (x, y : Real)
 Matrix   <: (a, b, c, d, e, f : Real)
 Bezier   <: (A, B, C : Point)
 EdgeSpan <: (x, y, c, l : Real)
-EdgeSample <: (x, y, a, h : Real)
+EdgeSample    <: (x, y, a, h : Real)
 PixelCoverage <: (x, y, c, ic : Real)
 
 Texture    :: Point >> Color
 Compositor :: (Color, Color) >> Color
-GradientShape :: Point >> Real
+GradientShape      :: Point >> Real
 GradientExtendMode :: Real >> Real
-GradientColor :: (Real, Color) >> (Real, Color)
+GradientColor      :: (Real, Color) >> (Real, Color)
 
 ¬(a : Real) : Real
     a = 0
@@ -34,6 +34,9 @@ GradientColor :: (Real, Color) >> (Real, Color)
 (a : Real) ~ (b : Real) : Real
     (a + b) / 2
 
+(a : Color) ⊕ (b : Color) : Color
+    a × (1 - b.a) + b × (1 - a.a)
+
 (u : Vector) ≠* (v : Vector) : Real
     u.x ≠ v.x ∨ u.y ≠ v.y
 
@@ -54,6 +57,3 @@ GradientColor :: (Real, Color) >> (Real, Color)
 
 (M : Matrix) ⊗ (A : Point) : Point
     (M.a × A.x + M.c × A.y + M.e, M.b × A.x + M.d × A.y + M.f)
-
-(a : Color) ⊕ (b : Color) : Color
-    a × (1 - b.a) + b × (1 - a.a)
