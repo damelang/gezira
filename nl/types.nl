@@ -9,9 +9,7 @@ PixelCoverage <: (x, y, c, ic : Real)
 
 Texture    :: Point >> Color
 Compositor :: (Color, Color) >> Color
-GradientShape      :: Point >> Real
-GradientExtendMode :: Real >> Real
-GradientColor      :: (Real, Color) >> (Real, Color)
+ColorSpans :: (Real, Color) >> (Real, Color)
 
 ¬(a : Real) : Real
     a = 0
