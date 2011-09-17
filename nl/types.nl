@@ -3,8 +3,8 @@ Point    <: (x, y : Real)
 Vector   <: (x, y : Real)
 Matrix   <: (a, b, c, d, e, f : Real)
 Bezier   <: (A, B, C : Point)
-EdgeSpan <: (x, y, c, l : Real)
-EdgeSample    <: (x, y, a, h : Real)
+EdgeSample <: (x, y, a, h : Real)
+EdgeSpan   <: (x, y, c, l : Real)
 PixelCoverage <: (x, y, c, ic : Real)
 
 Texture    :: Point >> Color
