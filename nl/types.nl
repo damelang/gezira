@@ -40,7 +40,7 @@ GradientColor      :: (Real, Color) >> (Real, Color)
 (u : Vector) ≠* (v : Vector) : Real
     u.x ≠ v.x ∨ u.y ≠ v.y
 
-(u : Vector) ?? (v : Vector) : Vector
+(u : Vector) ?* (v : Vector) : Vector
     { u if u ≠* 0, v }
 
 (u : Vector) ∙ (v : Vector) : Real
