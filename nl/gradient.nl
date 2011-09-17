@@ -1,7 +1,3 @@
-GradientShape :: Point >> Real
-GradientExtendMode :: Real >> Real
-GradientColor :: (Real, Color) >> (Real, Color)
-
 LinearGradientShape (s00, dsdx, dsdy : Real) : GradientShape
     ∀ (x, y)
         >> s00 + x × dsdx + y × dsdy

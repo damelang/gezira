@@ -1,6 +1,3 @@
-(a : Color) ⊕ (b : Color) : Color
-    a × (1 - b.a) + b × (1 - a.a)
-
 CompositeClear : Compositor
     ∀ (a, b)
         >> 0

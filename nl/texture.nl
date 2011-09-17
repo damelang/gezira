@@ -1,5 +1,3 @@
-PixelCoverage <: (x, y, c, ic : Real)
-
 TransformPoints (M : Matrix) : Point >> Point
     ∀ P
         >> M ⊗ P
