@@ -32,8 +32,8 @@ ColorSpans :: (Real, Color) >> (Real, Color)
 (a : Real) ~ (b : Real) : Real
     (a + b) / 2
 
-(a : Color) ⊕ (b : Color) : Color
-    a × (1 - b.a) + b × (1 - a.a)
+(A : Color) ⊕ (B : Color) : Color
+    A × (1 - B.a) + B × (1 - A.a)
 
 (u : Vector) ≠* (v : Vector) : Real
     u.x ≠ v.x ∨ u.y ≠ v.y
