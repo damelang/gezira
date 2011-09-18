@@ -1,5 +1,3 @@
-EdgeSample <: (x, y, a, h : Real)
-
 DecomposeBeziers : Bezier >> EdgeSample
     ∀ (A, B, C)
         inside = (⌊ A ⌋ = ⌊ C ⌋ ∨ ⌈ A ⌉ = ⌈ C ⌉)
@@ -40,3 +38,12 @@ CombineEdgeSamples : EdgeSample >> EdgeSpan
 
 Rasterize : Bezier >> EdgeSpan
     ⇒ DecomposeBeziers → SortBy (@x) → SortBy (@y) → CombineEdgeSamples
+
+RectangleSpans (min, max : Point) : Real >> EdgeSpan
+    l = max.x - min.x - 1
+    x = min.x + 0.5
+    << min.y + 0.5
+    ∀ y
+        if y < max.y
+            >> (x, y, 1, l)
+            << y + 1

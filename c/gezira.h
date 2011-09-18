@@ -4,15 +4,6 @@
 #include "nile.h"
 
 nile_Process_t *
-gezira_TransformPoints (nile_Process_t *p, 
-                        float v_M_a, 
-                        float v_M_b, 
-                        float v_M_c, 
-                        float v_M_d, 
-                        float v_M_e, 
-                        float v_M_f);
-
-nile_Process_t *
 gezira_TransformBeziers (nile_Process_t *p, 
                          float v_M_a, 
                          float v_M_b, 
@@ -22,34 +13,14 @@ gezira_TransformBeziers (nile_Process_t *p,
                          float v_M_f);
 
 nile_Process_t *
-gezira_UniformColor (nile_Process_t *p, 
-                     float v_C_a, 
-                     float v_C_r, 
-                     float v_C_g, 
-                     float v_C_b);
-
-nile_Process_t *
-gezira_CompositeTextures (nile_Process_t *p, 
-                          nile_Process_t *v_t1, 
-                          nile_Process_t *v_t2, 
-                          nile_Process_t *v_c);
-
-nile_Process_t *
-gezira_CalculateBounds (nile_Process_t *p);
-
-nile_Process_t *
-gezira_RectangleSpans (nile_Process_t *p, 
-                       float v_min_x, 
-                       float v_min_y, 
-                       float v_max_x, 
-                       float v_max_y);
-
-nile_Process_t *
 gezira_ClipBeziers (nile_Process_t *p, 
                     float v_min_x, 
                     float v_min_y, 
                     float v_max_x, 
                     float v_max_y);
+
+nile_Process_t *
+gezira_CalculateBounds (nile_Process_t *p);
 
 nile_Process_t *
 gezira_CompositeClear (nile_Process_t *p);
@@ -131,7 +102,7 @@ gezira_CompositeInvert (nile_Process_t *p);
 
 nile_Process_t *
 gezira_InverseOver (nile_Process_t *p, 
-                    float v_a);
+                    float v_A);
 
 nile_Process_t *
 gezira_ContrastiveOver (nile_Process_t *p, 
@@ -225,64 +196,47 @@ gezira_GaussianBlur1x21 (nile_Process_t *p,
                          nile_Process_t *v_t);
 
 nile_Process_t *
-gezira_LinearGradientShape (nile_Process_t *p, 
-                            float v_s00, 
-                            float v_dsdx, 
-                            float v_dsdy);
+gezira_LinearGradient (nile_Process_t *p, 
+                       float v_s00, 
+                       float v_dsdx, 
+                       float v_dsdy);
 
 nile_Process_t *
-gezira_RadialGradientShape (nile_Process_t *p, 
-                            float v_C_x, 
-                            float v_C_y, 
-                            float v_r);
+gezira_RadialGradient (nile_Process_t *p, 
+                       float v_C_x, 
+                       float v_C_y, 
+                       float v_r);
 
 nile_Process_t *
-gezira_GradientExtendPad (nile_Process_t *p);
+gezira_PadGradient (nile_Process_t *p);
 
 nile_Process_t *
-gezira_GradientExtendRepeat (nile_Process_t *p);
+gezira_RepeatGradient (nile_Process_t *p);
 
 nile_Process_t *
-gezira_GradientExtendReflect (nile_Process_t *p);
+gezira_ReflectGradient (nile_Process_t *p);
 
 nile_Process_t *
-gezira_GradientColorBegin (nile_Process_t *p);
+gezira_ColorSpansBegin (nile_Process_t *p);
 
 nile_Process_t *
-gezira_GradientColorSpan (nile_Process_t *p, 
-                          float v_c0_a, 
-                          float v_c0_r, 
-                          float v_c0_g, 
-                          float v_c0_b, 
-                          float v_dcds_a, 
-                          float v_dcds_r, 
-                          float v_dcds_g, 
-                          float v_dcds_b, 
-                          float v_l);
+gezira_ColorSpan (nile_Process_t *p, 
+                  float v_S1_a, 
+                  float v_S1_r, 
+                  float v_S1_g, 
+                  float v_S1_b, 
+                  float v_S2_a, 
+                  float v_S2_r, 
+                  float v_S2_g, 
+                  float v_S2_b, 
+                  float v_l);
 
 nile_Process_t *
-gezira_GradientColorEnd (nile_Process_t *p);
+gezira_ColorSpansEnd (nile_Process_t *p);
 
 nile_Process_t *
-gezira_Gradient (nile_Process_t *p, 
-                 nile_Process_t *v_s, 
-                 nile_Process_t *v_m, 
-                 nile_Process_t *v_c);
-
-nile_Process_t *
-gezira_ImageExtendPad (nile_Process_t *p, 
-                       float v_D_x, 
-                       float v_D_y);
-
-nile_Process_t *
-gezira_ImageExtendRepeat (nile_Process_t *p, 
-                          float v_D_x, 
-                          float v_D_y);
-
-nile_Process_t *
-gezira_ImageExtendReflect (nile_Process_t *p, 
-                           float v_D_x, 
-                           float v_D_y);
+gezira_ApplyColorSpans (nile_Process_t *p, 
+                        nile_Process_t *v_spans);
 
 nile_Process_t *
 gezira_DecomposeBeziers (nile_Process_t *p);
@@ -292,6 +246,50 @@ gezira_CombineEdgeSamples (nile_Process_t *p);
 
 nile_Process_t *
 gezira_Rasterize (nile_Process_t *p);
+
+nile_Process_t *
+gezira_RectangleSpans (nile_Process_t *p, 
+                       float v_min_x, 
+                       float v_min_y, 
+                       float v_max_x, 
+                       float v_max_y);
+
+nile_Process_t *
+gezira_TransformPoints (nile_Process_t *p, 
+                        float v_M_a, 
+                        float v_M_b, 
+                        float v_M_c, 
+                        float v_M_d, 
+                        float v_M_e, 
+                        float v_M_f);
+
+nile_Process_t *
+gezira_PadTexture (nile_Process_t *p, 
+                   float v_D_x, 
+                   float v_D_y);
+
+nile_Process_t *
+gezira_RepeatTexture (nile_Process_t *p, 
+                      float v_D_x, 
+                      float v_D_y);
+
+nile_Process_t *
+gezira_ReflectTexture (nile_Process_t *p, 
+                       float v_D_x, 
+                       float v_D_y);
+
+nile_Process_t *
+gezira_UniformColor (nile_Process_t *p, 
+                     float v_C_a, 
+                     float v_C_r, 
+                     float v_C_g, 
+                     float v_C_b);
+
+nile_Process_t *
+gezira_CompositeTextures (nile_Process_t *p, 
+                          nile_Process_t *v_t1, 
+                          nile_Process_t *v_t2, 
+                          nile_Process_t *v_c);
 
 nile_Process_t *
 gezira_ExpandSpans (nile_Process_t *p);
