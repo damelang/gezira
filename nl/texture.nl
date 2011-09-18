@@ -17,8 +17,9 @@ ReflectTexture (D : Point) : Point >> Point
         >> | (| Q - 1 | % 2 - 1) | × D
 
 UniformColor (C : Color) : Texture
+    D = (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
     ∀ _
-        >> (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
+        >> D
 
 CompositeTextures (t1 : Texture, t2 : Texture, c : Compositor) : Texture
     ⇒ DupZip (t1, t2) → c
