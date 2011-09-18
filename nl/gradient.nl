@@ -29,8 +29,8 @@ ColorSpan (S1, S2 : Color, l : Real) : ColorSpans
         >> (s - l, D)
 
 ColorSpansEnd : (Real, Color) >> Color
-    ∀ (_, c)
-        >> (c.a, c.a × c.r, c.a × c.g, c.a × c.b)
+    ∀ (_, C)
+        >> (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
 
 ApplyColorSpans (spans : ColorSpans) : Real >> Color
     ⇒ ColorSpansBegin → spans → ColorSpansEnd
