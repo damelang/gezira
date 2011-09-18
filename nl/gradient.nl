@@ -22,10 +22,11 @@ ColorSpansBegin : Real >> (Real, Color)
     ∀ s
         >> (s, 0)
 
-ColorSpan (c0, dcds : Color, l : Real) : ColorSpans
-    ∀ (s, c)
-        d = c0 + s × dcds
-        >> (s - l, {c if s < 0, d})
+ColorSpan (S1, S2 : Color, l : Real) : ColorSpans
+    dS = S2 - S1
+    ∀ (s, C)
+        D = { S1 + s × dS if s ≥ 0, C }
+        >> (s - l, D)
 
 ColorSpansEnd : (Real, Color) >> Color
     ∀ (_, c)
