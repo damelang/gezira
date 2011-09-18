@@ -1,12 +1,20 @@
+- get SVG arc math (appox. using beziers) to Bert
+
+- Make linear gradient API simpler
+
+- General Gaussian blur
+
+- Decimation filter
+
+- cubic >> quadratic bezier kernel
+
+- ExpandSpans looks funny (the second 'if' should be nested
+  in the first?) Under what conditions will 'c'overage be 0 (or neg?)
+
 - stroke
-    - what about Miter joins/caps?
-        - process substitution based on arguments (like a 'round' flag)?
-    - deal with degenerate input
-    - fix compiler
-        - unnecessary (->) at the end of single process substitution statements
-        - support for field access in process substitution statement
-        - epilogue temporary variables problem (see 'vv' variable)
-        - input prefixing in prologue
+    - what about multiple stroke paths in the same stream? This would
+      allow for stroke-of-stroke-of-a...
+    - dashed lines (input path -> output several paths to stroker)
 
 - rasterizer
     - why is it so much slower for zoomed in snowflakes? Where is
@@ -33,7 +41,6 @@
       zero length or zero coverage (how much difference does this make?)
 
 - compositing
-    - should probably use capital letters for Color variables
     - CompositeInverse might need to unpremultiply the colors first,
       right now it only works on fully opaque images. The fact that
       it ignores the SOURCE pixels might mean that it shouldn't be
@@ -46,26 +53,21 @@
     - do any operators expect us to multiply the alpha in at the end?
     - add a "premultiply" and "unpremultiply" operator?
 
-- Make general Gaussian blur
+- calculate bounds should have something like this at the end
+  for perfectly vertical, no-area shapes (coming out of clipping):
 
-- Decimation filter
+    if min.x = max.x
+        >> (99999:Point, -99999:Point)
+    else
+        >> (min, max)
+
+  ...or we just tell the user that the bounds are empty if:
+
+    min.x >= max.x \or min.y >= max.y
 
 - Fix usage of '='. In bezier we want pairwise '=', in other
-  places we want a scalar result. Perhaps define '=,=' or something
-  for pairwise. Or '==' for the scalar result?
+  places we want a scalar result. Use '==' for the scalar result?
 
-- stroking
-    - change to new process execution serialization
-    - Change miter join interface to _not_ use the inverse of
-      the miter limit.
-    - what about multple stroke paths rendered in one pipeline?
-      Must determine the cap and join beziers differently, etc.
-    - remove the harpoon operator (but to use '-', I need
-      operator overloading to create a '-' operator that
-      returns a Vector)
-
-- dashed lines (input path -> output several paths to stroker)
-- cubic >> quadratic bezier kernel
 - more image effects
 
 - CrazyOver (a : Real) : Color >> Color

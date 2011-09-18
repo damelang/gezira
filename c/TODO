@@ -1,11 +1,3 @@
-- ssse3 gcc bug! Not on gcc 4.2 though
-  only for functionality used in the snowflake demo,
-  and only in gezira.c. Do a diff on
-  the generated assembly w/ and w/out -mssse3?
-
-- fix problem that processes with no body don't pass NULL for body parameter,
-    which means they don't get the default body, which swaps for nothing.
-
 - hack to fix prologue input prefixing
 
     (in RectangleSpans_prologue)
@@ -36,9 +28,11 @@ gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
     return out;
 }
 
-- fix hack for OffsetBezier (OffsetBezierDummy) for recursive processes
-  (and other similar hacks)
-    
+- ssse3 gcc performance bug! Not on gcc 4.2 though
+  only for functionality used in the snowflake demo,
+  and only in gezira.c. Do a diff on
+  the generated assembly w/ and w/out -mssse3?
+
 - over formulas notes
 
   r = (v.r * v.a + r * (1 - v.a)) * c + r * (1 - c);
