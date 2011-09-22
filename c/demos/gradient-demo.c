@@ -58,23 +58,24 @@ gezira_snowflake_render (gezira_snowflake_t *flake)
 
     /*
     nile_Process_t *colors = nile_Process_pipe (
-        gezira_GradientColorSpan (init, 1,    0.5,   0.1, 0.3,
-                                        0,   -0.5,   0.6,   0, 0.5),
-        gezira_GradientColorSpan (init, 1,   0.25,   0.4, 0.3,
-                                        0,   -0.5,  -0.8, 1.4, 0.5),
+        gezira_ColorSpan (init, 1,    0.5,   0.1, 0.3,
+                                1,   0.25,   0.4, 0.3, 0.5),
+        gezira_ColorSpan (init, 1,   0.25,   0.4, 0.3,
+                                1,      0,     0,   1, 0.5),
         NILE_NULL);
     */
     /*
      */
     nile_Process_t *colors =
-        gezira_GradientColorSpan (init, 1,    0.5,   0.1, 0.3,
-                                        0,   -0.5,   0.6,   0, 1);
-    nile_Process_t *texture = gezira_Gradient (init,
+        gezira_ColorSpan (init, 1,    0.5,   0.1, 0.3,
+                                1,      0,   0.7, 0.3, 1);
+    nile_Process_t *texture = nile_Process_pipe (
             //gezira_LinearGradientShape (init, -7, 0.015, 0.015),
             //gezira_RadialGradientShape (init, 250, 250, 50),
-            gezira_RadialGradientShape (init, 0, 0, 20),
-            gezira_GradientExtendReflect (init),
-            colors);
+            gezira_RadialGradient (init, 0, 0, 20),
+            gezira_ReflectGradient (init),
+            gezira_ApplyColorSpans (init, colors),
+            NILE_NULL);
     texture = nile_Process_pipe (
         gezira_TransformPoints (init, I.a, I.b, I.c, I.d, I.e, I.f),
         texture, NILE_NULL);
