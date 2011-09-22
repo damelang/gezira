@@ -23,7 +23,7 @@ ColorSpansBegin : Real >> (Real, Color)
         >> (s, 0)
 
 ColorSpan (S1, S2 : Color, l : Real) : ColorSpans
-    dS = S2 - S1
+    dS = (S2 - S1) / l
     ∀ (s, C)
         D = { S1 + s × dS if s ≥ 0, C }
         >> (s - l, D)
