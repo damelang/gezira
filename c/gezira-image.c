@@ -2,6 +2,7 @@
 #include "nile.h"
 #include "gezira-image.h"
 #include "stddef.h"
+#include <stdio.h>
 
 #define Real nile_Real_t
 
@@ -93,6 +94,10 @@ gezira_WriteToImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buff
         uint8_t c  = Real_to_uint8_t (nile_Buffer_pop_head (in));
         uint8_t ic = Real_to_uint8_t (nile_Buffer_pop_head (in));
         uint32_t *px = &image.pixels[x + y * image.stride];
+
+        if (!c)
+            continue;
+
         uint32_t d = *px;
         uint8_t da = d >> 24;
         uint8_t dr = d >> 16;
