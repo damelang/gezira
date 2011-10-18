@@ -60,11 +60,12 @@ CapBezier (o, c : Real, Z : Bezier) : Bezier >> Bezier
 
 OffsetAndJoin (o, l, c : Real, Z1, Zi : Bezier) : Bezier >> Bezier
     ∀ Zj
-        ⇒ OffsetAndJoin (o, l, c, Z1, Zj) → JoinBeziers (o, l, Zi, Zj) → OffsetBezier (o, Zi)
-    if Zi.C.x = Z1.A.x ∧ Zi.C.y = Z1.A.y
+        ⇒ OffsetAndJoin (o, l, c, Z1, Zj) →
+          JoinBeziers (o, l, Zi, Zj) → OffsetBezier (o, Zi)
+    if Zi.C =# Z1.A
         ⇒ JoinBeziers (o, l, Zi, Z1) → OffsetBezier (o, Zi)
     else
-        ⇒ CapBezier (o, c, Zi) → OffsetBezier (o, Zi)
+        ⇒ CapBezier (o, c, Zi)       → OffsetBezier (o, Zi)
 
 StrokeOneSide (w, l, c : Real) : Bezier >> Bezier
     ∀ Z1
