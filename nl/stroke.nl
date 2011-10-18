@@ -19,7 +19,7 @@ MiterJoin (o, l : Real, P : Point, u, v : Vector) : Bezier >> Bezier
     A = P + o × u
     C = P + o × v
     w = (A ⟂ C) ?* u
-    if u ∙ w ≥ (1 / l)
+    if u ∙ w ≥ 1 / (l ▷ 1)
         p = o / (u ∙ w)
         M = P + p × w
         >> (M, M ~ C, C) >> (A, A ~ M, M)
@@ -40,7 +40,7 @@ RoundJoin (o : Real, P : Point, u, v : Vector) : Bezier >> Bezier
 JoinBeziers (o, l : Real, Zi, Zj : Bezier) : Bezier >> Bezier
     u = Zi.B ⟂ Zi.C
     v = Zj.A ⟂ Zj.B
-    if l < 1
+    if l < 0
         ⇒ RoundJoin (o, (Zi.C), u, v) → (→)
     else
         ⇒ MiterJoin (o, l, (Zi.C), u, v) → (→)
