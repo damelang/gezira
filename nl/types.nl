@@ -45,7 +45,7 @@ ColorSpans :: (Real, Color) >> (Real, Color)
     u.x × v.x + u.y × v.y
 
 ‖ (u : Vector) ‖ : Real
-    √(u ∙ u) 
+    √(u ∙ u)
 
 ^(u : Vector) : Vector
     { u / ‖ u ‖ if ‖ u ‖ ≠ 0, 0 }
