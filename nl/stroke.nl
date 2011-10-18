@@ -54,8 +54,8 @@ CapBezier (o, c : Real, Z : Bezier) : Bezier >> Bezier
     else
         D = C + o × u
         G = C - o × u
-        E = D + c × v
-        F = G + c × v
+        E = D + o × c × v
+        F = G + o × c × v
         >> (D, D ~ E, E) >> (E, E ~ F, F) >> (F, F ~ G, G)
 
 OffsetAndJoin (o, l, c : Real, Z1, Zi : Bezier) : Bezier >> Bezier
