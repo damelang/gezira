@@ -12,7 +12,7 @@ OffsetBezier (o : Real, Z : Bezier) : Bezier >> Bezier
         N = M + o × w
         E = 2 × N - (D ~ F)
         >> (D, E, F)
-    else if u ≠* 0 ∧ v ≠* 0
+    else if A ≠# M ∧ M ≠# C
         ⇒ OffsetBezier (o, (M, B ~ C, C)) → OffsetBezier (o, (A, A ~ B, M))
 
 MiterJoin (o, l : Real, P : Point, u, v : Vector) : Bezier >> Bezier
@@ -79,13 +79,13 @@ SanitizeBezierPath : Bezier >> Bezier
     ∀ (A, B, C)
         u = A ⟂ B
         v = B ⟂ C
-        M = A ~ C
         if u ∙ v < -0.9999
-            << (A, M, C)
+            M = (A ~ B) ~ (B ~ C)
+            << (M, M ~ C, C) << (A, A ~ M, M)
         else if u ≠* 0 ∧ v ≠* 0
             >> (A, B, C)
-        else if (A ⟂ M) ≠* 0 ∧ (M ⟂ C) ≠* 0
-            >> (A, M, C)
+        else if A ~ C ≠# B
+            << (A, A ~ C, C)
 
 StrokeBezierPath (w, l, c : Real) : Bezier >> Bezier
     ⇒ SanitizeBezierPath →
