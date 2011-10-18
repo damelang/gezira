@@ -35,7 +35,7 @@ RoundJoin (o : Real, P : Point, u, v : Vector) : Bezier >> Bezier
         B = 2 × N - (A ~ C)
         >> (A, B, C)
     else
-        ⇒ RoundJoin (o, P, u, w) → RoundJoin (o, P, w, v)
+        ⇒ RoundJoin (o, P, w, v) → RoundJoin (o, P, u, w)
 
 JoinBeziers (o, l : Real, Zi, Zj : Bezier) : Bezier >> Bezier
     u = Zi.B ⟂ Zi.C
