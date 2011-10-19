@@ -26,7 +26,7 @@ CompositeTextures (t1 : Texture, t2 : Texture, c : Compositor) : Texture
 
 ExpandSpans : EdgeSpan >> PixelCoverage
     ∀ (x, y, c, l)
-        if c
+        if c ≠ 0
             >> (x, y, c, 1 - c)
         if l > 0
             << (x + 1, y, 1, l - 1)
