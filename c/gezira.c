@@ -3030,20 +3030,16 @@ gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
     gezira_RectangleSpans_vars_t v = *vars;
-    nile_Real_t t_6 = nile_Real_sub(v.v_max_x, v.v_min_x);
-    nile_Real_t t_7 = nile_Real (1);
-    nile_Real_t t_8 = nile_Real_sub(t_6, t_7);
-    v.v_l = t_8;
-    nile_Real_t t_9 = nile_Real (0.5);
-    nile_Real_t t_10 = nile_Real_add(v.v_min_x, t_9);
-    v.v_x = t_10;
-    nile_Real_t t_11 = nile_Real (0.5);
-    nile_Real_t t_12 = nile_Real_add(v.v_min_y, t_11);
-
+    nile_Real_t t_4 = nile_Real_sub(v.v_max_x, v.v_min_x);
+    v.v_l = t_4;
+    nile_Real_t t_5 = nile_Real (0.5);
+    nile_Real_t t_6 = nile_Real_add(v.v_min_x, t_5);
+    v.v_x = t_6;
+    nile_Real_t t_7 = nile_Real (0.5);
+    nile_Real_t t_8 = nile_Real_add(v.v_min_y, t_7);
     nile_Buffer_t *in = nile_Process_prefix_input (p, 0);
     if (in)
-        nile_Buffer_push_head(in, t_12);
-
+        nile_Buffer_push_head(in, t_8);
     *vars = v;
     return out;
 }
