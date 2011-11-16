@@ -9,7 +9,7 @@ CFLAGS       := -pipe -Wall -Werror -Wno-unused \
 ifneq (,$(findstring darwin,$(TARGET)))
   LDFLAGS += -framework Cocoa
 else ifneq (,$(findstring mingw,$(TARGET))$(findstring cygwin,$(TARGET)))
-  LDFLAGS += # TODO windows
+  LDFLAGS += -lgdi32
 else
   LDFLAGS += -lXext -lm -pthread
 endif
