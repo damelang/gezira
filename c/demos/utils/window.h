@@ -1,5 +1,6 @@
 #ifndef GEZIRA_WINDOW_H
 #define GEZIRA_WINDOW_H
+#include <stdint.h>
 
 typedef struct gezira_Window_ gezira_Window_t;
 
@@ -130,7 +131,56 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#error TODO move code over here
+struct gezira_Window_ {
+    gezira_Image_t image;
+    HDC            dc;
+    BITMAPINFO     bmi;
+    HWND           win32window;
+};
+
+static void
+gezira_Window_init (gezira_Window_t *window, int width, int height)
+{
+    BITMAPINFO bmi = { {
+        sizeof (BITMAPINFOHEADER),
+        width,
+        height,
+        1,
+        32,
+        BI_RGB,
+        0, 0, 0, 0, 0
+    } };
+    void *pixels = malloc (width * height * sizeof (uint32_t));
+    gezira_Image_init (&window->image, pixels, width, height, width);
+    window->win32window = CreateWindow ("STATIC", NULL, WS_VISIBLE, // WS_BORDER WS_POPUP WS_CAPTION WS_OVERLAPPED
+                                        0, 0, width, height,
+                                        NULL, NULL, NULL, 0);
+//    window->dc = GetDC (window->win32window);
+    window->bmi = bmi;
+}
+
+static char
+gezira_Window_key_pressed (gezira_Window_t *window)
+    { return -1; }
+
+static void
+gezira_Window_fini (gezira_Window_t *window)
+{
+//    ReleaseDC (window->win32window, window->dc);
+    DestroyWindow (window->win32window);
+    free (window->image.pixels);
+}
+
+static nile_Buffer_t *
+gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
+{
+    gezira_Window_t *window = *((gezira_Window_t **) nile_Process_vars (p));
+    window->dc = GetDC (window->win32window);
+    SetDIBitsToDevice (window->dc, 0, 0, window->image.width, window->image.height, 0, 0,
+                       0, window->image.height, window->image.pixels, &window->bmi, DIB_RGB_COLORS);
+    ReleaseDC (window->win32window, window->dc);
+    return out;
+}
 
 #elif defined (__unix__)
 
