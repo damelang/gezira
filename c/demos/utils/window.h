@@ -10,17 +10,14 @@ typedef struct {
 #ifdef GEZIRA_WINDOW_NONE
 
 struct gezira_Window_ {
-    int           width;
-    int           height;
-    uint32_t     *pixels;
+    gezira_Image_t image;
 };
 
 static void
 gezira_Window_init (gezira_Window_t *window, int width, int height)
 {
-    window->width = width;
-    window->height = height;
-    window->pixels = malloc (width * height * sizeof (uint32_t));
+    void *pixels = malloc (width * height * sizeof (uint32_t));
+    gezira_Image_init (&window->image, pixels, width, height, width);
 }
 
 static char
@@ -29,7 +26,7 @@ gezira_Window_key_pressed (gezira_Window_t *window)
 
 static void
 gezira_Window_fini (gezira_Window_t *window)
-    { free (window->pixels); }
+    { free (window->image.pixels); }
 
 static nile_Buffer_t *
 gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
@@ -48,14 +45,12 @@ typedef long NSEventType;
 extern void* const NSDefaultRunLoopMode;
 
 struct gezira_Window_ {
-    int           width;
-    int           height;
-    uint32_t     *pixels;
-    id            pool;
-    id            NSApp;
-    id            nswindow;
-    CGContextRef  context;
-    CGContextRef  bitmap;
+    gezira_Image_t image;
+    id             pool;
+    id             NSApp;
+    id             nswindow;
+    CGContextRef   context;
+    CGContextRef   bitmap;
 };
 
 static void
@@ -63,9 +58,8 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
 {
     id nscontext;
     CGColorSpaceRef colorspace;
-    window->width = width;
-    window->height = height;
-    window->pixels = malloc (width * height * sizeof (uint32_t));
+    void *pixels = malloc (width * height * sizeof (uint32_t));
+    gezira_Image_init (&window->image, pixels, width, height, width);
 
     /* NSApp */
     window->NSApp = objc_msgSend (objc_getClass ("NSApplication"), sel_getUid ("sharedApplication"));
@@ -86,7 +80,7 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     nscontext = objc_msgSend (objc_getClass ("NSGraphicsContext"), sel_getUid ("currentContext"));
     window->context = (CGContextRef) objc_msgSend (nscontext, sel_getUid ("graphicsPort"));
     colorspace = CGColorSpaceCreateDeviceRGB ();
-    window->bitmap = CGBitmapContextCreate (window->pixels, width, height, 8, width * 4, colorspace,
+    window->bitmap = CGBitmapContextCreate (pixels, width, height, 8, width * 4, colorspace,
                                             kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
     CGColorSpaceRelease (colorspace);
     CGContextSetBlendMode (window->context, kCGBlendModeCopy);
@@ -117,7 +111,7 @@ gezira_Window_fini (gezira_Window_t *window)
     CGContextRelease (window->context);
     objc_msgSend (window->nswindow, sel_getUid ("close"));
     objc_msgSend (window->pool, sel_getUid ("release"));
-    free (window->pixels);
+    free (window->image.pixels);
 }
 
 static nile_Buffer_t *
@@ -125,7 +119,7 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_Window_t *window = *((gezira_Window_t **) nile_Process_vars (p));
     CGImageRef image = CGBitmapContextCreateImage (window->bitmap);
-    CGContextDrawImage (window->context, CGRectMake (0, 0, window->width, window->height), image);
+    CGContextDrawImage (window->context, CGRectMake (0, 0, window->image.width, window->image.height), image);
     CGImageRelease (image);
     CGContextFlush (window->context);
     return out;
@@ -147,13 +141,11 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 #include <sys/shm.h>
 
 struct gezira_Window_ {
-    int              width;
-    int              height;
-    uint32_t        *pixels;
+    gezira_Image_t   image;
     XShmSegmentInfo *segment;
     Display         *display;
     GC               gc;
-    XImage          *image;
+    XImage          *ximage;
     Window           x11window;
 };
 
@@ -162,8 +154,6 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
 {
     int depth;
     Atom atom;
-    window->width = width;
-    window->height = height;
     window->segment = (XShmSegmentInfo *) malloc (sizeof (XShmSegmentInfo));
     window->display = XOpenDisplay (0);
     window->gc = DefaultGC (window->display, DefaultScreen (window->display));
@@ -172,16 +162,16 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
         fprintf (stderr, "Unsupported display depth: %d\n", depth);
         exit (1);
     }
-    window->image = XShmCreateImage (window->display, CopyFromParent, depth, ZPixmap,
+    window->ximage = XShmCreateImage (window->display, CopyFromParent, depth, ZPixmap,
                                      NULL, window->segment, width, height);
     window->x11window = XCreateWindow (window->display, DefaultRootWindow (window->display),
                                        50, 50, width, height, 0, depth, InputOutput,
                                        CopyFromParent, 0, NULL);
-    window->segment->shmid = shmget (IPC_PRIVATE, window->image->bytes_per_line * height,
+    window->segment->shmid = shmget (IPC_PRIVATE, window->ximage->bytes_per_line * height,
                                      IPC_CREAT | 0777);
-    window->segment->shmaddr = window->image->data =
+    window->segment->shmaddr = window->ximage->data =
         (char *) shmat (window->segment->shmid, 0, 0);
-    window->pixels = (uint32_t *) window->image->data;
+    gezira_Image_init (&window->image, window->ximage->data, width, height, width);
     window->segment->readOnly = True;
     XShmAttach (window->display, window->segment);
     shmctl (window->segment->shmid, IPC_RMID, NULL);
@@ -195,7 +185,7 @@ static void
 gezira_Window_fini (gezira_Window_t *window)
 {
     XShmDetach (window->display, window->segment);
-    XDestroyImage (window->image);
+    XDestroyImage (window->ximage);
     shmdt (window->segment->shmaddr);
     free (window->segment);
     XDestroyWindow (window->display, window->x11window);
@@ -206,8 +196,8 @@ static nile_Buffer_t *
 gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_Window_t *window = *((gezira_Window_t **) nile_Process_vars (p));
-    XShmPutImage (window->display, window->x11window, window->gc, window->image, 0, 0, 0, 0,
-                  window->image->width, window->image->height, False);
+    XShmPutImage (window->display, window->x11window, window->gc, window->ximage, 0, 0, 0, 0,
+                  window->ximage->width, window->ximage->height, False);
     XSync (window->display, False);
     return out;
 }
@@ -219,32 +209,31 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 static nile_Process_t *
 gezira_WindowUpdate (nile_Process_t *p, gezira_Window_t *window)
 {
+    nile_Process_t *parent = p;
     p = nile_Process (p, 1, sizeof (gezira_WindowUpdate_vars_t),
                       gezira_WindowUpdate_prologue, NULL, NULL);
     if (p) {
         gezira_WindowUpdate_vars_t *vars = nile_Process_vars (p);
+        nile_Process_t *nextGate = nile_Identity (parent, 1);
         vars->window = window;
+        nile_Process_gate (p, nextGate);
+        if (window->image.gate)
+            p = nile_Process_pipe (window->image.gate, p, NILE_NULL);
+        window->image.gate = nextGate;
     }
     return p;
 }
 
-static nile_Process_t *
-gezira_Window_update_and_clear (gezira_Window_t *window, nile_Process_t *init, nile_Process_t *gate,
+static void
+gezira_Window_update_and_clear (gezira_Window_t *window, nile_Process_t *init,
                                 float a, float r, float g, float b)
 {
-    nile_Process_t *gate_ = nile_Identity (init, 1);
-    nile_Process_t *clear = gezira_CompositeUniformColorOverImage_ARGB32 (init,
-        a, r, g, b,
-        window->pixels, window->width, window->height, window->width);
-    nile_Process_gate (clear, gate_);
+    nile_Process_feed (gezira_WindowUpdate (init, window), NULL, 0);
     nile_Process_feed (nile_Process_pipe (
-        gate,
-        gezira_WindowUpdate (init, window),
-        gezira_RectangleSpans (init, 0, 0, window->width, window->height),
-        clear,
-        NILE_NULL),
+            gezira_RectangleSpans (init, 0, 0, window->image.width, window->image.height),
+            gezira_CompositeUniformColorOverImage_ARGB32 (init, &window->image, a, r, g, b),
+            NILE_NULL),
         NULL, 0);
-    return gate_;
 }
 
 #endif
