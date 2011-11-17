@@ -269,9 +269,10 @@ gezira_GaussianBlur1x21 (nile_Process_t *p,
 
 nile_Process_t *
 gezira_LinearGradient (nile_Process_t *p, 
-                       float v_s00, 
-                       float v_dsdx, 
-                       float v_dsdy);
+                       float v_S_x, 
+                       float v_S_y, 
+                       float v_E_x, 
+                       float v_E_y);
 
 nile_Process_t *
 gezira_RadialGradient (nile_Process_t *p, 
