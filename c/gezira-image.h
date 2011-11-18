@@ -15,6 +15,9 @@ void
 gezira_Image_init (gezira_Image_t *image, void *pixels, int width, int height, int stride);
 
 void
+gezira_Image_done (gezira_Image_t *image);
+
+void
 gezira_Image_reset_gate (gezira_Image_t *image);
 
 nile_Process_t *
