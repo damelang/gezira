@@ -144,7 +144,7 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     BITMAPINFO bmi = { {
         sizeof (BITMAPINFOHEADER),
         width,
-        height,
+        -height,
         1,
         32,
         BI_RGB,
