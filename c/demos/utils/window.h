@@ -133,7 +133,6 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 
 struct gezira_Window_ {
     gezira_Image_t image;
-    HDC            dc;
     BITMAPINFO     bmi;
     HWND           win32window;
 };
@@ -155,7 +154,6 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     window->win32window = CreateWindow ("STATIC", NULL, WS_VISIBLE, // WS_BORDER WS_POPUP WS_CAPTION WS_OVERLAPPED
                                         0, 0, width, height,
                                         NULL, NULL, NULL, 0);
-//    window->dc = GetDC (window->win32window);
     window->bmi = bmi;
 }
 
@@ -166,7 +164,6 @@ gezira_Window_key_pressed (gezira_Window_t *window)
 static void
 gezira_Window_fini (gezira_Window_t *window)
 {
-//    ReleaseDC (window->win32window, window->dc);
     DestroyWindow (window->win32window);
     free (window->image.pixels);
 }
@@ -175,10 +172,10 @@ static nile_Buffer_t *
 gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_Window_t *window = *((gezira_Window_t **) nile_Process_vars (p));
-    window->dc = GetDC (window->win32window);
-    SetDIBitsToDevice (window->dc, 0, 0, window->image.width, window->image.height, 0, 0,
+    HDC dc = GetDC (window->win32window);
+    SetDIBitsToDevice (dc, 0, 0, window->image.width, window->image.height, 0, 0,
                        0, window->image.height, window->image.pixels, &window->bmi, DIB_RGB_COLORS);
-    ReleaseDC (window->win32window, window->dc);
+    ReleaseDC (window->win32window, dc);
     return out;
 }
 
