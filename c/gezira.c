@@ -3009,7 +3009,7 @@ gezira_Rasterize (nile_Process_t *p)
 #undef IN_QUANTUM
 #undef OUT_QUANTUM
 
-#define IN_QUANTUM 1
+#define IN_QUANTUM 2
 #define OUT_QUANTUM 4
 
 typedef struct {
@@ -3018,7 +3018,6 @@ typedef struct {
     nile_Real_t v_max_x;
     nile_Real_t v_max_y;
     nile_Real_t v_l;
-    nile_Real_t v_x;
 } gezira_RectangleSpans_vars_t;
 
 static nile_Buffer_t *
@@ -3026,17 +3025,19 @@ gezira_RectangleSpans_prologue (nile_Process_t *p, nile_Buffer_t *out)
 {
     gezira_RectangleSpans_vars_t *vars = nile_Process_vars (p);
     gezira_RectangleSpans_vars_t v = *vars;
-    nile_Real_t t_4 = nile_Real_sub(v.v_max_x, v.v_min_x);
-    v.v_l = t_4;
-    nile_Real_t t_5 = nile_Real (0.5);
-    nile_Real_t t_6 = nile_Real_add(v.v_min_x, t_5);
-    v.v_x = t_6;
-    nile_Real_t t_7 = nile_Real (0.5);
-    nile_Real_t t_8 = nile_Real_add(v.v_min_y, t_7);
+    nile_Real_t t_2 = nile_Real_sub(v.v_max_x, v.v_min_x);
+    v.v_l = t_2;
+    nile_Real_t t_3 = nile_Real (0.5);
+    nile_Real_t t_4_x = t_3;
+    nile_Real_t t_4_y = t_3;
+    nile_Real_t t_5_x = nile_Real_add(v.v_min_x, t_4_x);
+    nile_Real_t t_5_y = nile_Real_add(v.v_min_y, t_4_y);
 
     nile_Buffer_t *in = nile_Process_prefix_input (p, 0);
-    if (in)
-        nile_Buffer_push_head(in, t_8);
+    if (in) {
+        nile_Buffer_push_head(in, t_5_y);
+        nile_Buffer_push_head(in, t_5_x);
+    }
 
     *vars = v;
     return out;
@@ -3052,29 +3053,37 @@ gezira_RectangleSpans_body (nile_Process_t *p,
     
     while (!nile_Buffer_is_empty (in) && !nile_Buffer_quota_hit (out)) {
         gezira_RectangleSpans_vars_t v_ = v;
+        nile_Real_t v_x = nile_Buffer_pop_head(in);
         nile_Real_t v_y = nile_Buffer_pop_head(in);
-        nile_Real_t t_9 = nile_Real_lt(v_y, v.v_max_y);
-        if (nile_Real_nz (t_9)) {
-            nile_Real_t t_11 = nile_Real (1);
-            nile_Real_t t_10_1 = v.v_x;
-            nile_Real_t t_10_2 = v_y;
-            nile_Real_t t_10_3 = t_11;
-            nile_Real_t t_10_4 = v.v_l;
-            nile_Real_t t_12_x = t_10_1;
-            nile_Real_t t_12_y = t_10_2;
-            nile_Real_t t_12_c = t_10_3;
-            nile_Real_t t_12_l = t_10_4;
+        nile_Real_t t_6 = nile_Real_lt(v_x, v.v_max_x);
+        nile_Real_t t_7 = nile_Real_lt(v_y, v.v_max_y);
+        nile_Real_t t_8 = nile_Real_and(t_6, t_7);
+        if (nile_Real_nz (t_8)) {
+            nile_Real_t t_10 = nile_Real (1);
+            nile_Real_t t_9_1 = v_x;
+            nile_Real_t t_9_2 = v_y;
+            nile_Real_t t_9_3 = t_10;
+            nile_Real_t t_9_4 = v.v_l;
+            nile_Real_t t_11_x = t_9_1;
+            nile_Real_t t_11_y = t_9_2;
+            nile_Real_t t_11_c = t_9_3;
+            nile_Real_t t_11_l = t_9_4;
             if (nile_Buffer_tailroom (out) < OUT_QUANTUM)
                 out = nile_Process_append_output (p, out);
-            nile_Buffer_push_tail(out, t_12_x);
-            nile_Buffer_push_tail(out, t_12_y);
-            nile_Buffer_push_tail(out, t_12_c);
-            nile_Buffer_push_tail(out, t_12_l);
+            nile_Buffer_push_tail(out, t_11_x);
+            nile_Buffer_push_tail(out, t_11_y);
+            nile_Buffer_push_tail(out, t_11_c);
+            nile_Buffer_push_tail(out, t_11_l);
             nile_Real_t t_13 = nile_Real (1);
             nile_Real_t t_14 = nile_Real_add(v_y, t_13);
+            nile_Real_t t_12_1 = v_x;
+            nile_Real_t t_12_2 = t_14;
+            nile_Real_t t_15_x = t_12_1;
+            nile_Real_t t_15_y = t_12_2;
             if (nile_Buffer_headroom (in) < IN_QUANTUM)
                 in = nile_Process_prefix_input (p, in);
-            nile_Buffer_push_head(in, t_14);
+            nile_Buffer_push_head(in, t_15_y);
+            nile_Buffer_push_head(in, t_15_x);
         }
         else {
             ; /* no-op */
