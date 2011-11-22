@@ -39,11 +39,10 @@ CombineEdgeSamples : EdgeSample >> CoverageSpan
 Rasterize : Bezier >> CoverageSpan
     ⇒ DecomposeBeziers → SortBy (@x) → SortBy (@y) → CombineEdgeSamples
 
-RectangleSpans (min, max : Point) : Real >> CoverageSpan
+RectangleSpans (min, max : Point) : Point >> CoverageSpan
     l = max.x - min.x
-    x = min.x + 0.5
-    << min.y + 0.5
-    ∀ y
-        if y < max.y
+    << min + 0.5
+    ∀ (x, y)
+        if x < max.x ∧ y < max.y
             >> (x, y, 1, l)
-            << y + 1
+            << (x, y + 1)
