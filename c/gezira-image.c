@@ -23,6 +23,15 @@ gezira_Image_init (gezira_Image_t *image, void *pixels, int width, int height, i
 }
 
 void
+gezira_Image_done (gezira_Image_t *image)
+{
+    if (image->gate != NULL) {
+	nile_Process_feed (image->gate, NULL, 0);
+	image->gate = NULL;
+    }
+}
+
+void
 gezira_Image_reset_gate (gezira_Image_t *image)
 {
     image->gate = NULL;
