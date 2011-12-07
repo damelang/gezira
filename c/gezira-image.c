@@ -26,8 +26,8 @@ void
 gezira_Image_done (gezira_Image_t *image)
 {
     if (image->gate != NULL) {
-	nile_Process_feed (image->gate, NULL, 0);
-	image->gate = NULL;
+        nile_Process_feed (image->gate, NULL, 0);
+        image->gate = NULL;
     }
 }
 
