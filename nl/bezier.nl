@@ -15,10 +15,9 @@ ClipBeziers (min, max : Point) : Bezier >> Bezier
             cC = min ▷ C ◁ max
             >> (cA, cA ~ cC, cC)
         else
-            ABBC    = (A ~ B) ~ (B ~ C)
-            nearmin = | ABBC - min | < 0.1
-            nearmax = | ABBC - max | < 0.1
-            M       = {min if nearmin, max if nearmax, ABBC}
+            ABBC = (A ~ B) ~ (B ~ C)
+            edge = {min  if |ABBC - min| < |ABBC - max|, max}
+            M    = {edge if |ABBC - edge| < 0.1, ABBC}
             << (M, B ~ C, C) << (A, A ~ B, M) 
 
 CalculateBounds : Bezier >> (Point, Point)
