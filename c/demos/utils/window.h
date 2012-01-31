@@ -248,6 +248,10 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
     XSync (window->display, False);
     return out;
 }
+ 
+static char
+gezira_Window_key_pressed (gezira_Window_t *window)
+    { return -1; }
 
 #else
 #error Unsupported platform!
