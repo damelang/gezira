@@ -12,7 +12,7 @@ OffsetBezier (o : Real, Z : Bezier) : Bezier >> Bezier
         N = M + o × w
         E = 2 × N - (D ~ F)
         >> (D, E, F)
-    else
+    else if A ≠# B ∧ B ≠# C
         ⇒ OffsetBezier (o, (M, B ~ C, C)) → OffsetBezier (o, (A, A ~ B, M))
 
 MiterJoin (o, l : Real, P : Point, u, v : Vector) : Bezier >> Bezier
