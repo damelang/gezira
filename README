@@ -1,4 +1,5 @@
-This isn't meant for others to use (yet). But for the persistent, here are some hints:
+This isn't meant for others to use (yet). But for the persistent,
+here are some hints:
 
 nl/
 
@@ -11,8 +12,9 @@ c/
 
 c/demos/
     
-    Some mostly-broken demos. Depends on a libgezira.a and a C-based Nile runtime.
-    If you're lucky, ``make -f Makefile.gcc snow-demo" might get you some falling snow.
+    Some mostly-broken demos. Depends on a libgezira.a and a C-based Nile
+    runtime. If you're lucky, ``make -f Makefile.gcc snow-demo" might get
+    you some falling snow.
 
 js/
 
