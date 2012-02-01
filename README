@@ -1,1 +1,27 @@
-TODO
+This isn't meant for others to use (yet). But for the persistent, here are some hints:
+
+nl/
+
+    Source code written in Nile
+
+c/
+
+    Compiler-generated C code. Depends on a C-based Nile runtime.
+    If you're lucky, ``make -f Makefile.gcc" might get you a libgezira.a.
+
+c/demos/
+    
+    Some mostly-broken demos. Depends on a libgezira.a and a C-based Nile runtime.
+    If you're lucky, ``make -f Makefile.gcc snow-demo" might get you some falling snow.
+
+js/
+
+    Compiler-generated Javascript code (out-of-date)
+
+js/demos/
+
+    Javascript demos
+
+hs/
+
+    Early experiment in generating Haskell code
