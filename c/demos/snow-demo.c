@@ -134,8 +134,9 @@ main (int argc, char **argv)
             gezira_snowflake_update (&flakes[i]);
         }
 
-        if (nile_error (init)) {
-            fprintf (stderr, "nile error (OOM)\n"); fflush (stderr);
+        if (nile_status (init) != NILE_STATUS_OK) {
+            fprintf (stderr, "Nile error status: %d\n", nile_status (init));
+            fflush (stderr);
             break;
         }
 
