@@ -1,38 +1,43 @@
-TransformPoints (M : Matrix) : Point >> Point
+TransformPoints (M:Matrix) : Point >> Point
     ∀ P
-        >> M ⊗ P
+        >> MP
 
-PadTexture (D : Point) : Point >> Point
-    ∀ P
-        >> 0 ▷ P ◁ D
+PadTexture (w:Real, h:Real) : Point >> Point
+    ∀ (x, y)
+        T      = (x / w, y / h)
+        (s, t) = 0 ▷ T ◁ 1
+        >> (sw, th)
 
-RepeatTexture (D : Point) : Point >> Point
-    ∀ P
-        Q = P / D
-        >> (Q - ⌊ Q ⌋) × D
+RepeatTexture (w:Real, h:Real) : Point >> Point
+    ∀ (x, y)
+        T      = (x / w, y / h)
+        (s, t) = T - ⌊T⌋
+        >> (sw, th)
 
-ReflectTexture (D : Point) : Point >> Point
-    ∀ P
-        Q = P / D
-        >> | (| Q - 1 | % 2 - 1) | × D
+ReflectTexture (w:Real, h:Real) : Point >> Point
+    ∀ (x, y)
+        T      = (x / w, y / h)
+        (s, t) = |(|(T - 1)| % 2 - 1)|
+        >> (sw, th)
 
-UniformColor (C : Color) : Texture
-    D = (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
+UniformColor (C:Color) : Texturer
+    (r, g, b, α) = C
     ∀ _
-        >> D
+        >> (αr, αg, αb, α)
 
-CompositeTextures (t1 : Texture, t2 : Texture, c : Compositor) : Texture
-    ⇒ DupZip (t1, t2) → c
+CompositeTexturers (t1:Texturer, t2:Texturer, c:Compositor) : Texturer
+    → DupZip (t1, t2) → c
 
-ExpandSpans : CoverageSpan >> CoveragePoint
+ExpandSpans () : SpanCoverage >> PointCoverage
     ∀ (x, y, c, l)
         if c > 0 ∧ l > 0
-            >> (x,     y, c, 1 - c)
+            >> (x, y, c, 1 - c)
             << (x + 1, y, c, l - 1)
 
-ExtractSamplePoints : CoveragePoint >> Point
+ExtractSamplePoints () : PointCoverage >> Point
     ∀ (x, y, _, _)
         >> (x, y)
 
-ApplyTexture (t : Texture) : CoverageSpan >> (Color, CoveragePoint)
-    ⇒ ExpandSpans → DupZip (ExtractSamplePoints → t, (→))
+ApplyTexturer (t:Texturer) : EdgeSpan >> (Color, PointCoverage)
+    → ExpandSpans () → DupZip (→ ExtractSamplePoints () → t,
+                               → PassThrough ())

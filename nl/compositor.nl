@@ -1,131 +1,149 @@
-CompositeClear : Compositor
+CompositeClear () : Compositor
     ∀ (A, B)
         >> 0
 
-CompositeSrc : Compositor
+CompositeSrc () : Compositor
     ∀ (A, B)
         >> A
 
-CompositeDst : Compositor
+CompositeDst () : Compositor
     ∀ (A, B)
         >> B
 
-CompositeOver : Compositor
+CompositeOver () : Compositor
     ∀ (A, B)
-        >> A + B × (1 - A.a)
+        α = A.α
+        >> A + (1 - α)B 
 
-CompositeDstOver : Compositor
+CompositeDstOver () : Compositor
     ∀ (A, B)
-        >> B + A × (1 - B.a)
+        β = B.α
+        >> B + (1 - β)A 
 
-CompositeSrcIn : Compositor
+CompositeSrcIn () : Compositor
     ∀ (A, B)
-        >> A × B.a
+        β = B.α
+        >> βA 
 
-CompositeDstIn : Compositor
+CompositeDstIn () : Compositor
     ∀ (A, B)
-        >> B × A.a
+        α = A.α
+        >> αB
 
-CompositeSrcOut : Compositor
+CompositeSrcOut () : Compositor
     ∀ (A, B)
-        >> A × (1 - B.a)
+        β = B.α
+        >> (1 - β)A 
 
-CompositeDstOut : Compositor
+CompositeDstOut () : Compositor
     ∀ (A, B)
-        >> B × (1 - A.a)
+        α = A.α
+        >> (1 - α)B 
 
-CompositeSrcAtop : Compositor
+CompositeSrcAtop () : Compositor
     ∀ (A, B)
-        >> A × B.a + B × (1 - A.a)
+        (α, β) = (A.α, B.α)
+        >> βA + (1 - α)B 
 
-CompositeDstAtop : Compositor
+CompositeDstAtop () : Compositor
     ∀ (A, B)
-        >> B × A.a + A × (1 - B.a)
+        (α, β) = (A.α, B.α)
+        >> αB + (1 - β)A
 
-CompositeXor : Compositor
+CompositeXor () : Compositor
     ∀ (A, B)
         >> A ⊕ B
 
-CompositePlus : Compositor
+CompositePlus () : Compositor
     ∀ (A, B)
         >> (A + B) ◁ 1
 
-CompositeMultiply : Compositor
+CompositeMultiply () : Compositor
     ∀ (A, B)
-        >> A × B + (A ⊕ B)
+        >> AB + (A ⊕ B)
 
-CompositeScreen : Compositor
+CompositeScreen () : Compositor
     ∀ (A, B)
-        >> A + B - A × B
+        >> A + B - AB
 
-CompositeOverlay : Compositor
+CompositeOverlay () : Compositor
     ∀ (A, B)
-        C = 2 × A × B + (A ⊕ B)
-        D = A.a × B.a - 2 × (B.a - B) × (A.a - A) + (A ⊕ B)
-        >> {C if 2 × B < B.a, D}
+        (α, β) = (A.α, B.α)
+        C = 2AB + (A ⊕ B)
+        D = αβ - 2(β - B)(α - A) + (A ⊕ B)
+        >> { C, if 2B < β
+             D, otherwise }
 
-CompositeDarken : Compositor
+CompositeDarken () : Compositor
     ∀ (A, B)
-        >> (A × B.a) ◁ (B × A.a) + (A ⊕ B)
+        (α, β) = (A.α, B.α)
+        >> (βA ◁ αB) + (A ⊕ B)
 
-CompositeLighten : Compositor
+CompositeLighten () : Compositor
     ∀ (A, B)
-        >> (A × B.a) ▷ (B × A.a) + (A ⊕ B)
+        (α, β) = (A.α, B.α)
+        >> (βA ▷ αB) + (A ⊕ B)
 
-CompositeColorDodge : Compositor
+CompositeColorDodge () : Compositor
     ∀ (A, B)
-        C = A.a × B.a + (A ⊕ B)
-        D = (B × A.a / (1 - A / A.a) + (A ⊕ B)) ◁ 1
-        >> {C if A × B.a + B × A.a ≥ A.a × B.a, D}
+        (α, β) = (A.α, B.α)
+        C = αβ + (A ⊕ B)
+        D = αB / (1 - A / α) + (A ⊕ B)
+        >> { C,     if βA + αB ≥ αβ
+             D ◁ 1, otherwise       }
 
-CompositeColorBurn : Compositor
+CompositeColorBurn () : Compositor
     ∀ (A, B)
-        c = A.a × (A × B.a + B × A.a - A.a × B.a) / A + (A ⊕ B)
-        >> {A ⊕ B if A × B.a + B × A.a ≤ A.a × B.a, c}
+        (α, β) = (A.α, B.α)
+        C = βA + αB
+        D = α(C - αβ) / A + (A ⊕ B)
+        >> { A ⊕ B, if C ≤ αβ
+             D,     otherwise }
 
-CompositeHardLight : Compositor
+CompositeHardLight () : Compositor
     ∀ (A, B)
-        C = 2 × A × B + (A ⊕ B)
-        D = A.a × B.a - 2 × (B.a - B) × (A.a - A) + (A ⊕ B)
-        >> {C if 2 × A < A.a, D}
+        (α, β) = (A.α, B.α)
+        C = 2AB + (A ⊕ B)
+        D = αβ - 2(β - B)(α - A) + (A ⊕ B)
+        >> { C, if 2A < α
+             D, otherwise }
 
-CompositeSoftLight : Compositor
+CompositeSoftLight () : Compositor
     ∀ (A, B)
-        C = (1 - B / B.a) × (2 × A - A.a)
-        D = B × (A.a - C) + (A ⊕ B)
-        E = B × (A.a - C × (3 - 8 × B / B.a)) + (A ⊕ B)
-        F = B × A.a + (√(B / B.a) × B.a - B) × (2 × A - A.a) + (A ⊕ B)
-        >> {D if 2 × A < A.a, E if B × 8 ≤ B.a, F}
+        (α, β) = (A.α, B.α)
+        C = (1 - B / β)(2A - α)
+        D = B(α - C) + (A ⊕ B)
+        E = B(α - C(3 - 8B / β)) + (A ⊕ B)
+        F = αB + (√(B / β)β - B)(2A - α) + (A ⊕ B)
+        >> { D, if 2A < α
+             E, if 8B ≤ β
+             F, otherwise }
 
-CompositeDifference : Compositor
+CompositeDifference () : Compositor
     ∀ (A, B)
-        C = A + B - 2 × ((A × B.a) ◁ (B × A.a))
-        >> (C.a + A.a × B.a, C.r, C.g, C.b)
+        (α, β)       = (A.α, B.α)
+        (r, g, b, γ) = A + B - 2(βA ◁ αB)
+        >> (r, g, b, αβ + γ)
 
-CompositeExclusion : Compositor
+CompositeExclusion () : Compositor
     ∀ (A, B)
-        C = A × B.a + B × A.a - 2 × A × B + (A ⊕ B)
-        >> (C.a + A.a × B.a, C.r, C.g, C.b)
+        (α, β)       = (A.α, B.α)
+        (r, g, b, γ) = βA + αB - 2AB + (A ⊕ B)
+        >> (r, g, b, αβ + γ)
 
-CompositeSubtract : Compositor
+CompositeSubtract () : Compositor
     ∀ (A, B)
-        >> (A + B - 1) ▷ 0
+        >> 0 ▷ (A + B - 1)
 
-CompositeInvert : Compositor
+CompositeInvert () : Compositor
     ∀ (A, B)
-        >> (B.a, 1 - B.r, 1 - B.g, 1 - B.b)
+        (r, g, b, α) = B
+        >> (1 - r, 1 - g, 1 - b, α)
 
-InverseOver (A : Real) : Color >> Color
-    ∀ C
-        D = C / (C.a ? 1)
-        E = A × (1 - D) + (1 - A) × D
-        >> (C.a, C.a × E.r, C.a × E.g, C.a × E.b)
-
-ContrastiveOver (a : Real) : Color >> Color
-    ∀ C
-        D = C / (C.a ? 1)
-        E = (1, {1/2 if D.r < 1/4, 0  },
-                {5/8 if D.g < 1/2, 3/8},
-                {1   if D.b < 3/4, 1/2}) : Color
-        F = (1 - a) × D + a × E
-        >> (C.a, C.a × F.r, C.a × F.g, C.a × F.b)
+InverseOver (β:Real) : Color >> Color
+    ∀ A
+        (r, g, b, α) = A
+        α' = α ? 1
+        A':Color = (r / α', g / α', b / α', α')
+        (r', g', b', _) = (1 - β)A' + β(1 - A')
+        >> (αr', αg', αb', α)

@@ -1,39 +1,43 @@
-LinearGradient (S, E : Point) : Point >> Real
-    v = E - S
-    d = v / (v ∙ v)
-    s00 = S ∙ d
+ProjectLinearGradient (A:Point, B:Point) : Point >> Real
+    v   = B - A
+    Δs  = v / (v ∙ v)
+    s00 = A ∙ Δs
     ∀ P
-        >> P ∙ d - s00
+        >> P ∙ Δs - s00
 
-RadialGradient (C : Point, r : Real) : Point >> Real
+ProjectRadialGradient (A:Point, r:Real) : Point >> Real
     ∀ P
-        >> ‖ P - C ‖ / r
+        >> ‖(P - A)‖ / r
 
-PadGradient : Real >> Real
+PadGradient () : GradientExtender
     ∀ s
         >> 0 ▷ s ◁ 1
 
-RepeatGradient : Real >> Real
+RepeatGradient () : GradientExtender
     ∀ s
-        >> s - ⌊ s ⌋
+        >> s - ⌊s⌋
 
-ReflectGradient : Real >> Real
+ReflectGradient () : GradientExtender
     ∀ s
-        >> | (| s - 1 | % 2 - 1) |
+        >> |(|(s - 1)| % 2 - 1)|
 
-ColorSpansBegin : Real >> (Real, Color)
+BeginGradientColor () : Real >> (Real, Color)
     ∀ s
         >> (s, 0)
 
-ColorSpan (S1, S2 : Color, l : Real) : ColorSpans
-    dS = (S2 - S1) / l
+GradientSpan (A:Color, a:Real, B:Color, b:Real) : GradientColor
     ∀ (s, C)
-        D = { S1 + s × dS if s ≥ 0, C }
-        >> (s - l, D)
+        α = (b - s) / (b - a)
+        C' = { αA + (1 - α)B, if a ≤ s ≤ b
+               C,             otherwise    }
+        >> (s, C')
 
-ColorSpansEnd : (Real, Color) >> Color
-    ∀ (_, C)
-        >> (C.a, C.a × C.r, C.a × C.g, C.a × C.b)
+EndGradientColor () : (Real, Color) >> Color
+    ∀ (_, (r, g, b, α))
+        >> (αr, αg, αb, α)
 
-ApplyColorSpans (spans : ColorSpans) : Real >> Color
-    ⇒ ColorSpansBegin → spans → ColorSpansEnd
+ApplyLinearGradient (A:Point, B:Point, e:GradientExtender, c:GradientColor) : Texturer
+    → ProjectLinearGradient (A, B) → e → BeginGradientColor () → c → EndGradientColor ()
+
+ApplyRadialGradient (A:Point, r:Real, e:GradientExtender, c:GradientColor) : Texturer
+    → ProjectRadialGradient (A, r) → e → BeginGradientColor () → c → EndGradientColor ()

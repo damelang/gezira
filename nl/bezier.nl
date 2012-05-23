@@ -1,30 +1,29 @@
-TransformBeziers (M : Matrix) : Bezier >> Bezier
+TransformBeziers (M:Matrix) : Bezier >> Bezier
     ∀ (A, B, C)
-        >> (M ⊗ A, M ⊗ B, M ⊗ C)
+        >> (MA, MB, MC)
 
-ClipBeziers (min, max : Point) : Bezier >> Bezier
-    ∀ (A, B, C)
-        bmin    = A ◁ B ◁ C
-        bmax    = A ▷ B ▷ C
-        inside  = min  ≤ bmin ∧ bmax ≤ max
-        outside = bmax ≤ min  ∨ max  ≤ bmin
-        if inside.x ∧ inside.y
-            >> (A, B, C)
-        else if outside.x ∨ outside.y
-            cA = min ▷ A ◁ max
-            cC = min ▷ C ◁ max
-            >> (cA, cA ~ cC, cC)
+ClipBeziers (min:Point, max:Point) : Bezier >> Bezier
+    ϵ = 0.1
+    ∀ Z
+        if ∧(min ≤ Z ≤ max)
+            >> Z
+        else if ∨(Z ≤ min ∨ max ≤ Z)
+            >> min ▷ Z ◁ max
         else
-            ABBC = (A ~ B) ~ (B ~ C)
-            edge = {min  if |ABBC - min| < |ABBC - max|, max}
-            M    = {edge if |ABBC - edge| < 0.1, ABBC}
-            << (M, B ~ C, C) << (A, A ~ B, M) 
+            (A, B, C)    = Z
+            M            = (A ~ B) ~ (B ~ C)
+            (Δmin, Δmax) = (M - min, M - max)
+            edge         = { min,  if |Δmin| < |Δmax|
+                             max,  otherwise          }
+            Δedge        = M - edge
+            N            = { edge, if |Δedge| < ϵ
+                             M,    otherwise      }
+            << (N, B ~ C, C) << (A, A ~ B, N) 
 
-CalculateBounds : Bezier >> (Point, Point)
-    min =  999999 : Point
-    max = -999999 : Point
+CalculateBounds () : Bezier >> (Point, Point)
+    (min:Point, max:Point) = (∞, -∞)
     ∀ (A, B, C)
-        if ¬(A.y = B.y ∧ B.y = C.y)
+        if ¬(A.y = B.y = C.y)
             min' = min ◁ A ◁ B ◁ C
             max' = max ▷ A ▷ B ▷ C
     >> (min, max)
