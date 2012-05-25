@@ -28,4 +28,4 @@ GradientSpan (A:Color, B:Color) : Real >> Color
         >> sA + (1 - s)B
 
 ApplyLinearGradient (A:ColorStop, B:ColorStop) : Point >> Color
-    -> ProjectLinearGradient (A.P, B.P) -> PadGradient () -> GradientSpan (A.C, B.C)
+    → ProjectLinearGradient (A.P, B.P) → PadGradient () → GradientSpan (A.C, B.C)
