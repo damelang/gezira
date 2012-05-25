@@ -1,3 +1,5 @@
+type ColorStop = (P:Point, C:Color)
+
 ProjectLinearGradient (A:Point, B:Point) : Point >> Real
     v   = B - A
     Δs  = v / (v ∙ v)
@@ -21,8 +23,9 @@ ReflectGradient () : GradientExtender
     ∀ s
         >> |(|(s - 1)| % 2 - 1)|
 
-GradientSpan (A:Color, a:Real, B:Color, b:Real) : Real >> Color
+GradientSpan (A:Color, B:Color) : Real >> Color
     ∀ s
-        t = (b - s) / (b - a)
-        (r, g, b, α) = tA + (1 - t)B
-        >> (αr, αg, αb, α)
+        >> sA + (1 - s)B
+
+ApplyLinearGradient (A:ColorStop, B:ColorStop) : Point >> Color
+    -> ProjectLinearGradient (A.P, B.P) -> PadGradient () -> GradientSpan (A.C, B.C)
