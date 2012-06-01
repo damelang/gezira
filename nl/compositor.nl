@@ -137,13 +137,13 @@ CompositeSubtract () : Compositor
 
 CompositeInvert () : Compositor
     ∀ (A, B)
-        (r, g, b, α) = B
-        >> (1 - r, 1 - g, 1 - b, α)
+        α = A.α
+        (r, g, b, _) = 1 - (A / (α ? 1))
+        >> (αr, αg, αb, α)
 
-InverseOver (β:Real) : Color >> Color
+InverseOver (β:Number) : Color >> Color
     ∀ A
-        (r, g, b, α) = A
-        α' = α ? 1
-        A':Color = (r / α', g / α', b / α', α')
-        (r', g', b', _) = (1 - β)A' + β(1 - A')
-        >> (αr', αg', αb', α)
+        α = A.α
+        B = A / (α ? 1)
+        (r, g, b, _) = βB + (1 - β)(1 - B)
+        >> (αr, αg, αb, α)

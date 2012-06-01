@@ -2,19 +2,19 @@ TransformPoints (M:Matrix) : Point >> Point
     ∀ P
         >> MP
 
-PadTexture (w:Real, h:Real) : Point >> Point
+PadTexture (w:Number, h:Number) : Point >> Point
     ∀ (x, y)
         T      = (x / w, y / h)
         (s, t) = 0 ▷ T ◁ 1
         >> (sw, th)
 
-RepeatTexture (w:Real, h:Real) : Point >> Point
+RepeatTexture (w:Number, h:Number) : Point >> Point
     ∀ (x, y)
         T      = (x / w, y / h)
         (s, t) = T - ⌊T⌋
         >> (sw, th)
 
-ReflectTexture (w:Real, h:Real) : Point >> Point
+ReflectTexture (w:Number, h:Number) : Point >> Point
     ∀ (x, y)
         T      = (x / w, y / h)
         (s, t) = |(|(T - 1)| % 2 - 1)|
@@ -22,8 +22,9 @@ ReflectTexture (w:Real, h:Real) : Point >> Point
 
 UniformColor (C:Color) : Texturer
     (r, g, b, α) = C
+    D = (αr, αg, αb, α)
     ∀ _
-        >> (αr, αg, αb, α)
+        >> D
 
 CompositeTexturers (t1:Texturer, t2:Texturer, c:Compositor) : Texturer
     → DupZip (t1, t2) → c
@@ -38,6 +39,6 @@ ExtractSamplePoints () : PointCoverage >> Point
     ∀ (x, y, _, _)
         >> (x, y)
 
-ApplyTexturer (t:Texturer) : EdgeSpan >> (Color, PointCoverage)
+ApplyTexturer (t:Texturer) : SpanCoverage >> (Color, PointCoverage)
     → ExpandSpans () → DupZip (→ ExtractSamplePoints () → t,
                                → PassThrough ())

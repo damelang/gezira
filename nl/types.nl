@@ -1,63 +1,46 @@
-type Color  = (r:Real, g:Real, b:Real, α:Real)
-type Point  = (x:Real, y:Real)
-type Vector = (x:Real, y:Real)
-type Matrix = (a:Real, b:Real, c:Real, d:Real, e:Real, f:Real)
+type Color  = (r:Number, g:Number, b:Number, α:Number)
+type Point  = (x:Number, y:Number)
+type Vector = (x:Number, y:Number)
+type Matrix = (a:Number, b:Number, c:Number, d:Number, e:Number, f:Number)
 type Bezier = (A:Point, B:Point, C:Point)
-type EdgeSample    = (x:Real, y:Real, area:Real, height:Real)
-type SpanCoverage  = (x:Real, y:Real, coverage:Real, length:Real)
-type PointCoverage = (x:Real, y:Real, coverage:Real, icoverage:Real)
+type EdgeSample    = (x:Number, y:Number, area:Number, height:Number)
+type SpanCoverage  = (x:Number, y:Number, coverage:Number, length:Number)
+type PointCoverage = (x:Number, y:Number, coverage:Number, icoverage:Number)
 
 type Texturer         = Point >> Color
 type Compositor       = (Color, Color) >> Color
-type GradientExtender = Real >> Real
-type GradientColor    = (Real, Color) >> (Real, Color)
+type GradientExtender = Number >> Number
+type GradientColor    = (Number, Color) >> (Number, Color)
 
-a:Real² : Real
+a:Number² : Number
     aa
 
-a:Real³ : Real
+a:Number³ : Number
     aaa
 
-|a:Real| : Real
+|a:Number| : Number
     { -a, if a < 0
        a, otherwise }
 
-|a:Integer| : Integer
-    { -a, if a < 0
-       a, otherwise }
+a:Number ≈ b:Number : Boolean
+    |(a - b)| < 0.0001
 
--- TODO infer this?
-|(a:Real, b:Real)| : (Real, Real)
-    (|a|, |b|)
+a:Number ≉ b:Number : Boolean
+    ¬(a ≈ b)
 
-a:Real ? b:Real : Real
+a:Number ? b:Number : Number
     { a, if a ≠ 0
       b, otherwise }
 
-a:Integer ? b:Integer : Integer
-    { a, if a ≠ 0
-      b, otherwise }
-
-a:Real ? b:Integer : Real
-    b':Real = b
-    a ? b'
-
-a:Real % n:Integer : Real
+a:Number % n:Number : Number
     b = a / (n ? 1)
     a - ⌊b⌋n
 
-(a1:Real, b1:Real) % n:Integer : (Real, Real)
-    (a1 % n, b1 % n)
-
-a:Real ◁ b:Real : Real
+a:Number ◁ b:Number : Number
     { a, if a < b
       b, otherwise }
 
-a:Integer ◁ b:Integer : Integer
-    { a, if a < b
-      b, otherwise }
-
-a:Real ▷ b:Real : Real
+a:Number ▷ b:Number : Number
     { a, if a > b
       b, otherwise }
 
@@ -65,24 +48,23 @@ A:Point = B:Point : Boolean
     ((x1, y1), (x2, y2)) = (A, B)
     (x1 = x2 ∧ y1 = y2)
 
+A:Point ≈ B:Point : Boolean
+    ((x1, y1), (x2, y2)) = (A, B)
+    (x1 ≈ x2 ∧ y1 ≈ y2)
+
 A:Point ≠ B:Point : Boolean
     ¬(A = B)
 
 A:Point ≉ B:Point : Boolean
-    ((x1, y1), (x2, y2)) = (A, B)
-    x1 ≉ x2 ∨ y1 ≉ y1
+    ¬(A ≈ B)
 
-A:Point ~ B:Point : Point
+A:Point ≤ B:Point : (Boolean, Boolean)
     ((x1, y1), (x2, y2)) = (A, B)
-    ((x1 + x2) / 2, (y1 + y2) / 2)
+    (x1 ≤ x2, y1 ≤ y2)
 
 A:Point - B:Point : Vector
     ((x1, y1), (x2, y2)) = (A, B)
     (x1 - x2, y1 - y2)
-
-A:Point - b:Real : Vector
-    B:Point = (b, b)
-    A - B
 
 ⌈A:Point⌉ : Point
     (x, y) = A
@@ -92,17 +74,17 @@ A:Point - b:Real : Vector
     (x, y) = A
     (⌊x⌋, ⌊y⌋)
 
-A:Point + b:Real : Point
-    (x, y) = A
-    (x + b, y + b)
+A:Point ~ B:Point : Point
+    ((x1, y1), (x2, y2)) = (A, B)
+    ((x1 + x2) / 2, (y1 + y2) / 2)
 
-A:Point + b:Integer : Point
-    b':Real = b
-    A + b'
+A:Point ▷ B:Point : Point
+    ((x1, y1), (x2, y2)) = (A, B)
+    (x1 ▷ x2, y1 ▷ y2)
 
-A:Point - (x2:Real, y2:Real) : Vector
-    B:Point = (x2, y2)
-    A - B
+A:Point ◁ B:Point : Point
+    ((x1, y1), (x2, y2)) = (A, B)
+    (x1 ◁ x2, y1 ◁ y2)
 
 A:Point + v:Vector : Point
     ((x1, y1), (x2, y2)) = (A, v)
@@ -112,9 +94,17 @@ A:Point - v:Vector : Point
     ((x1, y1), (x2, y2)) = (A, v)
     (x1 - x2, y1 - y2)
 
-a:Integer P:Point : Point
-    (x, y) = P
-    (ax, ay)
+A:Point + b:Number : Point
+    v:Vector = (b, b)
+    A + v
+
+A:Point - b:Number : Point
+    v:Vector = (b, b)
+    A - v
+
+A:Point - (x2:Number, y2:Number) : Vector
+    B:Point = (x2, y2)
+    A - B
 
 -u:Vector : Vector
     (x, y) = u
@@ -124,23 +114,19 @@ u:Vector ≠ v:Vector : Boolean
     ((x1, y1), (x2, y2)) = (u, v)
     x1 ≠ x2 ∨ y1 ≠ y2
 
-u:Vector ≠ r:Real : Boolean
-    v:Vector = (r, r)
+u:Vector ≠ s:Number : Boolean
+    v:Vector = (s, s)
     u ≠ v
-
-u:Vector ≠ i:Integer : Boolean
-    i':Real = i
-    u ≠ i'
 
 u:Vector + v:Vector : Vector
     ((x1, y1), (x2, y2)) = (u, v)
     (x1 + y1, x2 + y2)
 
-u:Vector + b:Real : Vector
+u:Vector + b:Number : Vector
     v:Vector = (b, b)
     u + v
 
-a:Real v:Vector : Vector
+a:Number v:Vector : Vector
     (x, y) = v
     (ax, ay)
 
@@ -148,11 +134,11 @@ u:Vector ? v:Vector : Vector
     { u, if u ≠ 0
       v, otherwise }
 
-u:Vector ∙ v:Vector : Real
+u:Vector ∙ v:Vector : Number
     ((x1, y1), (x2, y2)) = (u, v)
-    x1 + x2
+    x1x2 + y1y2
 
-P:Point ∙ v:Vector : Real
+P:Point ∙ v:Vector : Number
     (x, y) = P
     u:Vector = (x, y)
     u ∙ v
@@ -161,54 +147,38 @@ P:Point ∙ v:Vector : Real
     (x, y) = u
     (|x|, |y|)
 
-‖u:Vector‖ : Real
+‖u:Vector‖ : Number
     √(u ∙ u) 
 
 ⌊u:Vector⌋ : Vector
     (x, y) = u
     (⌊x⌋, ⌊y⌋)
 
-u:Vector / s:Real : Vector
+u:Vector / s:Number : Vector
     (x, y) = u
     (x / s, y / s)
-
-^u:Vector : Vector
-    { u / ‖u‖, if ‖u‖ ≠ 0
-      0,       otherwise  }
 
 u:Vector < v:Vector : (Boolean, Boolean)
     ((x1, y1), (x2, y2)) = (u, v)
     (x1 < x2, y1 < y2)
 
-u:Vector < r:Real : (Boolean, Boolean)
+u:Vector < r:Number : (Boolean, Boolean)
     v:Vector = (r, r)
     u < v
 
 A:Point ⟂ B:Point : Vector
     ((x1, y1), (x2, y2)) = (A, B)
     v:Vector = (y1 - y2, x2 - x1)
-    ^v
+    { v / ‖v‖, if ‖v‖ ≠ 0
+      0,       otherwise  }
 
 M:Matrix P:Point : Point
     (a, b, c, d, e, f) = M
     (x, y) = P
     (ax + cy + e, bx + dy + f)
 
-A:Point ≤ B:Point : (Boolean, Boolean)
-    ((x1, y1), (x2, y2)) = (A, B)
-    (x1 ≤ x2, y1 ≤ y2)
-
 (a1:Boolean, b1:Boolean) ∧ (a2:Boolean, b2:Boolean) : (Boolean, Boolean)
     (a1 ∧ a2, b1 ∧ b2)
-
-(a1:Boolean, b1:Boolean) ∨ (a2:Boolean, b2:Boolean) : (Boolean, Boolean)
-    (a1 ∨ a2, b1 ∨ b2)
-
-∧(a1:Boolean, a2:Boolean) : Boolean
-    a1 ∧ a2
-
-∨(a1:Boolean, a2:Boolean) : Boolean
-    a1 ∨ a2
 
 P:Point ≤ Z:Bezier : (Boolean, Boolean)
     (A, B, C) = Z
@@ -217,14 +187,6 @@ P:Point ≤ Z:Bezier : (Boolean, Boolean)
 Z:Bezier ≤ P:Point : (Boolean, Boolean)
     (A, B, C) = Z
     A ≤ P ∧ B ≤ P ∧ C ≤ P
-
-A:Point ▷ B:Point : Point
-    ((x1, y1), (x2, y2)) = (A, B)
-    (x1 ▷ x2, y1 ▷ y2)
-
-A:Point ◁ B:Point : Point
-    ((x1, y1), (x2, y2)) = (A, B)
-    (x1 ◁ x2, y1 ◁ y2)
 
 P:Point ▷ Z:Bezier : Bezier
     (A, B, C) = Z
@@ -270,11 +232,11 @@ A:Color ≤ B:Color : (Boolean, Boolean, Boolean, Boolean)
     ((r1, g1, b1, α1), (r2, g2, b2, α2)) = (A, B)
     (r1 ≤ r2, g1 ≤ g2, b1 ≤ b2, α1 ≤ α2)
 
-A:Color ≥ b:Real : (Boolean, Boolean, Boolean, Boolean)
+A:Color ≥ b:Number : (Boolean, Boolean, Boolean, Boolean)
     B:Color = (b, b, b, b)
     A ≥ B
 
-A:Color ≤ b:Real : (Boolean, Boolean, Boolean, Boolean)
+A:Color ≤ b:Number : (Boolean, Boolean, Boolean, Boolean)
     B:Color = (b, b, b, b)
     A ≤ B
 
@@ -282,11 +244,11 @@ A:Color ≤ b:Real : (Boolean, Boolean, Boolean, Boolean)
     (r, g, b, α) = A
     (√r, √g, √b, √α)
 
-a:Real B:Color : Color
+a:Number B:Color : Color
     A:Color = (a, a, a, a)
     AB
 
-A:Color b:Real : Color
+A:Color b:Number : Color
     B:Color = (b, b, b, b)
     AB
 
@@ -294,78 +256,68 @@ A:Color ⊕ B:Color : Color
     (α, β) = (A.α, B.α)
     (1 - β)A + (1 - α)B
 
-A:Color - b:Real : Color
+A:Color - b:Number : Color
     B:Color = (b, b, b, b)
     A - B
 
-s:Integer C:Color : Color
-    s':Real = s
-    s'C
-
-a:Real - B:Color : Color
+a:Number - B:Color : Color
     A:Color = (a, a, a, a)
     A - B
 
-a:Integer - B:Color : Color
-    a':Real = a
-    a' - B
-
-A:Color - b:Integer : Color
-    b':Real = b
-    A - b'
-
-a:Real + B:Color : Color
+a:Number + B:Color : Color
     A:Color = (a, a, a, a)
     A + B
 
-A:Color < b:Real : (Boolean, Boolean, Boolean, Boolean)
+A:Color < b:Number : (Boolean, Boolean, Boolean, Boolean)
     B:Color  = (b, b, b, b)
     A < B
 
-A:Color / b:Real : Color
+A:Color / b:Number : Color
     B:Color = (b, b, b, b)
     A / B
 
-A:Color ◁ b:Real : Color
+A:Color ◁ b:Number : Color
     B:Color = (b, b, b, b)
     A ◁ B
 
-a:Real ▷ B:Color : Color
+a:Number ▷ B:Color : Color
     A:Color = (a, a, a, a)
     A ▷ B
 
-a:Real ◁ B:Color : Color
+a:Number ◁ B:Color : Color
     A:Color = (a, a, a, a)
     A ◁ B
 
-A:Color ◁ b:Integer : Color
-    b':Real = b
-    A ◁ b'
+-- TODO infer these?
 
-a:Integer ◁ B:Color : Color
-    a':Real = a
-    a' ◁ B
+⌊(a:Number, b:Number)⌋ : (Number, Number)
+    (⌊a⌋, ⌊b⌋)
 
-a:Real ◁ b:Integer : Real
-    b':Real = b
-    a ◁ b'
+(a1:Number, b1:Number) - (a2:Number, b2:Number) : (Number, Number)
+    (a1 - a2, b1 - b2)
 
-a:Integer ▷ B:Color : Color
-    a':Real = a
-    a' ▷ B
+(a1:Number, b1:Number) - n:Number : (Number, Number)
+    (a1, b1) - (n, n)
 
-a:Integer ▷ b:Real : Real
-    a':Real = a
-    a' ▷ b
+|(a:Number, b:Number)| : (Number, Number)
+    (|a|, |b|)
 
-a:Real ▷ b:Integer : Real
-    b':Real = b
-    a ▷ b'
+(a1:Number, b1:Number) % n:Number : (Number, Number)
+    (a1 % n, b1 % n)
 
-a:Integer ▷ (a2:Real, b2:Real) : (Real, Real)
-    (a1, b1) = (a, a)
+n:Number ▷ (a2:Number, b2:Number) : (Number, Number)
+    (a1, b1) = (n, n)
     (a1 ▷ a2, b1 ▷ b2)
 
-(a1:Real, b1:Real) ◁ b:Integer : (Real, Real)
-    (a2, b2) = (b, b)
+(a1:Number, b1:Number) ◁ n:Number : (Number, Number)
+    (a2, b2) = (n, n)
     (a1 ◁ a2, b1 ◁ b2)
+
+(a1:Boolean, b1:Boolean) ∨ (a2:Boolean, b2:Boolean) : (Boolean, Boolean)
+    (a1 ∨ a2, b1 ∨ b2)
+
+∧(a1:Boolean, a2:Boolean) : Boolean
+    a1 ∧ a2
+
+∨(a1:Boolean, a2:Boolean) : Boolean
+    a1 ∨ a2

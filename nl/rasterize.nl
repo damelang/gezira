@@ -1,9 +1,8 @@
 DecomposeBeziers () : Bezier >> EdgeSample
     ϵ = 0.1
-    ∀ Z
-        (A, B, C) = Z
-        P         = ⌊A⌋ ◁ ⌊C⌋
-        if ∧(P ≤ Z ≤ P + 1)
+    ∀ (A, B, C)
+        P = ⌊A⌋ ◁ ⌊C⌋
+        if ∧(P ≤ A ≤ P + 1 ∧ P ≤ C ≤ P + 1)
             (x, y) = P
             (w, _) = P + 1 - (A ~ C)
             (_, h) = C - A
@@ -35,8 +34,8 @@ CombineEdgeSamples () : EdgeSample >> SpanCoverage
 Rasterize () : Bezier >> SpanCoverage
     → DecomposeBeziers () → SortBy (1) → SortBy (2) → CombineEdgeSamples ()
 
-RectangleSpans (x1:Real, y1:Real, x2:Real, y2:Real) : Point >> SpanCoverage
-    l = x2 - x1
+RectangleSpans (x1:Number, y1:Number, x2:Number, y2:Number) : Point >> SpanCoverage
+    l = x2 - x1 - 1
     << (x1 + 0.5, y1 + 0.5)
     ∀ (x, y)
         if y < y2

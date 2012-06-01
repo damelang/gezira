@@ -1,3 +1,12 @@
+Syntax for midpoint operator:
+    ~
+    \mid
+    ∩
+    ⩀
+    ⩃
+    ⤒
+    ⍿
+
 Compositor references
     - http://www.w3.org/TR/2003/WD-SVG12-20030715/#compositing
     - http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html#compositing

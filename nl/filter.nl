@@ -1,4 +1,4 @@
-SumWeightedColors (n:Integer) : (Real, Color) >> Color
+SumWeightedColors (n:Number) : (Number, Color) >> Color
     (i, sum:Color) = (1, 0)
     ∀ (w, C)
         if i = n
@@ -13,7 +13,7 @@ BilinearFilterPoints () : Point >> Point
         >> (x, y    ) >> (x + 1, y    )
         >> (x, y + 1) >> (x + 1, y + 1)
 
-BilinearFilterWeights () : Point >> Real
+BilinearFilterWeights () : Point >> Number
     ∀ P 
         (x, y) = ⌊(P - 0.5)⌋ + 0.5
         (u, v) = P - (x, y)
@@ -41,14 +41,14 @@ BicubicFilterDeltas () : Point >> Vector
         >> P - (x - 1, y + 1) >> P - (x, y + 1) >> P - (x + 1, y + 1) >> P - (x + 2, y + 1)
         >> P - (x - 1, y + 2) >> P - (x, y + 2) >> P - (x + 1, y + 2) >> P - (x + 2, y + 2)
 
-\cubic(s:Real) : Real
+\cubic(s:Number) : Number
     {  1.5s³ - 2.5s²      + 1, if 0 ≤ s < 1
       -0.5s³ + 2.5s² - 4s + 2, if 1 ≤ s < 2
                             0, otherwise    }
 
-BicubicFilterWeights () : Vector >> Real
+BicubicFilterWeights () : Vector >> Number
     ∀ (Δx, Δy)
-        (w1, w2) = (\cubic(|Δx|), \cubic(|Δy|))
+        (w1, w2) = (\cubic|Δx|, \cubic|Δy|)
         >> w1w2
 
 BicubicFilter (t:Texturer) : Texturer

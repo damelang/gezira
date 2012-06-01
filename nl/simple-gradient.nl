@@ -1,13 +1,13 @@
 type ColorStop = (P:Point, C:Color)
 
-ProjectLinearGradient (A:Point, B:Point) : Point >> Real
+ProjectLinearGradient (A:Point, B:Point) : Point >> Number
     v   = B - A
     Δs  = v / (v ∙ v)
     s00 = A ∙ Δs
     ∀ P
         >> P ∙ Δs - s00
 
-ProjectRadialGradient (A:Point, r:Real) : Point >> Real
+ProjectRadialGradient (A:Point, r:Number) : Point >> Number
     ∀ P
         >> ‖(P - A)‖ / r
 
@@ -23,7 +23,7 @@ ReflectGradient () : GradientExtender
     ∀ s
         >> |(|(s - 1)| % 2 - 1)|
 
-GradientSpan (A:Color, B:Color) : Real >> Color
+GradientSpan (A:Color, B:Color) : Number >> Color
     ∀ s
         >> sA + (1 - s)B
 
