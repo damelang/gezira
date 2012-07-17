@@ -133,12 +133,13 @@ gezira_WriteToImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buff
         uint16_t g = sg * c + dg * ic;
         uint16_t b = sb * c + db * ic;
 
+        /*
         a >>= 8;
         r >>= 8;
         g >>= 8;
         b >>= 8;
+        */
         
-        /*
         a += 128;
         r += 128;
         g += 128;
@@ -147,7 +148,6 @@ gezira_WriteToImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buff
         r = (r + (r >> 8)) >> 8;
         g = (g + (g >> 8)) >> 8;
         b = (b + (b >> 8)) >> 8;
-        */
 
         *px = (a << 24) | (r << 16) | (g << 8) | (b << 0);
     }
@@ -219,17 +219,17 @@ gezira_CompositeUniformColorOverImage_ARGB32_body (nile_Process_t *p, nile_Buffe
                     uint16_t g  = v.g16 + dg * v.ia8;
                     uint16_t b  = v.b16 + db * v.ia8;
 
+                    /*
                     a >>= 8;
                     r >>= 8;
                     g >>= 8;
                     b >>= 8;
+                    */
 
-                    /*
                     a = (a + (a >> 8)) >> 8;
                     r = (r + (r >> 8)) >> 8;
                     g = (g + (g >> 8)) >> 8;
                     b = (b + (b >> 8)) >> 8;
-                    */
 
                     *px_++ = (a << 24) | (r << 16) | (g << 8) | (b << 0);
                 }
@@ -247,13 +247,14 @@ gezira_CompositeUniformColorOverImage_ARGB32_body (nile_Process_t *p, nile_Buffe
                 uint16_t g  = v.g8 * c;
                 uint16_t b  = v.b8 * c;
 
+                /*
                 uint16_t ia = (255 * 255 - a) >> 8;
                 a = (a + da * ia) >> 8;
                 r = (r + dr * ia) >> 8;
                 g = (g + dg * ia) >> 8;
                 b = (b + db * ia) >> 8;
+                */
 
-                /*
                 uint16_t ia = (255 * 255 - a) + 128;
                 ia = (ia + (ia >> 8)) >> 8;
                 a = a + da * ia + 128;
@@ -264,7 +265,6 @@ gezira_CompositeUniformColorOverImage_ARGB32_body (nile_Process_t *p, nile_Buffe
                 r = (r + (r >> 8)) >> 8;
                 g = (g + (g >> 8)) >> 8;
                 b = (b + (b >> 8)) >> 8;
-                */
 
                 *px++ = (a << 24) | (r << 16) | (g << 8) | (b << 0);
             }
