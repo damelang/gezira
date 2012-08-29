@@ -210,7 +210,7 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
         exit (1);
     }
     window->ximage = XShmCreateImage (window->display, CopyFromParent, depth, ZPixmap,
-                                     NULL, window->segment, width, height);
+                                      NULL, window->segment, width, height);
     window->x11window = XCreateWindow (window->display, DefaultRootWindow (window->display),
                                        50, 50, width, height, 0, depth, InputOutput,
                                        CopyFromParent, 0, NULL);
@@ -222,6 +222,7 @@ gezira_Window_init (gezira_Window_t *window, int width, int height)
     window->segment->readOnly = True;
     XShmAttach (window->display, window->segment);
     shmctl (window->segment->shmid, IPC_RMID, NULL);
+    XSelectInput (window->display, window->x11window, KeyPressMask);
     atom = XInternAtom (window->display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols (window->display, window->x11window, &atom, 1);
     XMapWindow (window->display, window->x11window);
@@ -247,6 +248,21 @@ gezira_WindowUpdate_prologue (nile_Process_t *p, nile_Buffer_t *out)
                   window->ximage->width, window->ximage->height, False);
     XSync (window->display, False);
     return out;
+}
+ 
+static char
+gezira_Window_key_pressed (gezira_Window_t *window)
+{
+    char key = -1;
+    XEvent event;
+    if (!XPending (window->display))
+     return key;
+    XNextEvent (window->display, &event);
+    if (event.type == ClientMessage) // just assume the delete window message for now
+        exit (0);
+    if (event.type == KeyPress)
+        XLookupString (&event.xkey, &key, 1, NULL, NULL);
+    return key;
 }
 
 #else
