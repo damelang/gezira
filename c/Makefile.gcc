@@ -26,11 +26,11 @@ ifeq ($(NO_AVX_FLAG), 0)
   CFLAGS += -mno-avx
 endif
 
-%.o: %.c *.h Makefile.gcc
-	$(CC) $(CFLAGS) -c $<
-
 libgezira.a: gezira.o gezira-image.o
 	$(AR) rcs $@ $^
+
+%.o: %.c *.h Makefile.gcc
+	$(CC) $(CFLAGS) -c $<
 
 clean:
 	$(RM) *.o *.a
