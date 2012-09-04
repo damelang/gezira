@@ -3,6 +3,10 @@
 
 #include "nile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 nile_Process_t *
 gezira_TransformBeziers (nile_Process_t *p, 
                          float v_M_a, 
@@ -397,7 +401,7 @@ nile_Process_t *
 gezira_ContrastiveOver (nile_Process_t *p, 
                         float v_a);
 
-
-
+#ifdef __cplusplus
+}
 #endif
-
+#endif

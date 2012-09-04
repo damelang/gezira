@@ -3,6 +3,10 @@
 
 #include "nile.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     void           *pixels;
     int             width;
@@ -30,4 +34,7 @@ nile_Process_t *
 gezira_CompositeUniformColorOverImage_ARGB32 (nile_Process_t *p, gezira_Image_t *image,
                                               float a, float r, float g, float b);
 
+#ifdef __cplusplus
+}
+#endif
 #endif

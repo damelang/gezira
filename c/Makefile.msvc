@@ -1,0 +1,17 @@
+NILE_RUNTIME = ..\..\nile\runtimes\c
+CFLAGS = /nologo /TP /EHsc /GR- \
+         /W3 /wd4244 /wd4101 \
+         /I$(NILE_RUNTIME) \
+         /fp:fast /arch:SSE2 /O2 /Oi
+
+libgezira.lib: gezira.obj gezira-image.obj
+	lib /nologo /OUT:libgezira.lib gezira.obj gezira-image.obj
+
+gezira.obj: gezira.h gezira.c Makefile.msvc
+	cl $(CFLAGS) /c gezira.c
+
+gezira-image.obj: gezira-image.h gezira-image.c Makefile.msvc
+	cl $(CFLAGS) /c gezira-image.c
+
+clean:
+	del *.obj *.lib
