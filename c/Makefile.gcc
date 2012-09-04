@@ -27,7 +27,7 @@ ifeq ($(NO_AVX_FLAG), 0)
 endif
 
 %.o: %.c *.h Makefile.gcc
-	$(CC) -c $(CFLAGS) $<
+	$(CC) $(CFLAGS) -c $<
 
 libgezira.a: gezira.o gezira-image.o
 	$(AR) rcs $@ $^
