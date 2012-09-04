@@ -1,3 +1,6 @@
 *.[oa]
+*.lib
+*.obj
 *.swp
+*.exe
 .DS_Store
