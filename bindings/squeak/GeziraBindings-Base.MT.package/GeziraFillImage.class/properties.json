@@ -1,0 +1,18 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"form",
+		"opaque",
+		"filter",
+		"mipmaps",
+		"transform" ],
+	"name" : "GeziraFillImage",
+	"pools" : [
+		 ],
+	"super" : "GeziraFill",
+	"type" : "normal" }

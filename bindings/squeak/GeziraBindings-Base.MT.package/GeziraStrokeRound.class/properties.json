@@ -1,0 +1,14 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		 ],
+	"name" : "GeziraStrokeRound",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

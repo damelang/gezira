@@ -1,0 +1,3 @@
+building
+floats
+	^stream contents

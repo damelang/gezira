@@ -1,0 +1,23 @@
+{
+	"class" : {
+		"contrastiveOver:" : "bf 9/20/2010 18:26",
+		"default" : "sw 10/12/2010 14:44",
+		"defaultFillReplacing:" : "sw 10/12/2010 14:43",
+		"gradient:center:radius:" : "bf 8/26/2010 21:21",
+		"gradient:direction:offset:" : "bf 8/26/2010 21:23",
+		"gradient:from:to:" : "bf 10/15/2010 23:37",
+		"image:" : "bf 8/18/2010 18:23",
+		"image:scale:" : "bf 7/17/2012 15:36",
+		"inverseOver:" : "bf 9/9/2010 17:19",
+		"transparent" : "bf 8/18/2010 17:44",
+		"uniform:" : "bf 8/18/2010 17:57" },
+	"instance" : {
+		"asColor" : "sw 12/6/2010 13:10",
+		"asGeziraFill" : "sw 12/6/2010 13:10",
+		"fillStyle" : "sw 10/12/2010 14:39",
+		"isOpaque" : "bf 9/2/2010 17:46",
+		"isTransparent" : "bf 8/18/2010 19:15",
+		"isUniform" : "bf 6/27/2012 15:30",
+		"mixed:with:" : "bf 8/18/2010 18:59",
+		"pipelineOn:for:" : "bf 1/26/2011 17:57",
+		"renderOn:target:for:" : "bf 10/17/2011 20:28" } }

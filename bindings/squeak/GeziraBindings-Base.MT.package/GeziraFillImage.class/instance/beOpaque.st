@@ -1,0 +1,3 @@
+accessing
+beOpaque
+	opaque := true

@@ -1,0 +1,28 @@
+{
+	"category" : "GeziraBindingsMT-Plugin",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		"NileBufferSize" ],
+	"commentStamp" : "bf 8/2/2010 16:55",
+	"instvars" : [
+		"threads",
+		"init",
+		"mem",
+		"memSize",
+		"stack",
+		"stackP",
+		"images",
+		"wasSync",
+		"errorMsg",
+		"errorItem",
+		"errorCode",
+		"m23ArgX",
+		"m23ArgY",
+		"m23ResultX",
+		"m23ResultY" ],
+	"name" : "GeziraBindingsMTPlugin",
+	"pools" : [
+		 ],
+	"super" : "SmartSyntaxInterpreterPlugin",
+	"type" : "normal" }

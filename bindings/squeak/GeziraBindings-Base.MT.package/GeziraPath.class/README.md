@@ -1,0 +1,1 @@
+Holds either a flat FloatArray suitable for rendering using the GeziraBindings plugin, or an array of contours suitable for rendering using balloon. Also converts between both.

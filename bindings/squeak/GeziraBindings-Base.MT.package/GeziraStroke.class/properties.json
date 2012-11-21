@@ -1,0 +1,16 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"width",
+		"joints",
+		"caps" ],
+	"name" : "GeziraStroke",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

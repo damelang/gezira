@@ -1,0 +1,15 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "bf 2/18/2010 21:45",
+	"instvars" : [
+		"floats",
+		"points" ],
+	"name" : "GeziraPath",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

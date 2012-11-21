@@ -1,0 +1,3 @@
+testing
+isOpaque
+	^opaque == true

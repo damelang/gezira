@@ -1,0 +1,12 @@
+{
+	"class" : {
+		"default" : "sw 10/20/2010 16:04" },
+	"instance" : {
+		"beOpaque" : "bf 9/2/2010 17:49",
+		"form" : "bf 8/18/2010 18:21",
+		"isOpaque" : "bf 9/2/2010 17:48",
+		"noFiltering" : "bf 7/27/2011 16:25",
+		"pipelineOn:for:" : "bf 7/17/2012 15:40",
+		"setForm:" : "bf 10/25/2010 19:15",
+		"transform:" : "bf 7/17/2012 16:55",
+		"transformedExtent" : "bf 7/17/2012 16:53" } }

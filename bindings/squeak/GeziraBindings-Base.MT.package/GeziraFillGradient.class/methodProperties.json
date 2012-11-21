@@ -1,0 +1,15 @@
+{
+	"class" : {
+		 },
+	"instance" : {
+		"addStop:at:" : "bf 8/23/2010 16:18",
+		"asColor" : "bf 9/15/2011 15:44",
+		"isOpaque" : "bf 9/2/2010 17:41",
+		"isTransparent" : "bf 8/23/2010 17:43",
+		"maxGreenStop" : "tk 10/17/2011 15:36",
+		"maxRedStop" : "tk 10/17/2011 15:37",
+		"solidGreenish" : "tk 10/17/2011 13:37",
+		"solidRedish" : "tk 10/17/2011 13:37",
+		"stops" : "bf 8/23/2010 16:13",
+		"stops:" : "bf 8/23/2010 16:55",
+		"stopsPipelineOn:" : "bf 10/17/2011 18:24" } }

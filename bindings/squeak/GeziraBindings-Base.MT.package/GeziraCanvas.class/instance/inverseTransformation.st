@@ -1,0 +1,3 @@
+accessing
+inverseTransformation
+	^self transform inverseTransformation

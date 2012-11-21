@@ -1,0 +1,15 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"limit",
+		"distance" ],
+	"name" : "GeziraStrokeMiter",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

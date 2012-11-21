@@ -1,0 +1,17 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		"ShowPipeline",
+		"Threads" ],
+	"commentStamp" : "",
+	"instvars" : [
+		"threads",
+		"memory",
+		"commands" ],
+	"name" : "GeziraBindings",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

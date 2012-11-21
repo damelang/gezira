@@ -1,0 +1,17 @@
+{
+	"class" : {
+		"miter" : "bf 5/31/2011 19:35",
+		"miter:" : "bf 5/31/2011 21:33",
+		"miterLimit:distance:" : "tk 11/15/2011 10:48",
+		"round" : "bf 8/20/2010 15:16",
+		"round:" : "bf 8/31/2010 16:55",
+		"width:" : "bf 11/28/2011 20:30",
+		"width:joints:caps:" : "bf 8/20/2010 15:28" },
+	"instance" : {
+		"caps" : "bf 8/20/2010 15:14",
+		"caps:" : "bf 8/20/2010 15:14",
+		"joints" : "bf 8/20/2010 15:15",
+		"joints:" : "bf 8/20/2010 15:14",
+		"strokePipelineOn:" : "bf 10/17/2011 19:12",
+		"width" : "bf 8/20/2010 15:14",
+		"width:" : "bf 8/20/2010 15:14" } }

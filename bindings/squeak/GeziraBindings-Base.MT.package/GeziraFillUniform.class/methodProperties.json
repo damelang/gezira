@@ -1,0 +1,18 @@
+{
+	"class" : {
+		"default" : "sw 9/1/2010 21:44",
+		"defaultFillReplacing:" : "sw 10/25/2010 15:30" },
+	"instance" : {
+		"alpha" : "bf 8/18/2010 18:17",
+		"asColor" : "sw 12/6/2010 13:14",
+		"blue" : "bf 8/18/2010 18:17",
+		"green" : "bf 8/18/2010 18:17",
+		"isOpaque" : "bf 9/2/2010 17:45",
+		"isTransparent" : "bf 8/18/2010 19:16",
+		"isUniform" : "bf 6/27/2012 15:31",
+		"mixed:with:" : "bf 8/18/2010 19:12",
+		"pipelineOn:for:" : "bf 1/26/2011 18:04",
+		"printOn:" : "yo 10/13/2011 19:00",
+		"red" : "bf 8/18/2010 18:17",
+		"renderOn:target:for:" : "bf 3/22/2011 19:02",
+		"setAlpha:red:green:blue:" : "bf 8/5/2010 17:06" } }

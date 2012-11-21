@@ -1,0 +1,17 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"floats",
+		"stream",
+		"pos",
+		"dir" ],
+	"name" : "GeziraPathBuilder",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

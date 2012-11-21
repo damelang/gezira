@@ -1,0 +1,14 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"stroke" ],
+	"name" : "GeziraStrokedPath",
+	"pools" : [
+		 ],
+	"super" : "GeziraFilledPath",
+	"type" : "normal" }

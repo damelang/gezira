@@ -1,0 +1,19 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "",
+	"instvars" : [
+		"previousState",
+		"target",
+		"clipAndTrans",
+		"fill",
+		"stroke",
+		"deferredRenderer" ],
+	"name" : "GeziraCanvas",
+	"pools" : [
+		 ],
+	"super" : "Object",
+	"type" : "normal" }

@@ -1,0 +1,14 @@
+{
+	"category" : "GeziraBindings-Base",
+	"classinstvars" : [
+		 ],
+	"classvars" : [
+		 ],
+	"commentStamp" : "bf 9/23/2010 14:14",
+	"instvars" : [
+		 ],
+	"name" : "GeziraShadowCanvas",
+	"pools" : [
+		 ],
+	"super" : "GeziraCanvas",
+	"type" : "normal" }

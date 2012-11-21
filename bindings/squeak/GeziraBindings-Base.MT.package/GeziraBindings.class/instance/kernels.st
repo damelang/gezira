@@ -1,0 +1,3 @@
+building
+kernels
+	^commands
