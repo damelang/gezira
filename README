@@ -16,6 +16,10 @@ c/demos/
     runtime. If you're lucky, ``make -f Makefile.gcc snow-demo" might get
     you some falling snow.
 
+bindings/squeak/
+
+    Squeak bindings to the compiled code in c/ .
+
 js/
 
     Compiler-generated Javascript code (out-of-date)
