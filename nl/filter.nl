@@ -57,3 +57,32 @@ BicubicFilter (t:Texturer) : Texturer
     → DupZip (→ BicubicFilterDeltas () → BicubicFilterWeights (),
               → BicubicFilterPoints () → t) →
       SumWeightedColors (16)
+
+GaussianBlur11x1Points () : Point >> Point
+    ∀ (x, y)
+        >> (x - 5, y) >> (x - 4, y) >> (x - 3, y) >> (x - 2, y) >> (x - 1, y)
+        >> (x    , y)
+        >> (x + 1, y) >> (x + 2, y) >> (x + 3, y) >> (x + 4, y) >> (x + 5, y)
+
+GaussianBlur1x11Points () : Point >> Point
+    ∀ (x, y)
+        >> (x, y - 5) >> (x, y - 4) >> (x, y - 3) >> (x, y - 2) >> (x, y - 1)
+        >> (x, y    )
+        >> (x, y + 1) >> (x, y + 2) >> (x, y + 3) >> (x, y + 4) >> (x, y + 5)
+
+GaussianBlur11x1Weights (f:Number) : Point >> Number
+    a = 1024f
+    s = 1024 + 11a
+    ∀ _
+        >> (a +   1) / s >> (a +  10) / s >> (a +  45) / s
+        >> (a + 120) / s >> (a + 210) / s >> (a + 252) / s
+        >> (a + 210) / s >> (a + 120) / s >> (a +  45) / s
+        >> (a +  10) / s >> (a +   1) / s
+
+GaussianBlur11x1 (f:Number, t:Texturer) : Texturer
+    → DupZip (→ GaussianBlur11x1Weights (f),
+              → GaussianBlur11x1Points () → t) → SumWeightedColors (11)
+
+GaussianBlur1x11 (f:Number, t:Texturer) : Texturer
+    → DupZip (→ GaussianBlur11x1Weights (f), 
+              → GaussianBlur1x11Points () → t) → SumWeightedColors (11)
