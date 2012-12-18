@@ -6,11 +6,12 @@ type Bezier = (A:Point, B:Point, C:Point)
 type EdgeSample    = (x:Number, y:Number, area:Number, height:Number)
 type SpanCoverage  = (x:Number, y:Number, coverage:Number, length:Number)
 type PointCoverage = (x:Number, y:Number, coverage:Number, icoverage:Number)
+type ColorStop     = (P:Point, C:Color)
 
 type Texturer         = Point >> Color
 type Compositor       = (Color, Color) >> Color
 type GradientExtender = Number >> Number
-type GradientColor    = (Number, Color) >> (Number, Color)
+type GradientSpan     = (Number, Color) >> (Number, Color)
 
 a:Number² : Number
     aa
@@ -170,7 +171,7 @@ A:Point ⟂ B:Point : Vector
     ((x1, y1), (x2, y2)) = (A, B)
     v:Vector = (y1 - y2, x2 - x1)
     { v / ‖v‖, if ‖v‖ ≠ 0
-      0,       otherwise  }
+      (0, 0),  otherwise  }
 
 M:Matrix P:Point : Point
     (a, b, c, d, e, f) = M
@@ -179,6 +180,12 @@ M:Matrix P:Point : Point
 
 (a1:Boolean, b1:Boolean) ∧ (a2:Boolean, b2:Boolean) : (Boolean, Boolean)
     (a1 ∧ a2, b1 ∧ b2)
+
+A:Point ≤ (B1:Point, B2:Point) : (Boolean, Boolean)
+    A ≤ B1 ∧ A ≤ B2
+
+(A1:Point, A2:Point) ≤ B:Point : (Boolean, Boolean)
+    A1 ≤ B ∧ A2 ≤ B
 
 P:Point ≤ Z:Bezier : (Boolean, Boolean)
     (A, B, C) = Z

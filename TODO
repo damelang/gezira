@@ -1,3 +1,8 @@
+- fix bad handling of stops. add arrays to nile, then do this:
+    ((s1, C1), (s2, C2)) = \stopsAt(stops, s) -- or "stops @ s"
+    α = (s2 - s) / (s2 - s1)
+    >> αC1 + (1 - α)C2 -- todo premultiply
+
 - get SVG arc math (appox. using beziers) to Bert
 
 - Make linear gradient API simpler
@@ -7,9 +12,6 @@
 - Decimation filter
 
 - cubic >> quadratic bezier kernel
-
-- ExpandSpans looks funny (the second 'if' should be nested
-  in the first?) Under what conditions will 'c'overage be 0 (or neg?)
 
 - stroke
     - what about multiple stroke paths in the same stream? This would
@@ -64,9 +66,6 @@
   ...or we just tell the user that the bounds are empty if:
 
     min.x >= max.x \or min.y >= max.y
-
-- Fix usage of '='. In bezier we want pairwise '=', in other
-  places we want a scalar result. Use '==' for the scalar result?
 
 - more image effects
 

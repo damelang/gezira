@@ -1,11 +1,13 @@
 SumWeightedColors (n:Number) : (Number, Color) >> Color
-    (i, sum:Color) = (1, 0)
+    i = 1
+    sum:Color = (0, 0, 0, 0)
     ∀ (w, C)
+        i' = { 1,     if i = n
+               i + 1, otherwise }
+        sum' = { (0, 0, 0, 0), if i = n
+                 sum + wC,     otherwise }
         if i = n
-            (i', sum') = (1, 0)
             >> 0 ▷ (sum + wC) ◁ 1
-        else
-            (i', sum') = (i + 1, sum + wC)
 
 BilinearFilterPoints () : Point >> Point
     ∀ P
@@ -48,7 +50,7 @@ BicubicFilterDeltas () : Point >> Vector
 
 BicubicFilterWeights () : Vector >> Number
     ∀ (Δx, Δy)
-        (w1, w2) = (\cubic|Δx|, \cubic|Δy|)
+        (w1, w2) = (\cubic(|Δx|), \cubic(|Δy|))
         >> w1w2
 
 BicubicFilter (t:Texturer) : Texturer

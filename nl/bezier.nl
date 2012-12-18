@@ -21,9 +21,10 @@ ClipBeziers (min:Point, max:Point) : Bezier >> Bezier
             << (N, B ~ C, C) << (A, A ~ B, N) 
 
 CalculateBounds () : Bezier >> (Point, Point)
-    (min:Point, max:Point) = (∞, -∞)
+    (min:Point, max:Point) = ((∞, ∞), (-∞, -∞))
     ∀ (A, B, C)
-        if ¬(A.y = B.y = C.y)
-            min' = min ◁ A ◁ B ◁ C
-            max' = max ▷ A ▷ B ▷ C
+        min' = { min ◁ A ◁ B ◁ C, if ¬(A.y = B.y = C.y)
+                 min,             otherwise             }
+        max' = { max ▷ A ▷ B ▷ C, if ¬(A.y = B.y = C.y)
+                 max,             otherwise             }
     >> (min, max)

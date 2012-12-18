@@ -1,6 +1,6 @@
 CompositeClear () : Compositor
     ∀ (A, B)
-        >> 0
+        >> (0, 0, 0, 0)
 
 CompositeSrc () : Compositor
     ∀ (A, B)
