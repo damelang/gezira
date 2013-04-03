@@ -119,7 +119,11 @@ gezira_WriteToImage_ARGB32_body (nile_Process_t *p, nile_Buffer_t *in, nile_Buff
         int x = nile_Real_toi (nile_Buffer_pop_head (in));
         int y = nile_Real_toi (nile_Buffer_pop_head (in));
         uint8_t c  = Real_to_uint8_t (nile_Buffer_pop_head (in));
-        uint8_t ic = Real_to_uint8_t (nile_Buffer_pop_head (in));
+        // Ignore inverse converage, as conversion from float to int
+        // causes precision issues. e.g., we can get the value 128 for
+        // both coverage and inverse coverage.
+        nile_Buffer_pop_head (in);
+        uint8_t ic = 255 - c;
         uint32_t *px = &pixels[x + y * stride];
 
         if (c == 0 ||
